@@ -1,0 +1,6 @@
+Sistema de contabilidad de pequeña tienda con factura electrónica
+Manejado por internet
+    * Bajo Django
+Tienda online acoplada
+    * Usa la misma lista de productos
+    * Usa uno de los precios de los productos
