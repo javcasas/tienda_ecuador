@@ -2,4 +2,16 @@ from django.conf.urls import patterns, url
 from billing import views
 
 urlpatterns = patterns('',
-        url(r'^$', views.index, name='index'))
+    url(r'^$', views.index, name='index'),
+    url(r'^item/(?P<item_id>[0-9]+)/$', views.view_item, name='view_item'),
+    url(r'^item/(?P<item_id>[0-9]+)/edit/$', views.edit_item, name='edit_item'),
+
+    url(r'^bill/new/$', views.new_bill, name='new_bill'),
+    url(r'^bill/(?P<bill_id>[0-9]+)/$', views.view_bill, name='view_bill'),
+    url(r'^bill/(?P<bill_id>[0-9]+)/edit/$', views.edit_bill, name='edit_bill'),
+    url(r'^bill/(?P<bill_id>[0-9]+)/delete/$', views.delete_bill, name='delete_bill'),
+
+    url(r'^bill/(?P<bill_id>[0-9]+)/add_item/$', views.add_item_to_bill, name='add_item_to_bill'),
+    url(r'^bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/edit/$', views.edit_item_in_bill, name='edit_item_in_bill'),
+    url(r'^bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/delete/$', views.delete_item_in_bill, name='delete_item_in_bill'),
+)

@@ -1,0 +1,30 @@
+Vender mercadería
+1. Cliente entra en tienda
+2. Vendedor pregunta ¿Qué quiere?
+3. Cliente pide mercadería
+4. Vendedor confirma que tiene mercadería
+5. Cliente pregunta precio
+6. Vendedor confirma precio
+7. Si cliente piensa que el precio es muy grande, se lo comunica al vendedor. El vendedor puede aceptar hacer descuento. Si tal, ir a punto 6
+8. Cliente acepta precio.
+9. Si cliente quiere más mercadería, ir a paso 3, si no cliente confirma que no quiere más
+10. Vendedor informa del precio total
+11. Si cliente piensa que el precio es muy alto, puede tratar de regatear (pasos 6, 7, 8), o reducir o eliminar mercancías de la compra
+12. Cliente acepta la compra
+13. Vendedor genera factura
+14. Vendedor entrega factura y mercadería a cliente
+15. Cliente paga
+
+El caso de uso está centrado en la edición de una factura proforma, y su posterior conversión a factura real.
+Sub-casos de uso:
+    * Nueva factura proforma
+    * Ver factura proforma
+    * Agregar item a factura proforma
+        * Buscar item por nombre
+    * Modificar precio y cantidad de item en factura proforma
+        * Ver precio base, ver y seleccionar diferentes precios
+    * Eliminar item de factura proforma
+    * Editar factura proforma
+        * Cambiar datos del cliente
+    * Confirmar factura proforma y convertirla en factura real
+

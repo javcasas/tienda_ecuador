@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Billing</title>
+    </head>
+
+    <body>
+        <h1>Bill</h1>
+        Number: {{ bill.number }} <br />
+        <hr />
+        {% for item in items %}
+            SKU: {{ item.sku }} <br />
+            Name: {{ item.name }} <br />
+            Description: {{ item.description }} <br />
+            Qty: {{ item.qty }} <br />
+            <hr />
+        {% endfor %}
+    </body>
+
+</html>

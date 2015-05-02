@@ -7,6 +7,10 @@
 
     <body>
         hello world!
+        {% for item in items %}
+            <br />
+            <a href="{% url 'view_item' item.id %}">{{ item }}</a>
+        {% endfor %}
     </body>
 
 </html>
