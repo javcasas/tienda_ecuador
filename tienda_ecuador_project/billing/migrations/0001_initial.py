@@ -2,20 +2,49 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
+            name='BaseItem',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('sku', models.CharField(max_length=50)),
+                ('name', models.CharField(max_length=50)),
+                ('description', models.CharField(max_length=500)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
             name='Bill',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('number', models.CharField(max_length=20)),
+                ('number', models.CharField(max_length=20, blank=True)),
+                ('is_proforma', models.BooleanField(default=False)),
             ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='BillItem',
+            fields=[
+                ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
+                ('qty', models.IntegerField()),
+                ('bill', models.ForeignKey(to='billing.Bill')),
+            ],
+            options={
+            },
+            bases=('billing.baseitem',),
         ),
         migrations.CreateModel(
             name='Customer',
@@ -23,15 +52,18 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=100)),
             ],
+            options={
+            },
+            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='Item',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('sku', models.CharField(max_length=50)),
-                ('name', models.CharField(max_length=50)),
-                ('description', models.CharField(max_length=500)),
+                ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
             ],
+            options={
+            },
+            bases=('billing.baseitem',),
         ),
         migrations.CreateModel(
             name='Shop',
@@ -39,33 +71,37 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=100)),
             ],
+            options={
+            },
+            bases=(models.Model,),
         ),
         migrations.CreateModel(
-            name='BillItem',
+            name='ShopUser',
             fields=[
-                ('item_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Item')),
-                ('qty', models.IntegerField()),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('shop', models.ForeignKey(to='billing.Shop')),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
-            bases=('billing.item',),
-        ),
-        migrations.AddField(
-            model_name='item',
-            name='shop',
-            field=models.ForeignKey(to='billing.Shop'),
+            options={
+            },
+            bases=(models.Model,),
         ),
         migrations.AddField(
             model_name='bill',
             name='issued_to',
-            field=models.ForeignKey(to='billing.Customer'),
+            field=models.ForeignKey(to='billing.Customer', blank=True),
+            preserve_default=True,
         ),
         migrations.AddField(
             model_name='bill',
             name='shop',
             field=models.ForeignKey(to='billing.Shop'),
+            preserve_default=True,
         ),
         migrations.AddField(
-            model_name='billitem',
-            name='bill',
-            field=models.ForeignKey(to='billing.Bill'),
+            model_name='baseitem',
+            name='shop',
+            field=models.ForeignKey(to='billing.Shop'),
+            preserve_default=True,
         ),
     ]

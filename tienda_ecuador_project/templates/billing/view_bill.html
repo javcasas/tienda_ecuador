@@ -8,14 +8,19 @@
     <body>
         <h1>Bill</h1>
         Number: {{ bill.number }} <br />
+        Issued to: {{ bill.issued_to }} <br />
+        Status: {% if bill.can_be_modified %} Proforma {% else %} Final {% endif %}
         <hr />
-        {% for item in items %}
+        {% for item in bill.items %}
             SKU: {{ item.sku }} <br />
             Name: {{ item.name }} <br />
             Description: {{ item.description }} <br />
             Qty: {{ item.qty }} <br />
             <hr />
         {% endfor %}
+        {% if bill.can_be_modified %}
+            <a href="{% url 'edit_bill' bill.pk %}">Edit</a>
+        {% endif %}
     </body>
 
 </html>
