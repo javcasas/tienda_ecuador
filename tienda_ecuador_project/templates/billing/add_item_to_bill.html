@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Billing</title>
+    </head>
+
+    <body>
+        <h1>Bill</h1>
+        Number: {{ bill.number }} <br />
+        Issued to: {{ bill.issued_to }} <br />
+        <h1>Add item</h1>
+        {% for item in items %}
+            <form method='post' action='.'>
+            {% csrf_token %}
+            {{ item.sku }} - {{ item.name }}
+            <input type='hidden' name='item_id' value='{{ item.pk }}' />
+            <button type='submit'>Add item</button>
+            </form>
+        {% endfor %}
+        <a href="{% url 'view_bill' bill.pk %}">Return</a>
+    </body>
+
+</html>

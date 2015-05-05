@@ -16,10 +16,15 @@
             Name: {{ item.name }} <br />
             Description: {{ item.description }} <br />
             Qty: {{ item.qty }} <br />
+            {% if bill.can_be_modified %}
+            <a href="{% url 'edit_item_in_bill' bill.pk item.pk %}">Edit</a>
+            <a href="{% url 'delete_item_from_bill' bill.pk item.pk %}">Delete</a>
+            {% endif %}
             <hr />
         {% endfor %}
         {% if bill.can_be_modified %}
             <a href="{% url 'edit_bill' bill.pk %}">Edit</a>
+            <a href="{% url 'add_item_to_bill' bill.pk %}">Add Item</a>
         {% endif %}
     </body>
 

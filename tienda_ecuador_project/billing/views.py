@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
-from models import Item, Bill, BillItem, ShopUser
-from forms import ItemForm, BillForm
+from models import Item, Bill, BillItem, ShopUser, Customer
+from forms import ItemForm, BillForm, BillItemForm
 from django.contrib.auth.decorators import login_required
 
 
@@ -17,9 +17,10 @@ def get_shop(request):
         raise Exception("Access Denied, you have access to no shops")
 
 
+@login_required
 def index(request):
-    items = Item.objects.all()
-    bills = Bill.objects.all()
+    items = Item.objects.filter(shop=get_shop(request))
+    bills = Bill.objects.filter(shop=get_shop(request))
     param_dict = {
         'items': items,
         'bills': bills,
@@ -61,9 +62,10 @@ def view_bill(request, bill_id):
 
 @login_required
 def new_bill(request):
-    new = Bill(shop=get_shop(request))
+    customer, created = Customer.objects.get_or_create(name='Consumidor Final')
+    new = Bill(shop=get_shop(request), issued_to=customer)
     new.save()
-    return view_bill(new.fields.pk)
+    return view_bill(request, new.pk)
 
 
 @login_required
@@ -106,10 +108,43 @@ def delete_bill(request, bill_id):
 
 @login_required
 def add_item_to_bill(request, bill_id):
-    pass
+    bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
+    if not bill.can_be_modified():
+        # The bill has been issued, and can't be modified
+        raise Exception("The bill can't be modified")
+
+    if request.method == 'POST':
+        item = Item.objects.get(pk=request.POST['item_id'], shop=get_shop(request))
+        values = dict(item.__dict__)
+        for k in values.keys():
+            if k.startswith('_') or k in ('id', 'baseitem_ptr_id'):
+                values.pop(k)
+        values['qty'] = 1
+        values['bill'] = bill
+        bitem = BillItem(**values)
+        bitem.save()
+        return view_bill(request, bill_id)
+    items = Item.objects.filter(shop=get_shop(request))
+    return render(request, "billing/add_item_to_bill.html", {'bill': bill, 'items': items})
+
 
 def edit_item_in_bill(request, bill_id, item_id):
-    pass
+    bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
+    item = get_object_or_404(BillItem, pk=item_id, bill=bill, shop=get_shop(request))
+    if not bill.can_be_modified():
+        # The bill has been issued, and can't be modified
+        raise Exception("The bill can't be modified")
+
+    if request.method == 'POST':
+        form = BillItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save(commit=True)
+            return view_bill(request, bill_id)
+        else:
+            print form.errors
+    else:
+        form = BillItemForm(instance=item)
+    return render(request, "billing/edit_item_in_bill.html", {'form': form, 'bill_id': bill_id})
 
 def delete_item_in_bill(request, bill_id, item_id):
     pass

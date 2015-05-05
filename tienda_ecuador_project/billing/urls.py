@@ -13,5 +13,5 @@ urlpatterns = patterns('',
 
     url(r'^bill/(?P<bill_id>[0-9]+)/add_item/$', views.add_item_to_bill, name='add_item_to_bill'),
     url(r'^bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/edit/$', views.edit_item_in_bill, name='edit_item_in_bill'),
-    url(r'^bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/delete/$', views.delete_item_in_bill, name='delete_item_in_bill'),
+    url(r'^bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/delete/$', views.delete_item_in_bill, name='delete_item_from_bill'),
 )

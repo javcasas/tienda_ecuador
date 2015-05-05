@@ -68,7 +68,7 @@ class Bill(models.Model):
         return BillItem.objects.filter(bill=self, shop=self.shop)
 
     def __unicode__(self):
-        return self.number
+        return "{} - {}".format(self.number, self.issued_to)
 
     def can_be_modified(self):
         """

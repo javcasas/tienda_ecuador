@@ -58,7 +58,6 @@ def my_populate():
     b2i1 = add_bill_item(sku='t1-123', name='Item T11', description='Item 1 en Tienda 1', shop=t1, bill=b2, qty=4)
     b2i1 = add_bill_item(sku='t1-146', name='Item T12', description='Item 2 en Tienda 1', shop=t1, bill=b2, qty=8)
     
-    
 
 if __name__ == '__main__':
     print "Starting Billing population script..."
