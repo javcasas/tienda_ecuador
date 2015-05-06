@@ -18,7 +18,10 @@
             Qty: {{ item.qty }} <br />
             {% if bill.can_be_modified %}
             <a href="{% url 'edit_item_in_bill' bill.pk item.pk %}">Edit</a>
-            <a href="{% url 'delete_item_from_bill' bill.pk item.pk %}">Delete</a>
+            <form action="{% url 'delete_item_from_bill' bill.pk item.pk %}" method='post'>
+                {% csrf_token %}
+                <button type='submit'>Delete</button>
+            </form>
             {% endif %}
             <hr />
         {% endfor %}

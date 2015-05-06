@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from models import Item, Bill, BillItem, ShopUser, Customer
 from forms import ItemForm, BillForm, BillItemForm
 from django.contrib.auth.decorators import login_required
@@ -43,7 +43,7 @@ def edit_item(request, item_id):
         form = ItemForm(request.POST, instance=item)
         if form.is_valid():
             form.save(commit=True)
-            return view_item(request, item_id)
+            return redirect("view_item", item_id)
         else:
             print form.errors
     else:
@@ -65,7 +65,7 @@ def new_bill(request):
     customer, created = Customer.objects.get_or_create(name='Consumidor Final')
     new = Bill(shop=get_shop(request), issued_to=customer)
     new.save()
-    return view_bill(request, new.pk)
+    return redirect("view_bill", new.pk)
 
 
 @login_required
@@ -79,19 +79,13 @@ def edit_bill(request, bill_id):
         form = BillForm(request.POST, instance=bill)
         if form.is_valid():
             form.save(commit=True)
-            return view_bill(request, bill_id)
+            return redirect("view_bill", bill_id)
         else:
             print form.errors
     else:
         form = BillForm(instance=bill)
     return render(request, "billing/edit_bill.html", {'form': form, 'bill_id': bill_id})
 
-    items = BillItem.objects.filter(bill=bill)
-    param_dict = {
-        'bill': bill,
-        'items': items,
-    }
-    return render(request, "billing/view_bill.html", param_dict)
 
 @login_required
 def delete_bill(request, bill_id):
@@ -104,7 +98,7 @@ def delete_bill(request, bill_id):
             bill.delete()
         else:
             raise Exception("Bill is definitive")
-    return index(request)
+    return redirect("index")
 
 @login_required
 def add_item_to_bill(request, bill_id):
@@ -123,7 +117,7 @@ def add_item_to_bill(request, bill_id):
         values['bill'] = bill
         bitem = BillItem(**values)
         bitem.save()
-        return view_bill(request, bill_id)
+        return redirect("view_bill", bill_id)
     items = Item.objects.filter(shop=get_shop(request))
     return render(request, "billing/add_item_to_bill.html", {'bill': bill, 'items': items})
 
@@ -139,7 +133,7 @@ def edit_item_in_bill(request, bill_id, item_id):
         form = BillItemForm(request.POST, instance=item)
         if form.is_valid():
             form.save(commit=True)
-            return view_bill(request, bill_id)
+            return redirect("view_bill", bill_id)
         else:
             print form.errors
     else:
@@ -147,4 +141,12 @@ def edit_item_in_bill(request, bill_id, item_id):
     return render(request, "billing/edit_item_in_bill.html", {'form': form, 'bill_id': bill_id})
 
 def delete_item_in_bill(request, bill_id, item_id):
-    pass
+    bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
+    item = get_object_or_404(BillItem, pk=item_id, bill=bill, shop=get_shop(request))
+    if not bill.can_be_modified():
+        # The bill has been issued, and can't be modified
+        raise Exception("The bill can't be modified")
+
+    if request.method == 'POST':
+        item.delete()
+    return redirect("view_bill", bill_id)
