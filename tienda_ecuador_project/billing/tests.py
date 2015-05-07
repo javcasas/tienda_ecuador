@@ -1,7 +1,8 @@
 from django.test import TestCase
-from billing.models import Bill, Shop, Customer, BillItem
+from billing.models import Bill, Shop, Customer, BillItem, ShopUser
+from django.contrib.auth.models import User
 
-# Create your tests here.
+
 class BillTests(TestCase):
     """
     Tests that check the Bill model
@@ -12,14 +13,53 @@ class BillTests(TestCase):
         self.customer = Customer(name="Pepe")
         self.customer.save()
 
+    def tearDown(self):
+        self.shop.delete()
+        self.customer.delete()
+
+    def test_bill_has_all_the_required_fields(self):
+        """
+        Checks that the bill model has all the required fields
+        """
+        pbill = Bill(shop=self.shop, number=3,
+                     issued_to=self.customer, is_proforma=True)
+        pbill.save()
+        bill = Bill.objects.get(pk=pbill.pk)
+        self.assertEquals(bill.shop, self.shop)
+        self.assertEquals(bill.number, '3')
+        self.assertEquals(bill.issued_to, self.customer)
+        self.assertEquals(bill.is_proforma, True)
+        pbill.delete()
+
+    def test_billitem_has_all_the_required_fields(self):
+        """
+        Checks that the BillItem model has all the required fields
+        """
+        bill = Bill(shop=self.shop, number=3,
+                    issued_to=self.customer, is_proforma=True)
+        bill.save()
+        pitem = BillItem(bill=bill, qty=6,
+                         sku="SKU45", name="Item",
+                         description="Desc", shop=self.shop)
+        pitem.save()
+        item = BillItem.objects.get(pk=pitem.pk)
+
+        self.assertEquals(item.bill, bill)
+        self.assertEquals(item.qty, 6)
+        self.assertEquals(item.sku, "SKU45")
+        self.assertEquals(item.name, "Item")
+        self.assertEquals(item.description, "Desc")
+        self.assertEquals(item.shop, self.shop)
+
     def test_bill_can_be_written_if_is_proforma(self):
         """
         Checks that the bill can be written if is proforma
         """
-        bill = Bill(shop=self.shop, number=3, issued_to=self.customer, is_proforma=True)
+        bill = Bill(shop=self.shop, number=3,
+                    issued_to=self.customer, is_proforma=True)
         bill.save()
         self.assertEqual(Bill.objects.get(pk=bill.pk).number, '3')
-        bill.number=4
+        bill.number = 4
         bill.save()
         self.assertEqual(Bill.objects.get(pk=bill.pk).number, '4')
 
@@ -27,11 +67,12 @@ class BillTests(TestCase):
         """
         Checks that the bill can only be written if is proforma
         """
-        bill = Bill(shop=self.shop, number=3, issued_to=self.customer, is_proforma=True)
+        bill = Bill(shop=self.shop, number=3,
+                    issued_to=self.customer, is_proforma=True)
         bill.save()
-        bill.is_proforma=False
+        bill.is_proforma = False
         bill.save()
-        bill.number=4
+        bill.number = 4
         bill.save()
         self.assertEqual(Bill.objects.get(pk=bill.pk).number, '3')
 
@@ -39,9 +80,10 @@ class BillTests(TestCase):
         """
         Checks Bill.secret_save
         """
-        bill = Bill(shop=self.shop, number=5, issued_to=self.customer, is_proforma=False)
+        bill = Bill(shop=self.shop, number=5,
+                    issued_to=self.customer, is_proforma=False)
         bill.save()
-        bill.number=6
+        bill.number = 6
         bill.secret_save()
         self.assertEqual(Bill.objects.get(pk=bill.pk).number, '6')
 
@@ -49,9 +91,12 @@ class BillTests(TestCase):
         """
         Checks that I can add items to a proforma bill
         """
-        bill = Bill(shop=self.shop, number=3, issued_to=self.customer, is_proforma=True)
+        bill = Bill(shop=self.shop, number=3,
+                    issued_to=self.customer, is_proforma=True)
         bill.save()
-        item = BillItem(bill=bill, qty=6, sku="SKU45", name="Item", description="Desc", shop=self.shop)
+        item = BillItem(bill=bill, qty=6,
+                        sku="SKU45", name="Item",
+                        description="Desc", shop=self.shop)
         item.save()
         self.assertEqual(BillItem.objects.get(pk=item.pk).qty, 6)
 
@@ -59,9 +104,85 @@ class BillTests(TestCase):
         """
         Checks that I can't add items to a final bill
         """
-        bill = Bill(shop=self.shop, number=3, issued_to=self.customer, is_proforma=False)
+        bill = Bill(shop=self.shop, number=3,
+                    issued_to=self.customer, is_proforma=False)
         bill.save()
-        item = BillItem(bill=bill, qty=6, sku="SKU45", name="Item", description="Desc", shop=self.shop)
+        item = BillItem(bill=bill, qty=6,
+                        sku="SKU45", name="Item",
+                        description="Desc", shop=self.shop)
         item.save()
         with self.assertRaises(BillItem.DoesNotExist):
             BillItem.objects.get(pk=item.pk)
+
+    def test_bill_item_secret_save(self):
+        """
+        Checks that I can't add items to a final bill
+        """
+        bill = Bill(shop=self.shop, number=3,
+                    issued_to=self.customer, is_proforma=False)
+        bill.save()
+        item = BillItem(bill=bill, qty=6,
+                        sku="SKU45", name="Item",
+                        description="Desc", shop=self.shop)
+        item.secret_save()
+        self.assertEquals(BillItem.objects.get(pk=item.pk).qty, 6)
+
+    def test_bill_items(self):
+        """
+        Checks the Bill.items method
+        """
+        bill = Bill(shop=self.shop, number=3,
+                    issued_to=self.customer, is_proforma=True)
+        bill.save()
+        item = BillItem(bill=bill, qty=6,
+                        sku="SKU45", name="Item",
+                        description="Desc", shop=self.shop)
+        item.save()
+        self.assertEqual(bill.items[0], item)
+
+
+class ShopTests(TestCase):
+    """
+    Tests that check the Shop model
+    """
+    def test_shop_has_all_the_required_fields(self):
+        pshop = Shop(name="Tienda 1")
+        pshop.save()
+        shop = Shop.objects.get(pk=pshop.pk)
+        self.assertEquals(shop.name, "Tienda 1")
+        pshop.delete()
+
+
+class ShopUserTests(TestCase):
+    """
+    Tests that check the ShopUser model
+    """
+    def setUp(self):
+        self.shop = Shop(name="Tienda 1")
+        self.shop.save()
+        self.user = User(username="Pepe")
+        self.user.save()
+
+    def tearDown(self):
+        self.shop.delete()
+        self.user.delete()
+
+    def test_ShopUser_has_all_the_required_fields(self):
+        psu = ShopUser(shop=self.shop, user=self.user)
+        psu.save()
+        su = ShopUser.objects.get(pk=psu.pk)
+        self.assertEquals(su.shop, self.shop)
+        self.assertEquals(su.user, self.user)
+        psu.delete()
+
+
+class CustomerTests(TestCase):
+    """
+    Tests that check the Customer model
+    """
+    def test_Customer_has_all_the_required_fields(self):
+        pcust = Customer(name="Pepe")
+        pcust.save()
+        cust = Customer.objects.get(pk=pcust.pk)
+        self.assertEquals(cust.name, "Pepe")
+        cust.delete()
