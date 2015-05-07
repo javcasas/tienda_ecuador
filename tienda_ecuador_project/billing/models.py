@@ -33,9 +33,6 @@ class BaseItem(models.Model):
     description = models.CharField(max_length=500)
     shop = models.ForeignKey(Shop)
 
-    def __unicode__(self):
-        return "{} ({})".format(self.name, self.pk)
-
 
 class Item(BaseItem):
     """

@@ -1,2 +1,6 @@
 *.pyc
 *.swp
+.coverage
+db.sqlite3
+htmlcov/
+venv/
