@@ -107,6 +107,8 @@ class BillItem(BaseItem):
         """
         Tries to save the new values, but doesn't do anything it the bill can't be modified
         """
+        if not self.bill.can_be_modified():
+            return
         try:
             prev_item = BillItem.objects.get(pk=self.pk)
             if prev_item.bill.can_be_modified():

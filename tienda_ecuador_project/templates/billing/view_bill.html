@@ -29,6 +29,7 @@
             <a href="{% url 'edit_bill' bill.pk %}">Edit</a>
             <a href="{% url 'add_item_to_bill' bill.pk %}">Add Item</a>
         {% endif %}
+        <a href='{% url "index" %}'>Back</a>
     </body>
 
 </html>
