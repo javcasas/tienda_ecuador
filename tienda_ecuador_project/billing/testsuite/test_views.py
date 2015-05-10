@@ -63,11 +63,25 @@ class ViewLoggedInTests(LoggedInTests):
         self.company.delete()
         super(ViewLoggedInTests, self).tearDown()
 
-    def test_view_index(self):
+    def test_view_index_multiple_companies(self):
         """
         A logged-in user can view the billing index, and the index shows the available companies
         """
+        company2 = models.Company(name='Tienda 2')
+        company2.save()
+        companyuser2 = models.CompanyUser(user=self.user, company=company2)
+        companyuser2.save()
         response = self.c.get(reverse('index'))
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(list(response.context['companies']), [self.company])
+        self.assertEquals(list(response.context['companies']), [self.company, company2])
         self.assertContains(response, self.company.name)
+        self.assertContains(response, company2.name)
+        company2.delete()
+
+    def test_view_index_single_company(self):
+        """
+        A logged-in user is redirected if he has only a single company
+        """
+        response = self.c.get(reverse('index'))
+        self.assertEquals(response.status_code, 302)
+        #self.assertContains(response, self.company.name)

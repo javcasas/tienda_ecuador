@@ -18,7 +18,7 @@ class CompanyUser(models.Model):
     He can log in and user the facilities for the associated company
     """
     company = models.ForeignKey(Company)
-    user = models.OneToOneField(User)
+    user = models.ForeignKey(User)
 
     def __unicode__(self):
         return self.user.username

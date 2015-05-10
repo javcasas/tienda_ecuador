@@ -20,13 +20,17 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def index(request):
     """
-    Shows an index for the current user
+    Shows an index for the current user, showing the companies he can administer
+    If there is a single company, it redirects to the company automatically
     """
-    c_user = CompanyUser.objects.get(user=request.user)
+    c_user = CompanyUser.objects.filter(user=request.user)
+    if len(c_user) == 1:
+        return redirect("company_index", c_user[0].company.id)
     param_dict = {
-        'companies': Company.objects.filter(pk=c_user.company.pk),
+        'companies': Company.objects.filter(id__in=[cu.id for cu in c_user]),
     }
     return render(request, "billing/index.html", param_dict)
+
 
 @login_required
 def company_index(request, company_id):
