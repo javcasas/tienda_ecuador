@@ -2,25 +2,39 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from billing import models
+from functools import partial
 
 
-#class BillingIndexViewTests(TestCase):
-#
-#    def test_index_view(self):
-#        """
-#        """
-#        response = self.client.get(reverse('index'))
-#        self.assertEqual(response.status_code, 200)
-#        self.assertContains(response, "There are no categories present.")
-#        self.assertQuerysetEqual(response.context['categories'], [])
+def add_instance(klass, **kwargs):
+    """
+    Add a instance of the specified class with the specified arguments,
+    and returns it after saving it
+    """
+    s = klass.objects.get_or_create(**kwargs)[0]
+    s.save()
+    return s
 
-#class ItemViewTests(TestCase):
-#    def test_non_existing_item_view(self):
-#        """
-#        Ensure a non-existing item returns a 404
-#        """
-#        response = self.client.get(reverse('view_item', args=(555,)))
-#        self.assertEqual(response.status_code, 404)
+
+add_Company = partial(add_instance, models.Company)
+add_Item = partial(add_instance, models.Item)
+add_Customer = partial(add_instance, models.Customer)
+add_CompanyUser = partial(add_instance, models.CompanyUser)
+add_Bill = partial(add_instance, models.Bill)
+add_BillItem = partial(add_instance, models.BillItem)
+
+
+def add_user(**kwargs):
+    pw = kwargs.pop("password")
+    u = add_instance(User, **kwargs)
+    u.set_password(pw)
+    u.save()
+    return u
+
+
+def try_delete(item):
+    if item.pk:
+        item.delete()
+
 
 class NotLoggedInTests(TestCase):
     """
@@ -31,7 +45,9 @@ class NotLoggedInTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_company_index(self):
-        response = self.client.get(reverse('company_index', kwargs={'company_id': 1}))
+        response = self.client.get(
+            reverse('company_index', kwargs={'company_id': 1})
+        )
         self.assertEqual(response.status_code, 302)
 
 
@@ -40,48 +56,96 @@ class LoggedInTests(TestCase):
     Tests that support a logged-in user
     """
     def setUp(self):
-        self.user = User(username="paco")
-        self.user.set_password("paco_pw")
-        self.user.save()
+        self.user = add_user(username="paco", password='paco_pw')
         self.c = Client()
-        r = self.c.post("/accounts/login/", {'username': 'paco', 'password': 'paco_pw'})
+        r = self.c.post("/accounts/login/",
+                        {'username': 'paco', 'password': 'paco_pw'})
         self.assertEquals(r.status_code, 302)  # redirect to index
 
     def tearDown(self):
         self.user.delete()
 
-class ViewLoggedInTests(LoggedInTests):
+
+class LoggedInWithCompanyTests(LoggedInTests):
+    """
+    Logged in user that is associated with a company
+    """
     def setUp(self):
-        super(ViewLoggedInTests, self).setUp()
-        self.company = models.Company(name='Tienda 1')
-        self.company.save()
-        self.companyuser = models.CompanyUser(user=self.user, company=self.company)
-        self.companyuser.save()
+        super(LoggedInWithCompanyTests, self).setUp()
+        self.company = add_Company(name='Tienda 1')
+        self.company_user = add_CompanyUser(user=self.user,
+                                            company=self.company)
 
     def tearDown(self):
-        self.companyuser.delete()
-        self.company.delete()
-        super(ViewLoggedInTests, self).tearDown()
+        for i in [self.company_user, self.company]:
+            try_delete(i)
+        super(LoggedInWithCompanyTests, self).tearDown()
 
+
+class IndexViewTests(LoggedInWithCompanyTests):
     def test_view_index_multiple_companies(self):
         """
-        A logged-in user can view the billing index, and the index shows the available companies
+        A logged-in user can view the billing index,
+        and the index shows the available companies
         """
-        company2 = models.Company(name='Tienda 2')
-        company2.save()
-        companyuser2 = models.CompanyUser(user=self.user, company=company2)
-        companyuser2.save()
-        response = self.c.get(reverse('index'))
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(list(response.context['companies']), [self.company, company2])
-        self.assertContains(response, self.company.name)
-        self.assertContains(response, company2.name)
-        company2.delete()
+        try:
+            company2 = add_Company(name="Tienda 2")
+            company2_user = add_CompanyUser(user=self.user, company=company2)
+            response = self.c.get(reverse('index'))
+            self.assertEquals(response.status_code, 200)
+            self.assertEquals(list(response.context['companies']),
+                              [self.company, company2])
+            self.assertContains(response, self.company.name)
+            self.assertContains(response, company2.name)
+        finally:
+            for i in [company2_user, company2]:
+                try_delete(i)
 
     def test_view_index_single_company(self):
         """
         A logged-in user is redirected if he has only a single company
         """
         response = self.c.get(reverse('index'))
-        self.assertEquals(response.status_code, 302)
-        #self.assertContains(response, self.company.name)
+        self.assertRedirects(response,
+                             reverse('company_index', args=(self.company.id,)))
+
+
+class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
+    """
+    Logged in user associated with a company that has bills and items
+    """
+    def setUp(self):
+        """
+        Adds an item, a customer, and a bill with an item
+        """
+        super(self.__class__, self).setUp()
+        self.item = add_Item(
+            sku="SKU123", name='An Item',
+            description='The description', company=self.company
+        )
+        self.customer = add_Customer(name="Luis")
+        self.bill = add_Bill(
+            issued_to=self.customer, number='001-002-123456789',
+            company=self.company, is_proforma=True
+        )
+        self.bill_item = add_BillItem(
+            sku="SKU123", name='An Item', description='The description',
+            company=self.company, bill=self.bill, qty=4
+        )
+
+    def tearDown(self):
+        for i in [self.bill_item, self.bill, self.customer, self.item]:
+            try_delete(i)
+        super(self.__class__, self).tearDown()
+
+    def test_company_index(self):
+        """
+        Ensures the company index shows the items and the bills
+        """
+        response = self.c.get(
+            reverse('company_index', args=(self.company.id,))
+        )
+        self.assertContains(response, self.item.name)
+        self.assertContains(response, self.item.sku)
+        self.assertContains(response, self.bill.number)
+        self.assertContains(response, self.bill.issued_to.name)

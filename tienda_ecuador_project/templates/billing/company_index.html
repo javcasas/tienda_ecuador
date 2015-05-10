@@ -10,7 +10,7 @@
         <table border='1'>
         {% for item in items %}
             <tr><td>
-            <a href="{% url 'view_item' item.id %}">{{ item }}</a>
+            <a href="#">{{ item.sku }}- {{ item.name }}</a>
             </td></tr>
         {% endfor %}
         </table>
@@ -19,11 +19,10 @@
         <table border='1'>
         {% for bill in bills %}
             <tr><td>
-            <a href="{% url 'view_bill' bill.id %}">{{ bill }}</a>
+            <a href="#">{{ bill.number }} - {{ bill.issued_to.name }}</a>
             </td></tr>
         {% endfor %}
         </table>
-        <a href="{% url 'new_bill' %}">New Proforma Bill</a>
     </body>
 
 </html>

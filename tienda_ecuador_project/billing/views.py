@@ -37,14 +37,14 @@ def company_index(request, company_id):
     """
     Shows an index for a company
     """
-    # items = Item.objects.filter(shop=get_shop(request))
-    # bills = Bill.objects.filter(shop=get_shop(request))
-    # param_dict = {
-        # 'items': items,
-        # 'bills': bills,
-    # }
-    param_dict = {}
-    return render(request, "billing/index.html", param_dict)
+    company = get_object_or_404(Company, id=company_id)
+    items = Item.objects.filter(company=company)
+    bills = Bill.objects.filter(company=company)
+    param_dict = {
+        'items': items,
+        'bills': bills,
+    }
+    return render(request, "billing/company_index.html", param_dict)
 # 
 # 
 # @login_required
