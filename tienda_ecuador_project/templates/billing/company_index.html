@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Billing</title>
+    </head>
+
+    <body>
+        <h1>Items</h1>
+        <table border='1'>
+        {% for item in items %}
+            <tr><td>
+            <a href="{% url 'view_item' item.id %}">{{ item }}</a>
+            </td></tr>
+        {% endfor %}
+        </table>
+
+        <h1>Bills</h1>
+        <table border='1'>
+        {% for bill in bills %}
+            <tr><td>
+            <a href="{% url 'view_bill' bill.id %}">{{ bill }}</a>
+            </td></tr>
+        {% endfor %}
+        </table>
+        <a href="{% url 'new_bill' %}">New Proforma Bill</a>
+    </body>
+
+</html>
