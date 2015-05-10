@@ -2,9 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class Shop(models.Model):
+class Company(models.Model):
     """
-    Represents a shop
+    Represents a company
     """
     name = models.CharField(max_length=100, unique=True)
 
@@ -12,12 +12,12 @@ class Shop(models.Model):
         return self.name
 
 
-class ShopUser(models.Model):
+class CompanyUser(models.Model):
     """
-    Represents a shop clerk that has an associated shop and user account
-    He can log in and user the facilities for the associated shop
+    Represents a shop clerk that has an associated company and user account
+    He can log in and user the facilities for the associated company
     """
-    shop = models.ForeignKey(Shop)
+    company = models.ForeignKey(Company)
     user = models.OneToOneField(User)
 
     def __unicode__(self):
@@ -31,7 +31,7 @@ class BaseItem(models.Model):
     sku = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
-    shop = models.ForeignKey(Shop)
+    company = models.ForeignKey(Company)
 
 
 class Item(BaseItem):
@@ -57,12 +57,12 @@ class Bill(models.Model):
     """
     issued_to = models.ForeignKey(Customer, blank=True)
     number = models.CharField(max_length=20, blank=True)
-    shop = models.ForeignKey(Shop)
+    company = models.ForeignKey(Company)
     is_proforma = models.BooleanField(default=True)
 
     @property
     def items(self):
-        return BillItem.objects.filter(bill=self, shop=self.shop)
+        return BillItem.objects.filter(bill=self, company=self.company)
 
     def __unicode__(self):
         return "{} - {}".format(self.number, self.issued_to)
