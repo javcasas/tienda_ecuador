@@ -109,6 +109,18 @@ class IndexViewTests(LoggedInWithCompanyTests):
         self.assertRedirects(response,
                              reverse('company_index', args=(self.company.id,)))
 
+    def test_view_company_index_access_denied(self):
+        """
+        A logged-in user can't view the index for a company he has no access
+        """
+        try:
+            company2 = add_Company(name="Tienda 2")
+            response = self.c.get(reverse('company_index', args=(company2.id,)))
+            self.assertEquals(response.status_code, 404)
+        finally:
+            for i in [company2]:
+                try_delete(i)
+
 
 class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
     """
