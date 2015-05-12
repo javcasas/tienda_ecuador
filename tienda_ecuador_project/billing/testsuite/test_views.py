@@ -116,7 +116,9 @@ class IndexViewTests(LoggedInWithCompanyTests):
         """
         try:
             company2 = add_Company(name="Tienda 2")
-            response = self.c.get(reverse('company_index', args=(company2.id,)))
+            response = self.c.get(
+                reverse('company_index', args=(company2.id,))
+            )
             self.assertEquals(response.status_code, 404)
         finally:
             for i in [company2]:
@@ -174,6 +176,34 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertContains(response, self.item.sku)
         self.assertContains(response, self.item.description)
 
+    def test_edit_item(self):
+        """
+        Ensures you can edit an item
+        """
+        url = reverse('edit_item', args=(self.company.id, self.item.id))
+        response = self.c.get(url)
+        self.assertContains(response, self.item.name)
+        self.assertContains(response, self.item.sku)
+        self.assertContains(response, self.item.description)
+
+    def test_edit_item_submit(self):
+        """
+        Ensures you can submit an item
+        """
+        url = reverse('edit_item', args=(self.company.id, self.item.id))
+        sku = '555'
+        name = 'myitem'
+        description = 'bleh'
+        self.c.post(url, {
+            'sku': sku,
+            'name': name,
+            'description': description
+        })
+        item = models.Item.objects.get(id=self.item.id)
+        self.assertEquals(item.sku, sku)
+        self.assertEquals(item.name, name)
+        self.assertEquals(item.description, description)
+
     def test_access_denied(self):
         """
         A logged-in user can't view stuff for a company he has no access
@@ -182,7 +212,7 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         user = add_User(username=username, password=password)
         c = Client()
         r = c.post("/accounts/login/",
-                        {'username': username, 'password': password})
+                   {'username': username, 'password': password})
         self.assertEquals(r.status_code, 302)  # redirect to index
 
         # URLs to check
@@ -193,7 +223,10 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         try:
             for url in urls:
                 response = c.get(url)
-                self.assertEquals(response.status_code, 404, "URL {} can be checked from another user".format(url))
+                self.assertEquals(
+                    response.status_code, 404,
+                    "URL {} can be checked from another user".format(url)
+                )
         finally:
             for i in [user]:
                 try_delete(i)

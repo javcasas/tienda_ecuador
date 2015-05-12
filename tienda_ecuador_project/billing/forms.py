@@ -1,6 +1,7 @@
 from django import forms
 from billing.models import Item, Customer, Bill, BillItem
 
+
 class ItemForm(forms.ModelForm):
     sku = forms.CharField(max_length=50, help_text="Please enter the SKU.")
     name = forms.CharField(max_length=50, help_text="Please enter the name of the item.")
@@ -22,6 +23,7 @@ class BillForm(forms.ModelForm):
         # Provide an association between the ModelForm and a model
         model = Bill
         fields = ('issued_to', 'number')
+
 
 class BillItemForm(forms.ModelForm):
     sku = forms.CharField(max_length=50, help_text="Please enter the SKU.")

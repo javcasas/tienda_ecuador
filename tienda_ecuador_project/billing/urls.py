@@ -5,7 +5,7 @@ urlpatterns = patterns('',
     url(r'^$', views.index, name='index'),
     url(r'^(?P<company_id>[0-9]+)/$', views.company_index, name='company_index'),
     url(r'^(?P<company_id>[0-9]+)/item/(?P<item_id>[0-9]+)/$', views.view_item, name='view_item'),
-#    url(r'^item/(?P<item_id>[0-9]+)/edit/$', views.edit_item, name='edit_item'),
+    url(r'^(?P<company_id>[0-9]+)/item/(?P<item_id>[0-9]+)/edit/$', views.edit_item, name='edit_item'),
 #
 #    url(r'^bill/new/$', views.new_bill, name='new_bill'),
 #    url(r'^bill/(?P<bill_id>[0-9]+)/$', views.view_bill, name='view_bill'),

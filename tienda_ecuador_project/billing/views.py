@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from models import Item, Bill, CompanyUser, Company
-# from forms import ItemForm, BillForm, BillItemForm
+from forms import ItemForm  # , BillForm, BillItemForm
 from django.contrib.auth.decorators import login_required
 from functools import wraps
 
@@ -62,21 +62,27 @@ def view_item(request, company_id, item_id):
         'item': item,
     }
     return render(request, "billing/view_item.html", param_dict)
-#
-#
-# @login_required
-# def edit_item(request, item_id):
-#    # item = get_object_or_404(Item, pk=item_id, shop=get_shop(request))
-#    # if request.method == 'POST':
-#        # form = ItemForm(request.POST, instance=item)
-#        # if form.is_valid():
-#            # form.save(commit=True)
-#            # return redirect("view_item", item_id)
-#        # else:
-#            # print form.errors
-#    # else:
-#        # form = ItemForm(instance=item)
-#    # return render(request, "billing/edit_item.html", {'form': form, 'item_id': item_id})
+
+
+@login_required
+def edit_item(request, company_id, item_id):
+    company = get_object_or_404(Company, id=company_id)
+    item = get_object_or_404(Item, pk=item_id, company=company)
+    if request.method == 'POST':
+        form = ItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save(commit=True)
+            return redirect("view_item", company_id, item_id)
+        else:
+            print form.errors
+    else:
+        form = ItemForm(instance=item)
+    param_dict = {
+        'form': form,
+        'item_id': item_id,
+        'company_id': company_id,
+    }
+    return render(request, "billing/edit_item.html", param_dict)
 #
 #
 # @login_required

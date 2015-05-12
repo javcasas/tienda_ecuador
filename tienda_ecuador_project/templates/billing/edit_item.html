@@ -6,12 +6,11 @@
     </head>
 
     <body>
-        <form method='post'>
+        <form method='post' action='.'>
             {% csrf_token %}
             {{ form.as_p }}
             <button type='submit'>Submit</button>
         </form>
-        <a href='{% url 'view_item' item_id %}'>Return</a>
     </body>
 
 </html>
