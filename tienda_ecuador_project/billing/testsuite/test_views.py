@@ -23,7 +23,7 @@ add_Bill = partial(add_instance, models.Bill)
 add_BillItem = partial(add_instance, models.BillItem)
 
 
-def add_user(**kwargs):
+def add_User(**kwargs):
     pw = kwargs.pop("password")
     u = add_instance(User, **kwargs)
     u.set_password(pw)
@@ -56,10 +56,11 @@ class LoggedInTests(TestCase):
     Tests that support a logged-in user
     """
     def setUp(self):
-        self.user = add_user(username="paco", password='paco_pw')
+        username, password = 'paco', 'paco_pw'
+        self.user = add_User(username=username, password=password)
         self.c = Client()
         r = self.c.post("/accounts/login/",
-                        {'username': 'paco', 'password': 'paco_pw'})
+                        {'username': username, 'password': password})
         self.assertEquals(r.status_code, 302)  # redirect to index
 
     def tearDown(self):
@@ -161,3 +162,38 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertContains(response, self.item.sku)
         self.assertContains(response, self.bill.number)
         self.assertContains(response, self.bill.issued_to.name)
+
+    def test_view_item(self):
+        """
+        Ensures the company index shows the items and the bills
+        """
+        response = self.c.get(
+            reverse('view_item', args=(self.company.id, self.item.id))
+        )
+        self.assertContains(response, self.item.name)
+        self.assertContains(response, self.item.sku)
+        self.assertContains(response, self.item.description)
+
+    def test_access_denied(self):
+        """
+        A logged-in user can't view stuff for a company he has no access
+        """
+        username, password = 'pepe', 'pepe_pw'
+        user = add_User(username=username, password=password)
+        c = Client()
+        r = c.post("/accounts/login/",
+                        {'username': username, 'password': password})
+        self.assertEquals(r.status_code, 302)  # redirect to index
+
+        # URLs to check
+        urls = [
+            reverse('company_index', args=(self.company.id,)),
+            reverse('view_item', args=(self.company.id, self.item.id)),
+        ]
+        try:
+            for url in urls:
+                response = c.get(url)
+                self.assertEquals(response.status_code, 404, "URL {} can be checked from another user".format(url))
+        finally:
+            for i in [user]:
+                try_delete(i)

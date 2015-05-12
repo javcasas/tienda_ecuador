@@ -50,14 +50,18 @@ def company_index(request, company_id):
         'bills': bills,
     }
     return render(request, "billing/company_index.html", param_dict)
-#
-#
-# @login_required
-# def view_item(request, item_id):
-#    param_dict = {
-#        'item': get_object_or_404(Item, pk=item_id, shop=get_shop(request)),
-#    }
-#    return render(request, "billing/view_item.html", param_dict)
+
+
+@login_required
+@has_access_to_company
+def view_item(request, company_id, item_id):
+    company = get_object_or_404(Company, id=company_id)
+    item = get_object_or_404(Item, pk=item_id, company=company)
+    param_dict = {
+        'company': company,
+        'item': item,
+    }
+    return render(request, "billing/view_item.html", param_dict)
 #
 #
 # @login_required
