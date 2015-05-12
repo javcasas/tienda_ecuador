@@ -219,6 +219,7 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         urls = [
             reverse('company_index', args=(self.company.id,)),
             reverse('view_item', args=(self.company.id, self.item.id)),
+            reverse('edit_item', args=(self.company.id, self.item.id)),
         ]
         try:
             for url in urls:

@@ -55,6 +55,9 @@ def company_index(request, company_id):
 @login_required
 @has_access_to_company
 def view_item(request, company_id, item_id):
+    """
+    View an inventory item
+    """
     company = get_object_or_404(Company, id=company_id)
     item = get_object_or_404(Item, pk=item_id, company=company)
     param_dict = {
@@ -65,7 +68,11 @@ def view_item(request, company_id, item_id):
 
 
 @login_required
+@has_access_to_company
 def edit_item(request, company_id, item_id):
+    """
+    Edit and submit an inventory item
+    """
     company = get_object_or_404(Company, id=company_id)
     item = get_object_or_404(Item, pk=item_id, company=company)
     if request.method == 'POST':
