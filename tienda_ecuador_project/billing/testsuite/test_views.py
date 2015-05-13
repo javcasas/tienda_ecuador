@@ -162,8 +162,20 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         )
         self.assertContains(response, self.item.name)
         self.assertContains(response, self.item.sku)
+        # View item link
+        self.assertContains(response, reverse('view_item', args=(self.company.id, self.item.id)))
         self.assertContains(response, self.bill.number)
         self.assertContains(response, self.bill.issued_to.name)
+        # View bill link
+        self.assertContains(response, reverse('view_bill', args=(self.company.id, self.bill.id)))
+
+    def assertContainsItem(self, response, item):
+        """
+        Checks all the fields in an item
+        """
+        self.assertContains(response, self.item.name)
+        self.assertContains(response, self.item.sku)
+        self.assertContains(response, self.item.description)
 
     def test_view_item(self):
         """
@@ -172,9 +184,8 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         response = self.c.get(
             reverse('view_item', args=(self.company.id, self.item.id))
         )
-        self.assertContains(response, self.item.name)
-        self.assertContains(response, self.item.sku)
-        self.assertContains(response, self.item.description)
+        self.assertContainsItem(response, self.item)
+        self.assertContains(response, reverse('company_index', args=(self.company.id,)))
 
     def test_edit_item(self):
         """
@@ -182,9 +193,9 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         """
         url = reverse('edit_item', args=(self.company.id, self.item.id))
         response = self.c.get(url)
-        self.assertContains(response, self.item.name)
-        self.assertContains(response, self.item.sku)
-        self.assertContains(response, self.item.description)
+        self.assertContainsItem(response, self.item)
+        # Cancel/Back button/link
+        self.assertContains(response, reverse('view_item', args=(self.company.id, self.item.id)))
 
     def test_edit_item_submit(self):
         """
@@ -194,7 +205,7 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         sku = '555'
         name = 'myitem'
         description = 'bleh'
-        self.c.post(url, {
+        r = self.c.post(url, {
             'sku': sku,
             'name': name,
             'description': description
@@ -203,6 +214,49 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertEquals(item.sku, sku)
         self.assertEquals(item.name, name)
         self.assertEquals(item.description, description)
+        self.assertRedirects(r,  reverse('view_item', args=(self.company.id, self.item.id)))
+
+    def test_view_bill(self):
+        """
+        Ensures the bills can be viewed
+        """
+        response = self.c.get(
+            reverse('view_bill', args=(self.company.id, self.bill.id))
+        )
+        self.assertContains(response, self.bill.number)
+        self.assertContains(response, self.bill.issued_to.name)
+        for item in self.bill.items:
+            self.assertContainsItem(response, item)
+        # Cancel/Back button/link
+        self.assertContains(response, reverse('company_index', args=(self.company.id,)))
+
+    def test_edit_bill(self):
+        """
+        Ensures the bills can be edited
+        """
+        response = self.c.get(
+            reverse('edit_bill', args=(self.company.id, self.bill.id))
+        )
+        self.assertContains(response, self.bill.number)
+        self.assertContains(response, self.bill.issued_to.name)
+        # Cancel/Back button/link
+        self.assertContains(response, reverse('view_bill', args=(self.company.id, self.bill.id)))
+
+    def test_edit_bill_submit(self):
+        """
+        Ensures you can submit an item
+        """
+        url = reverse('edit_bill', args=(self.company.id, self.bill.id))
+        number = '555'
+        issued_to = self.customer.id
+        r = self.c.post(url, {
+            'number': number,
+            'issued_to': issued_to,
+        })
+        bill = models.Bill.objects.get(id=self.bill.id)
+        self.assertEquals(bill.number, number)
+        self.assertEquals(bill.issued_to.id, issued_to)
+        self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, self.bill.id)))
 
     def test_access_denied(self):
         """
@@ -220,6 +274,8 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             reverse('company_index', args=(self.company.id,)),
             reverse('view_item', args=(self.company.id, self.item.id)),
             reverse('edit_item', args=(self.company.id, self.item.id)),
+            reverse('view_bill', args=(self.company.id, self.bill.id)),
+            reverse('edit_bill', args=(self.company.id, self.bill.id)),
         ]
         try:
             for url in urls:

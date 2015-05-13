@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from models import Item, Bill, CompanyUser, Company
-from forms import ItemForm  # , BillForm, BillItemForm
+from forms import ItemForm, BillForm, BillItemForm
 from django.contrib.auth.decorators import login_required
 from functools import wraps
 
@@ -48,6 +48,7 @@ def company_index(request, company_id):
     param_dict = {
         'items': items,
         'bills': bills,
+        'company_id': company_id,
     }
     return render(request, "billing/company_index.html", param_dict)
 
@@ -63,6 +64,7 @@ def view_item(request, company_id, item_id):
     param_dict = {
         'company': company,
         'item': item,
+        'company_id': company_id,
     }
     return render(request, "billing/view_item.html", param_dict)
 
@@ -90,17 +92,19 @@ def edit_item(request, company_id, item_id):
         'company_id': company_id,
     }
     return render(request, "billing/edit_item.html", param_dict)
-#
-#
-# @login_required
-# def view_bill(request, bill_id):
-#    # bill = get_object_or_404(Bill, pk=bill_id)
-#    # param_dict = {
-#        # 'bill': bill,
-#    # }
-#    # return render(request, "billing/view_bill.html", param_dict)
-#
-#
+
+
+@login_required
+@has_access_to_company
+def view_bill(request, company_id, bill_id):
+    bill = get_object_or_404(Bill, pk=bill_id)
+    param_dict = {
+        'bill': bill,
+        'company_id': company_id,
+    }
+    return render(request, "billing/view_bill.html", param_dict)
+
+
 # @login_required
 # def new_bill(request):
 #    # customer, created = Customer.objects.get_or_create(name='Consumidor Final')
@@ -109,24 +113,31 @@ def edit_item(request, company_id, item_id):
 #    # return redirect("view_bill", new.pk)
 #
 #
-# @login_required
-# def edit_bill(request, bill_id):
-#    # bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
-#    # if not bill.can_be_modified():
-#        # # The bill has been issued, and can't be modified
-#        # raise Exception("The bill can't be modified")
-#
-#    # if request.method == 'POST':
-#        # form = BillForm(request.POST, instance=bill)
-#        # if form.is_valid():
-#            # form.save(commit=True)
-#            # return redirect("view_bill", bill_id)
-#        # else:
-#            # print form.errors
-#    # else:
-#        # form = BillForm(instance=bill)
-#    # return render(request, "billing/edit_bill.html", {'form': form, 'bill_id': bill_id})
-#
+@login_required
+@has_access_to_company
+def edit_bill(request, company_id, bill_id):
+    company = get_object_or_404(Company, id=company_id)
+    bill = get_object_or_404(Bill, pk=bill_id, company=company)
+    if not bill.can_be_modified():
+        # The bill has been issued, and can't be modified
+        raise Exception("The bill can't be modified")
+
+    if request.method == 'POST':
+        form = BillForm(request.POST, instance=bill)
+        if form.is_valid():
+            form.save(commit=True)
+            return redirect("view_bill", company_id, bill_id)
+        else:
+            print form.errors
+    else:
+        form = BillForm(instance=bill)
+    param_dict = {
+        'form': form,
+        'bill_id': bill_id,
+        'company_id': company_id,
+    }
+    return render(request, "billing/edit_bill.html", param_dict)
+
 #
 # @login_required
 # def delete_bill(request, bill_id):

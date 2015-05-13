@@ -17,8 +17,8 @@
             Description: {{ item.description }} <br />
             Qty: {{ item.qty }} <br />
             {% if bill.can_be_modified %}
-            <a href="{% url 'edit_item_in_bill' bill.pk item.pk %}">Edit</a>
-            <form action="{% url 'delete_item_from_bill' bill.pk item.pk %}" method='post'>
+            <a href="#">Edit</a>
+            <form action="#" method='post'>
                 {% csrf_token %}
                 <button type='submit'>Delete</button>
             </form>
@@ -26,10 +26,10 @@
             <hr />
         {% endfor %}
         {% if bill.can_be_modified %}
-            <a href="{% url 'edit_bill' bill.pk %}">Edit</a>
-            <a href="{% url 'add_item_to_bill' bill.pk %}">Add Item</a>
+            <a href="#">Edit</a>
+            <a href="#">Add Item</a>
         {% endif %}
-        <a href='{% url "index" %}'>Back</a>
+        <a href='{% url "company_index" company_id %}'>Back</a>
     </body>
 
 </html>
