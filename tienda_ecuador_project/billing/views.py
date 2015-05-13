@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from models import Item, Bill, CompanyUser, Company
+from models import Item, Bill, CompanyUser, Company, Customer
 from forms import ItemForm, BillForm, BillItemForm
 from django.contrib.auth.decorators import login_required
 from functools import wraps
+from django.views.generic import View
 
 
 @login_required
@@ -69,35 +70,60 @@ def view_item(request, company_id, item_id):
     return render(request, "billing/view_item.html", param_dict)
 
 
-@login_required
-@has_access_to_company
-def edit_item(request, company_id, item_id):
-    """
-    Edit and submit an inventory item
-    """
-    company = get_object_or_404(Company, id=company_id)
-    item = get_object_or_404(Item, pk=item_id, company=company)
-    if request.method == 'POST':
-        form = ItemForm(request.POST, instance=item)
+class HasAccessToCompanyMixin(View):
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(HasAccessToCompanyMixin, cls).as_view(**initkwargs)
+        return has_access_to_company(view)
+
+
+class ObjectEditView(HasAccessToCompanyMixin):
+    def get(self, request, *args, **kwargs):
+        """
+        Implements the GET method, shows a form for the object
+        """
+        param_dict = self.base_param_dict(*args, **kwargs)
+        item = self.get_object(*args, **kwargs)
+        param_dict['form'] = self.form_class(instance=item)
+        return render(request, self.template, param_dict)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Implements the POST method, checks the posted data
+        and saves and redirects
+        """
+        param_dict = self.base_param_dict(*args, **kwargs)
+        item = self.get_object(*args, **kwargs)
+        form = self.form_class(request.POST, instance=item)
         if form.is_valid():
             form.save(commit=True)
-            return redirect("view_item", company_id, item_id)
+            return self.success_url(*args, **kwargs)
         else:
-            print form.errors
-    else:
-        form = ItemForm(instance=item)
-    param_dict = {
-        'form': form,
-        'item_id': item_id,
-        'company_id': company_id,
-    }
-    return render(request, "billing/edit_item.html", param_dict)
+            param_dict['form'] = form
+            return render(request, self.template, param_dict)
+
+
+class EditItem(ObjectEditView):
+    template = "billing/edit_item.html"
+    form_class = ItemForm
+
+    def get_object(self, company_id, item_id):
+        return get_object_or_404(Item, id=item_id, company_id=company_id)
+
+    def base_param_dict(self, company_id, item_id):
+        return {
+            'item_id': item_id,
+            'company_id': company_id,
+        }
+
+    def success_url(self, company_id, item_id):
+        return redirect("view_item", company_id, item_id)
 
 
 @login_required
 @has_access_to_company
 def view_bill(request, company_id, bill_id):
-    bill = get_object_or_404(Bill, pk=bill_id)
+    bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
     param_dict = {
         'bill': bill,
         'company_id': company_id,
@@ -105,19 +131,20 @@ def view_bill(request, company_id, bill_id):
     return render(request, "billing/view_bill.html", param_dict)
 
 
-# @login_required
-# def new_bill(request):
-#    # customer, created = Customer.objects.get_or_create(name='Consumidor Final')
-#    # new = Bill(shop=get_shop(request), issued_to=customer)
-#    # new.save()
-#    # return redirect("view_bill", new.pk)
-#
-#
+class NewBill(HasAccessToCompanyMixin):
+    def post(self, request, company_id):
+        customer, created = Customer.objects.get_or_create(
+            name='Consumidor Final'
+        )
+        new = Bill(company_id=company_id, issued_to=customer)
+        new.save()
+        return redirect("view_bill", company_id, new.pk)
+
+
 @login_required
 @has_access_to_company
 def edit_bill(request, company_id, bill_id):
-    company = get_object_or_404(Company, id=company_id)
-    bill = get_object_or_404(Bill, pk=bill_id, company=company)
+    bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
     if not bill.can_be_modified():
         # The bill has been issued, and can't be modified
         raise Exception("The bill can't be modified")

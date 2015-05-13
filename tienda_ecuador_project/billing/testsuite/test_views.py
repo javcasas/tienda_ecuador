@@ -258,6 +258,26 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertEquals(bill.issued_to.id, issued_to)
         self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, self.bill.id)))
 
+    def test_new_bill(self):
+        """
+        Ensures you can create a new bill only using a POST
+        """
+        bills = set(models.Bill.objects.all())
+        url = reverse('new_bill', args=(self.company.id,))
+        c = self.c
+        r = c.post(url, {})
+        new_bills = set(models.Bill.objects.all())
+        new_bill = (new_bills - bills).pop()
+        self.assertEquals(new_bill.issued_to.name, 'Consumidor Final')
+        self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, new_bill.id)))
+
+    def test_new_bill_get(self):
+        """
+        Ensures GET fails to create a new bill
+        """
+        r = self.c.get(reverse('new_bill', args=(self.company.id,)))
+        self.assertEquals(r.status_code, 405)
+
     def test_access_denied(self):
         """
         A logged-in user can't view stuff for a company he has no access
