@@ -1,8 +1,11 @@
+from functools import partial
+
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ObjectDoesNotExist
+
 from billing import models
-from functools import partial
 
 
 def add_instance(klass, **kwargs):
@@ -32,8 +35,11 @@ def add_User(**kwargs):
 
 
 def try_delete(item):
-    if item.pk:
-        item.delete()
+    try:
+        if item.pk:
+            item.delete()
+    except ObjectDoesNotExist:
+        pass
 
 
 class NotLoggedInTests(TestCase):
@@ -260,12 +266,11 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
 
     def test_new_bill(self):
         """
-        Ensures you can create a new bill only using a POST
+        Ensures you can create a new bill using a POST
         """
         bills = set(models.Bill.objects.all())
         url = reverse('new_bill', args=(self.company.id,))
-        c = self.c
-        r = c.post(url, {})
+        r = self.c.post(url, {})
         new_bills = set(models.Bill.objects.all())
         new_bill = (new_bills - bills).pop()
         self.assertEquals(new_bill.issued_to.name, 'Consumidor Final')
@@ -276,6 +281,22 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         Ensures GET fails to create a new bill
         """
         r = self.c.get(reverse('new_bill', args=(self.company.id,)))
+        self.assertEquals(r.status_code, 405)
+
+    def test_delete_bill(self):
+        """
+        Ensures you can delete a proforma bill using a POST
+        """
+        url = reverse('delete_bill', args=(self.company.id, self.bill.id))
+        r = self.c.post(url, {})
+        self.assertFalse(models.Bill.objects.filter(id=self.bill.id))
+        self.assertRedirects(r,  reverse('company_index', args=(self.company.id,)))
+
+    def test_delete_bill_get(self):
+        """
+        Ensures GET fails to delete a bill
+        """
+        r = self.c.get(reverse('delete_bill', args=(self.company.id, self.bill.id)))
         self.assertEquals(r.status_code, 405)
 
     def test_access_denied(self):
@@ -296,6 +317,8 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             reverse('edit_item', args=(self.company.id, self.item.id)),
             reverse('view_bill', args=(self.company.id, self.bill.id)),
             reverse('edit_bill', args=(self.company.id, self.bill.id)),
+            reverse('new_bill', args=(self.company.id,)),
+            reverse('delete_bill', args=(self.company.id, self.bill.id)),
         ]
         try:
             for url in urls:

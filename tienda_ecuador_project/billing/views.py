@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from models import Item, Bill, CompanyUser, Company, Customer
+from models import Item, Bill, BillItem, CompanyUser, Company, Customer
 from forms import ItemForm, BillForm, BillItemForm
 from django.contrib.auth.decorators import login_required
 from functools import wraps
@@ -165,19 +165,17 @@ def edit_bill(request, company_id, bill_id):
     }
     return render(request, "billing/edit_bill.html", param_dict)
 
-#
-# @login_required
-# def delete_bill(request, bill_id):
-#    # bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
-#    # if request.method == 'POST':
-#        # if bill.is_proforma:
-#            # items = BillItem.objects.find(bill=bill)
-#            # for item in items:
-#                # item.delete()
-#            # bill.delete()
-#        # else:
-#            # raise Exception("Bill is definitive")
-#    # return redirect("index")
+
+class DeleteBill(HasAccessToCompanyMixin):
+    def post(self, request, company_id, bill_id):
+        bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
+        if bill.is_proforma:
+            for item in BillItem.objects.filter(bill=bill):
+                item.delete()
+            bill.delete()
+        else:
+            raise Exception("Bill is definitive")
+        return redirect("company_index", company_id)
 #
 # @login_required
 # def add_item_to_bill(request, bill_id):
