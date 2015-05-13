@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponseForbidden
 from models import Item, Bill, BillItem, CompanyUser, Company, Customer
 from forms import ItemForm, BillForm, BillItemForm
 from django.contrib.auth.decorators import login_required
@@ -141,29 +142,41 @@ class NewBill(HasAccessToCompanyMixin):
         return redirect("view_bill", company_id, new.pk)
 
 
-@login_required
-@has_access_to_company
-def edit_bill(request, company_id, bill_id):
-    bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
-    if not bill.can_be_modified():
-        # The bill has been issued, and can't be modified
-        raise Exception("The bill can't be modified")
+class EditBill(ObjectEditView):
+    template = "billing/edit_bill.html"
+    form_class = BillForm
 
-    if request.method == 'POST':
-        form = BillForm(request.POST, instance=bill)
+    def get_object(self, company_id, bill_id):
+        return get_object_or_404(Bill, id=bill_id, company_id=company_id)
+
+    def base_param_dict(self, company_id, bill_id):
+        return {
+            'bill_id': bill_id,
+            'company_id': company_id,
+        }
+
+    def success_url(self, company_id, bill_id):
+        '''
+        What to do when save is successful
+        '''
+        return redirect("view_bill", company_id, bill_id)
+
+    def post(self, request, company_id, bill_id):
+        '''
+        Custom POST to check if bill.can_be_modified
+        '''
+        bill = self.get_object(company_id, bill_id)
+        if not bill.can_be_modified():
+            # The bill has been issued, and can't be modified
+            return HttpResponseForbidden("Bill is definitive")
+
+        form = self.form_class(request.POST, instance=bill)
         if form.is_valid():
             form.save(commit=True)
-            return redirect("view_bill", company_id, bill_id)
-        else:
-            print form.errors
-    else:
-        form = BillForm(instance=bill)
-    param_dict = {
-        'form': form,
-        'bill_id': bill_id,
-        'company_id': company_id,
-    }
-    return render(request, "billing/edit_bill.html", param_dict)
+            return self.success_url(company_id, bill_id)
+        param_dict = self.base_param_dict(company_id, bill_id)
+        param_dict['form'] = form,
+        return render(request, self.template, param_dict)
 
 
 class DeleteBill(HasAccessToCompanyMixin):
@@ -174,7 +187,7 @@ class DeleteBill(HasAccessToCompanyMixin):
                 item.delete()
             bill.delete()
         else:
-            raise Exception("Bill is definitive")
+            return HttpResponseForbidden("Bill is definitive")
         return redirect("company_index", company_id)
 #
 # @login_required

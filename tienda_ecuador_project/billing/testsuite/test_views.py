@@ -250,7 +250,7 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
 
     def test_edit_bill_submit(self):
         """
-        Ensures you can submit an item
+        Ensures you can submit a bill
         """
         url = reverse('edit_bill', args=(self.company.id, self.bill.id))
         number = '555'
@@ -263,6 +263,22 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertEquals(bill.number, number)
         self.assertEquals(bill.issued_to.id, issued_to)
         self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, self.bill.id)))
+
+    def test_edit_final_bill_submit(self):
+        """
+        Ensures you can't submit a final bill
+        """
+        self.bill.is_proforma = False
+        self.bill.save()
+        url = reverse('edit_bill', args=(self.company.id, self.bill.id))
+        number = '555'
+        issued_to = self.customer.id
+        r = self.c.post(url, {
+            'number': number,
+            'issued_to': issued_to,
+        })
+        bill = models.Bill.objects.get(id=self.bill.id)
+        self.assertEquals(r.status_code, 403)  # Forbidden
 
     def test_new_bill(self):
         """
@@ -291,6 +307,17 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         r = self.c.post(url, {})
         self.assertFalse(models.Bill.objects.filter(id=self.bill.id))
         self.assertRedirects(r,  reverse('company_index', args=(self.company.id,)))
+
+    def test_delete_final_bill(self):
+        """
+        Ensures you can't delete a final bill
+        """
+        self.bill.is_proforma = False
+        self.bill.save()
+        url = reverse('delete_bill', args=(self.company.id, self.bill.id))
+        r = self.c.post(url, {})
+        self.assertTrue(models.Bill.objects.filter(id=self.bill.id))
+        self.assertEquals(r.status_code, 403)  # Forbidden
 
     def test_delete_bill_get(self):
         """
