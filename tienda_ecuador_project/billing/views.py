@@ -189,7 +189,48 @@ class DeleteBill(HasAccessToCompanyMixin):
         else:
             return HttpResponseForbidden("Bill is definitive")
         return redirect("company_index", company_id)
-#
+
+
+class AddItemToBill(HasAccessToCompanyMixin):
+    form_class = BillItemForm
+    def get(self, request, company_id, bill_id):
+        bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
+        if not bill.can_be_modified():
+            # The bill has been issued, and can't be modified
+            return HttpResponseForbidden("Bill is definitive")
+
+        data = {
+            'bill': bill_id,
+            'company': company_id,
+        }
+        form = self.form_class(data)
+        field_dict = {
+            'company_id': company_id,
+            'bill_id': bill_id,
+            'form': form,
+            'bill': bill,
+        }
+        return render(request, "billing/add_item_to_bill.html", field_dict)
+
+    def post(self, request, company_id, bill_id):
+        bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
+        if not bill.can_be_modified():
+            # The bill has been issued, and can't be modified
+            return HttpResponseForbidden("Bill is definitive")
+
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("view_bill", company_id, bill_id)
+        else:
+            field_dict = {
+                'company_id': company_id,
+                'bill_id': bill_id,
+                'form': form,
+                'bill': bill,
+            }
+            return render(request, "billing/add_item_to_bill.html", field_dict)
+
 # @login_required
 # def add_item_to_bill(request, bill_id):
 #    # bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))

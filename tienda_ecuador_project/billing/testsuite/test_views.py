@@ -326,6 +326,68 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         r = self.c.get(reverse('delete_bill', args=(self.company.id, self.bill.id)))
         self.assertEquals(r.status_code, 405)
 
+    def test_add_item_to_bill(self):
+        """
+        Ensures you can select items to add to bills
+        """
+        url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
+        r = self.c.get(url)
+        #for item in models.Item.objects.filter(company=self.company):
+        #    self.assertContainsItem(r, item)
+
+    def test_add_item_to_bill_submit(self):
+        """
+        Ensures you can add items to bills
+        """
+        url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
+        sku = '555'
+        name = 'myitem'
+        description = 'bleh'
+        qty = 44
+        bill_id = self.bill.id
+        bill_items = set(models.BillItem.objects.filter(bill_id=bill_id))
+        r = self.c.post(url, {
+            'sku': sku,
+            'name': name,
+            'description': description,
+            'qty': qty,
+            'bill': bill_id,
+            'company': self.company.id,
+        })
+        new = (set(models.BillItem.objects.filter(bill_id=bill_id)) - bill_items).pop()
+        self.assertEquals(new.sku, sku)
+        self.assertEquals(new.name, name)
+        self.assertEquals(new.description, description)
+        self.assertEquals(new.qty, qty)
+        self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, self.bill.id)))
+
+    def test_add_item_to_final_bill_submit(self):
+        """
+        Ensures you can't add items to final bills
+        """
+        self.bill.is_proforma = False
+        self.bill.save()
+        url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
+        r = self.c.post(url, {
+            'sku': '555',
+            'name': 'bla',
+            'description': 'desc',
+            'qty': 3,
+            'bill': self.bill.id,
+            'company': self.company.id,
+        })
+        self.assertEquals(r.status_code, 403)
+
+    def test_add_item_to_final_bill(self):
+        """
+        Ensures you can't add items to final bills
+        """
+        self.bill.is_proforma = False
+        self.bill.save()
+        url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
+        r = self.c.get(url)
+        self.assertEquals(r.status_code, 403)
+
     def test_access_denied(self):
         """
         A logged-in user can't view stuff for a company he has no access

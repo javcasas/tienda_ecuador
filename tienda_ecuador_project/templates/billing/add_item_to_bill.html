@@ -10,15 +10,15 @@
         Number: {{ bill.number }} <br />
         Issued to: {{ bill.issued_to }} <br />
         <h1>Add item</h1>
-        {% for item in items %}
             <form method='post' action='.'>
             {% csrf_token %}
-            {{ item.sku }} - {{ item.name }}
-            <input type='hidden' name='item_id' value='{{ item.pk }}' />
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+            {{ form.as_p }}
             <button type='submit'>Add item</button>
             </form>
-        {% endfor %}
-        <a href="{% url 'view_bill' bill.pk %}">Return</a>
+        <a href="{% url 'view_bill' company_id bill_id %}">Return</a>
     </body>
 
 </html>
