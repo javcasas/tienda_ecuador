@@ -262,7 +262,7 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         bill = models.Bill.objects.get(id=self.bill.id)
         self.assertEquals(bill.number, number)
         self.assertEquals(bill.issued_to.id, issued_to)
-        self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, self.bill.id)))
+        self.assertRedirects(r, reverse('view_bill', args=(self.company.id, self.bill.id)))
 
     def test_edit_final_bill_submit(self):
         """
@@ -386,6 +386,72 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.bill.save()
         url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
         r = self.c.get(url)
+        self.assertEquals(r.status_code, 403)
+
+    def test_edit_item_in_bill(self):
+        """
+        Ensures you can edit items in a bill
+        """
+        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
+        r = self.c.get(url)
+        self.assertEquals(r.status_code, 200)
+        self.assertContainsItem(r, self.bill_item)
+
+    def test_edit_item_in_bill_submit(self):
+        """
+        Ensures you can edit and submit items to bills
+        """
+        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
+        sku = '555'
+        name = 'myitem'
+        description = 'bleh'
+        qty = 44
+        bill_id = self.bill.id
+        r = self.c.post(url, {
+            'sku': sku,
+            'name': name,
+            'description': description,
+            'qty': qty,
+            'bill': bill_id,
+            'company': self.company.id,
+        })
+        self.assertRedirects(r, reverse('view_bill', args=(self.company.id, self.bill.id)))
+        bill_item = models.BillItem.objects.get(id=self.bill_item.id)
+        self.assertEquals(bill_item.sku, sku)
+        self.assertEquals(bill_item.name, name)
+        self.assertEquals(bill_item.description, description)
+        self.assertEquals(bill_item.qty, qty)
+
+    def test_edit_item_in_final_bill(self):
+        """
+        Ensures you can't edit items in a final bill
+        """
+        self.bill.is_proforma = False
+        self.bill.save()
+        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
+        r = self.c.get(url)
+        self.assertEquals(r.status_code, 403)
+
+    def test_edit_item_in_final_bill_submit(self):
+        """
+        Ensures you can't edit and submit items to bills
+        """
+        self.bill.is_proforma = False
+        self.bill.save()
+        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
+        sku = '555'
+        name = 'myitem'
+        description = 'bleh'
+        qty = 44
+        bill_id = self.bill.id
+        r = self.c.post(url, {
+            'sku': sku,
+            'name': name,
+            'description': description,
+            'qty': qty,
+            'bill': bill_id,
+            'company': self.company.id,
+        })
         self.assertEquals(r.status_code, 403)
 
     def test_access_denied(self):
