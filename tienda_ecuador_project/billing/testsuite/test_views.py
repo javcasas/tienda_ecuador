@@ -454,6 +454,33 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         })
         self.assertEquals(r.status_code, 403)
 
+    def test_delete_item_from_bill(self):
+        """
+        Ensures you can delete an item in a proforma bill using a POST
+        """
+        url = reverse('delete_item_from_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
+        r = self.c.post(url, {})
+        self.assertRedirects(r, reverse('view_bill', args=(self.company.id, self.bill.id)))
+        self.assertFalse(models.BillItem.objects.filter(id=self.bill_item.id))
+
+    def test_delete_item_from_final_bill(self):
+        """
+        Ensures you can't delete an item in a final bill
+        """
+        self.bill.is_proforma = False
+        self.bill.save()
+        url = reverse('delete_item_from_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
+        r = self.c.post(url, {})
+        self.assertTrue(models.Bill.objects.filter(id=self.bill.id))
+        self.assertEquals(r.status_code, 403)  # Forbidden
+
+    def test_delete_item_from_bill_get(self):
+        """
+        Ensures GET fails to delete an item in a bill
+        """
+        r = self.c.get(reverse('delete_item_from_bill', args=(self.company.id, self.bill.id, self.bill_item.id)))
+        self.assertEquals(r.status_code, 405)
+
     def test_access_denied(self):
         """
         A logged-in user can't view stuff for a company he has no access
@@ -474,6 +501,8 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             reverse('edit_bill', args=(self.company.id, self.bill.id)),
             reverse('new_bill', args=(self.company.id,)),
             reverse('delete_bill', args=(self.company.id, self.bill.id)),
+            reverse('add_item_to_bill', args=(self.company.id, self.bill.id)),
+            reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id)),
         ]
         try:
             for url in urls:

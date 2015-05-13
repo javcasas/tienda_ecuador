@@ -14,5 +14,5 @@ urlpatterns = patterns('',
 
     url(r'^(?P<company_id>[0-9]+)/bill/(?P<bill_id>[0-9]+)/add_item/$', views.AddItemToBill.as_view(), name='add_item_to_bill'),
     url(r'^(?P<company_id>[0-9]+)/bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/edit/$', views.EditItemInBill.as_view(), name='edit_item_in_bill'),
-#    url(r'^bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/delete/$', views.delete_item_in_bill, name='delete_item_from_bill'),
+    url(r'^(?P<company_id>[0-9]+)/bill/(?P<bill_id>[0-9]+)/item/(?P<item_id>[0-9]+)/delete/$', views.DeleteItemFromBill.as_view(), name='delete_item_from_bill'),
 )

@@ -270,53 +270,13 @@ class EditItemInBill(HasAccessToCompanyMixin):
                 'bill': bill,
             }
             return render(request, "billing/add_item_to_bill.html", field_dict)
-# @login_required
-# def add_item_to_bill(request, bill_id):
-#    # bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
-#    # if not bill.can_be_modified():
-#        # # The bill has been issued, and can't be modified
-#        # raise Exception("The bill can't be modified")
-#
-#    # if request.method == 'POST':
-#        # item = Item.objects.get(pk=request.POST['item_id'], shop=get_shop(request))
-#        # values = dict(item.__dict__)
-#        # for k in values.keys():
-#            # if k.startswith('_') or k in ('id', 'baseitem_ptr_id'):
-#                # values.pop(k)
-#        # values['qty'] = 1
-#        # values['bill'] = bill
-#        # bitem = BillItem(**values)
-#        # bitem.save()
-#        # return redirect("view_bill", bill_id)
-#    # items = Item.objects.filter(shop=get_shop(request))
-#    # return render(request, "billing/add_item_to_bill.html", {'bill': bill, 'items': items})
-#
-#
-# def edit_item_in_bill(request, bill_id, item_id):
-#    # bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
-#    # item = get_object_or_404(BillItem, pk=item_id, bill=bill, shop=get_shop(request))
-#    # if not bill.can_be_modified():
-#        # # The bill has been issued, and can't be modified
-#        # raise Exception("The bill can't be modified")
-#
-#    # if request.method == 'POST':
-#        # form = BillItemForm(request.POST, instance=item)
-#        # if form.is_valid():
-#            # form.save(commit=True)
-#            # return redirect("view_bill", bill_id)
-#        # else:
-#            # print form.errors
-#    # else:
-#        # form = BillItemForm(instance=item)
-#    # return render(request, "billing/edit_item_in_bill.html", {'form': form, 'bill_id': bill_id})
-#
-# def delete_item_in_bill(request, bill_id, item_id):
-#    # bill = get_object_or_404(Bill, pk=bill_id, shop=get_shop(request))
-#    # item = get_object_or_404(BillItem, pk=item_id, bill=bill, shop=get_shop(request))
-#    # if not bill.can_be_modified():
-#        # # The bill has been issued, and can't be modified
-#        # raise Exception("The bill can't be modified")
-#
-#    # if request.method == 'POST':
-#        # item.delete()
-#    # return redirect("view_bill", bill_id)
+
+class DeleteItemFromBill(HasAccessToCompanyMixin):
+    def post(self, request, company_id, bill_id, item_id):
+        bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
+        if bill.can_be_modified():
+            item = get_object_or_404(BillItem, id=item_id, bill_id=bill_id, company_id=company_id)
+            item.delete()
+            return redirect("view_bill", company_id, bill_id)
+        else:
+            return HttpResponseForbidden("Bill is definitive")
