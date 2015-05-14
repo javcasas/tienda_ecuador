@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html>
-
-    <head>
-        <title>Billing</title>
-    </head>
-
-    <body>
+{% extends 'billing/selected_company.html' %}
+{% block title_l1 %}Ver Factura{% endblock %}
+{% block body_l1_block %}
         <h1>Bill</h1>
         Number: {{ bill.number }} <br />
         Issued to: {{ bill.issued_to }} <br />
@@ -30,6 +25,4 @@
             <a href="#">Add Item</a>
         {% endif %}
         <a href='{% url "company_index" company_id %}'>Back</a>
-    </body>
-
-</html>
+{% endblock %}

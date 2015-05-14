@@ -24,267 +24,324 @@ def index(request):
     return render(request, "billing/index.html", param_dict)
 
 
-def has_access_to_company(fn):
+class CompanySelectedMixin(View):
     """
-    Decorator that checks the current user can use the company specified
-    by company_id
+    Base class for views where the company has been already selected
+    Checks:
+        * That the user has access to the company
     """
-    @wraps(fn)
-    def wrapper(request, company_id, *args, **kwargs):
-        get_object_or_404(
-            CompanyUser, user=request.user, company_id=company_id
-        )
-        return fn(request, company_id, *args, **kwargs)
-    return wrapper
+    @classmethod
+    def has_access_to_company(cls, fn):
+        """
+        Decorator that checks the current user can use the company specified
+        by company_id
+        """
+        @login_required
+        @wraps(fn)
+        def wrapper(request, company_id, *args, **kwargs):
+            get_object_or_404(
+                CompanyUser, user=request.user, company_id=company_id
+            )
+            return fn(request, company_id, *args, **kwargs)
+        return wrapper
 
-
-@login_required
-@has_access_to_company
-def company_index(request, company_id):
-    """
-    Shows an index for a company
-    """
-    company = get_object_or_404(Company, id=company_id)
-    items = Item.objects.filter(company=company)
-    bills = Bill.objects.filter(company=company)
-    param_dict = {
-        'items': items,
-        'bills': bills,
-        'company_id': company_id,
-    }
-    return render(request, "billing/company_index.html", param_dict)
-
-
-@login_required
-@has_access_to_company
-def view_item(request, company_id, item_id):
-    """
-    View an inventory item
-    """
-    company = get_object_or_404(Company, id=company_id)
-    item = get_object_or_404(Item, pk=item_id, company=company)
-    param_dict = {
-        'company': company,
-        'item': item,
-        'company_id': company_id,
-    }
-    return render(request, "billing/view_item.html", param_dict)
-
-
-class HasAccessToCompanyMixin(View):
     @classmethod
     def as_view(cls, **initkwargs):
-        view = super(HasAccessToCompanyMixin, cls).as_view(**initkwargs)
-        return has_access_to_company(view)
+        """
+        Generates a view
+        """
+        view = super(CompanySelectedMixin, cls).as_view(**initkwargs)
+        return cls.has_access_to_company(view)
+
+    @classmethod
+    def prepare_base_param_dict(cls, fn):
+        """
+        Makes self.base_param_dict
+        """
+        @wraps(fn)
+        def wrapper(self, request, company_id):
+            self._base_param_dict = {
+                'company_id': company_id,
+                'company': get_object_or_404(Company, id=company_id),
+            }
+            return fn(self, request, company_id)
+        return wrapper
+
+    @property
+    def base_param_dict(self):
+        return self._base_param_dict.copy()
 
 
-class ObjectEditView(HasAccessToCompanyMixin):
-    def get(self, request, *args, **kwargs):
+class BillSelectedMixin(CompanySelectedMixin):
+    """
+    Base class for views where the company and bill have been already selected
+    """
+    @classmethod
+    def prepare_base_param_dict(cls, fn):
         """
-        Implements the GET method, shows a form for the object
+        Makes self.base_param_dict
         """
-        param_dict = self.base_param_dict(*args, **kwargs)
-        item = self.get_object(*args, **kwargs)
-        param_dict['form'] = self.form_class(instance=item)
+        @wraps(fn)
+        def wrapper(self, request, company_id, bill_id, *args, **kwargs):
+            self._base_param_dict = {
+                'company_id': company_id,
+                'company': get_object_or_404(Company, id=company_id),
+                'bill_id': bill_id,
+                'bill': get_object_or_404(Bill, id=bill_id,
+                                          company_id=company_id),
+            }
+            return fn(self, request, company_id, bill_id, *args, **kwargs)
+        return wrapper
+
+    @classmethod
+    def check_bill_can_be_modified(cls, fn):
+        @wraps(fn)
+        def wrapper(self, request, company_id, bill_id, *args, **kwargs):
+            param_dict = self.base_param_dict
+            if param_dict['bill'].can_be_modified():
+                return fn(self, request, company_id, bill_id, *args, **kwargs)
+            else:
+                return HttpResponseForbidden("Bill is definitive")
+        return wrapper
+
+
+class BillItemSelectedMixin(BillSelectedMixin):
+    """
+    Base class for views where the company,
+    bill and bill itemhave been already selected
+    """
+    @classmethod
+    def prepare_base_param_dict(cls, fn):
+        """
+        Makes self.base_param_dict
+        """
+        @wraps(fn)
+        def wrapper(self, request, company_id, bill_id, item_id):
+            self._base_param_dict = {
+                'company_id': company_id,
+                'company': get_object_or_404(Company, id=company_id),
+                'bill_id': bill_id,
+                'bill': get_object_or_404(Bill, id=bill_id,
+                                          company_id=company_id),
+                'item_id': item_id,
+                'item': get_object_or_404(BillItem, id=item_id,
+                                          company_id=company_id,
+                                          bill_id=bill_id),
+            }
+            return fn(self, request, company_id, bill_id, item_id)
+        return wrapper
+
+
+class ItemSelectedMixin(CompanySelectedMixin):
+    """
+    Base class for views where the company and item have been already selected
+    """
+    @classmethod
+    def prepare_base_param_dict(cls, fn):
+        """
+        Makes self.base_param_dict
+        """
+        @wraps(fn)
+        def wrapper(self, request, company_id, item_id):
+            self._base_param_dict = {
+                'company_id': company_id,
+                'company': get_object_or_404(Company, id=company_id),
+                'item_id': item_id,
+                'item': get_object_or_404(Item, id=item_id,
+                                          company_id=company_id),
+            }
+            return fn(self, request, company_id, item_id)
+        return wrapper
+
+
+class CompanyIndex(CompanySelectedMixin):
+    @CompanySelectedMixin.prepare_base_param_dict
+    def get(self, request, company_id):
+        """
+        Shows an index for a company
+        """
+        param_dict = self.base_param_dict
+        param_dict['items'] = Item.objects.filter(company_id=company_id)
+        param_dict['bills'] = Bill.objects.filter(company_id=company_id)
+        return render(request, "billing/company_index.html", param_dict)
+
+
+class ViewItem(ItemSelectedMixin):
+    @ItemSelectedMixin.prepare_base_param_dict
+    def get(self, request, company_id, item_id):
+        """
+        View an inventory item
+        """
+        return render(request, "billing/view_item.html", self.base_param_dict)
+
+
+class EditItem(ItemSelectedMixin):
+    template = "billing/edit_item.html"
+    form_class = ItemForm
+
+    @ItemSelectedMixin.prepare_base_param_dict
+    def get(self, request, company_id, item_id):
+        """
+        Edit an inventory item
+        """
+        param_dict = self.base_param_dict
+        param_dict['form'] = self.form_class(instance=param_dict['item'])
         return render(request, self.template, param_dict)
 
-    def post(self, request, *args, **kwargs):
+    @ItemSelectedMixin.prepare_base_param_dict
+    def post(self, request, company_id, item_id):
         """
-        Implements the POST method, checks the posted data
-        and saves and redirects
+        Edit and submit an inventory item
         """
-        param_dict = self.base_param_dict(*args, **kwargs)
-        item = self.get_object(*args, **kwargs)
-        form = self.form_class(request.POST, instance=item)
+        param_dict = self.base_param_dict
+        form = self.form_class(request.POST, instance=param_dict['item'])
         if form.is_valid():
             form.save(commit=True)
-            return self.success_url(*args, **kwargs)
+            return redirect("view_item", company_id, item_id)
         else:
             param_dict['form'] = form
             return render(request, self.template, param_dict)
 
 
-class EditItem(ObjectEditView):
-    template = "billing/edit_item.html"
-    form_class = ItemForm
-
-    def get_object(self, company_id, item_id):
-        return get_object_or_404(Item, id=item_id, company_id=company_id)
-
-    def base_param_dict(self, company_id, item_id):
-        return {
-            'item_id': item_id,
-            'company_id': company_id,
-        }
-
-    def success_url(self, company_id, item_id):
-        return redirect("view_item", company_id, item_id)
+class ViewBill(BillSelectedMixin):
+    @BillSelectedMixin.prepare_base_param_dict
+    def get(self, request, company_id, bill_id):
+        """
+        View a bill
+        """
+        return render(request, "billing/view_bill.html", self.base_param_dict)
 
 
-@login_required
-@has_access_to_company
-def view_bill(request, company_id, bill_id):
-    bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
-    param_dict = {
-        'bill': bill,
-        'company_id': company_id,
-    }
-    return render(request, "billing/view_bill.html", param_dict)
-
-
-class NewBill(HasAccessToCompanyMixin):
+class NewBill(CompanySelectedMixin):
+    @CompanySelectedMixin.prepare_base_param_dict
     def post(self, request, company_id):
+        """
+        Create a new bill
+        """
         customer, created = Customer.objects.get_or_create(
             name='Consumidor Final'
         )
         new = Bill(company_id=company_id, issued_to=customer)
         new.save()
-        return redirect("view_bill", company_id, new.pk)
+        return redirect("view_bill", company_id, new.id)
 
 
-class EditBill(ObjectEditView):
+class EditBill(BillSelectedMixin):
     template = "billing/edit_bill.html"
     form_class = BillForm
 
-    def get_object(self, company_id, bill_id):
-        return get_object_or_404(Bill, id=bill_id, company_id=company_id)
-
-    def base_param_dict(self, company_id, bill_id):
-        return {
-            'bill_id': bill_id,
-            'company_id': company_id,
-        }
-
-    def success_url(self, company_id, bill_id):
-        '''
-        What to do when save is successful
-        '''
-        return redirect("view_bill", company_id, bill_id)
-
-    def post(self, request, company_id, bill_id):
-        '''
-        Custom POST to check if bill.can_be_modified
-        '''
-        bill = self.get_object(company_id, bill_id)
-        if not bill.can_be_modified():
-            # The bill has been issued, and can't be modified
-            return HttpResponseForbidden("Bill is definitive")
-
-        form = self.form_class(request.POST, instance=bill)
-        if form.is_valid():
-            form.save(commit=True)
-            return self.success_url(company_id, bill_id)
-        param_dict = self.base_param_dict(company_id, bill_id)
-        param_dict['form'] = form,
+    @BillSelectedMixin.prepare_base_param_dict
+    @BillSelectedMixin.check_bill_can_be_modified
+    def get(self, request, company_id, bill_id):
+        """
+        Edit a bill
+        """
+        param_dict = self.base_param_dict
+        param_dict['form'] = self.form_class(instance=param_dict['bill'])
         return render(request, self.template, param_dict)
 
-
-class DeleteBill(HasAccessToCompanyMixin):
+    @BillSelectedMixin.prepare_base_param_dict
+    @BillSelectedMixin.check_bill_can_be_modified
     def post(self, request, company_id, bill_id):
-        bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
-        if bill.is_proforma:
-            for item in BillItem.objects.filter(bill=bill):
-                item.delete()
-            bill.delete()
+        """
+        Edit and submit a bill
+        """
+        param_dict = self.base_param_dict
+        form = self.form_class(request.POST, instance=param_dict['bill'])
+        if form.is_valid():
+            form.save(commit=True)
+            return redirect("view_bill", company_id, bill_id)
         else:
-            return HttpResponseForbidden("Bill is definitive")
+            param_dict['form'] = form
+            return render(request, self.template, param_dict)
+
+
+class DeleteBill(BillSelectedMixin):
+    @BillSelectedMixin.prepare_base_param_dict
+    @BillSelectedMixin.check_bill_can_be_modified
+    def post(self, request, company_id, bill_id):
+        """
+        Delete a bill
+        """
+        bill = self.base_param_dict['bill']
+        for item in bill.items:
+            item.delete()
+        bill.delete()
         return redirect("company_index", company_id)
 
 
-class AddItemToBill(HasAccessToCompanyMixin):
+class AddItemToBill(BillSelectedMixin):
     form_class = BillItemForm
+    template = "billing/add_item_to_bill.html"
 
+    @BillSelectedMixin.prepare_base_param_dict
+    @BillSelectedMixin.check_bill_can_be_modified
     def get(self, request, company_id, bill_id):
-        bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
-        if not bill.can_be_modified():
-            # The bill has been issued, and can't be modified
-            return HttpResponseForbidden("Bill is definitive")
-
+        """
+        Add an item to a bill
+        """
+        param_dict = self.base_param_dict
         data = {
             'bill': bill_id,
             'company': company_id,
         }
-        form = self.form_class(data)
-        field_dict = {
-            'company_id': company_id,
-            'bill_id': bill_id,
-            'form': form,
-            'bill': bill,
-        }
-        return render(request, "billing/add_item_to_bill.html", field_dict)
+        param_dict['form'] = self.form_class(data)
+        return render(request, self.template, param_dict)
 
+    @BillSelectedMixin.prepare_base_param_dict
+    @BillSelectedMixin.check_bill_can_be_modified
     def post(self, request, company_id, bill_id):
-        bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
-        if not bill.can_be_modified():
-            # The bill has been issued, and can't be modified
-            return HttpResponseForbidden("Bill is definitive")
-
+        """
+        Add an item and submit to a bill
+        """
+        param_dict = self.base_param_dict
         form = self.form_class(request.POST)
         if form.is_valid():
             form.save()
             return redirect("view_bill", company_id, bill_id)
         else:
-            field_dict = {
-                'company_id': company_id,
-                'bill_id': bill_id,
-                'form': form,
-                'bill': bill,
-            }
-            return render(request, "billing/add_item_to_bill.html", field_dict)
+            param_dict['form'] = form
+            return render(request, self.template, param_dict)
 
 
-class EditItemInBill(HasAccessToCompanyMixin):
+class EditItemInBill(BillItemSelectedMixin):
     form_class = BillItemForm
+    template = "billing/edit_item_in_bill.html"
 
+    @BillItemSelectedMixin.prepare_base_param_dict
+    @BillItemSelectedMixin.check_bill_can_be_modified
     def get(self, request, company_id, bill_id, item_id):
-        item = get_object_or_404(BillItem, id=item_id,
-                                 company_id=company_id, bill_id=bill_id)
-        bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
-        if not bill.can_be_modified():
-            # The bill has been issued, and can't be modified
-            return HttpResponseForbidden("Bill is definitive")
+        """
+        Edit an item in a bill
+        """
+        param_dict = self.base_param_dict
+        form = self.form_class(instance=param_dict['item'])
+        param_dict['form'] = form
+        return render(request, self.template, param_dict)
 
-        form = self.form_class(instance=item)
-        field_dict = {
-            'company_id': company_id,
-            'bill_id': bill_id,
-            'item_id': item_id,
-            'form': form,
-            'bill': bill,
-            'item': item,
-        }
-        return render(request, "billing/edit_item_in_bill.html", field_dict)
-
+    @BillItemSelectedMixin.prepare_base_param_dict
+    @BillItemSelectedMixin.check_bill_can_be_modified
     def post(self, request, company_id, bill_id, item_id):
-        bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
-        bill_item = get_object_or_404(BillItem, bill_id=bill_id,
-                                      company_id=company_id, id=item_id)
-        if not bill.can_be_modified():
-            # The bill has been issued, and can't be modified
-            return HttpResponseForbidden("Bill is definitive")
-
-        form = self.form_class(request.POST, instance=bill_item)
+        """
+        Edit an item and submit in a bill
+        """
+        param_dict = self.base_param_dict
+        form = self.form_class(request.POST, instance=param_dict['item'])
         if form.is_valid():
             form.save()
             return redirect("view_bill", company_id, bill_id)
         else:
-            field_dict = {
-                'company_id': company_id,
-                'bill_id': bill_id,
-                'form': form,
-                'bill': bill,
-                'item': item,
-            }
-            return render(request, "billing/edit_item_in_bill.html", field_dict)
+            param_dict['form'] = form
+            return render(request, self.template, param_dict)
 
 
-class DeleteItemFromBill(HasAccessToCompanyMixin):
+class DeleteItemFromBill(BillItemSelectedMixin):
+    @BillItemSelectedMixin.prepare_base_param_dict
+    @BillItemSelectedMixin.check_bill_can_be_modified
     def post(self, request, company_id, bill_id, item_id):
-        bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
-        if bill.can_be_modified():
-            item = get_object_or_404(BillItem, id=item_id,
-                                     bill_id=bill_id, company_id=company_id)
-            item.delete()
-            return redirect("view_bill", company_id, bill_id)
-        else:
-            return HttpResponseForbidden("Bill is definitive")
+        """
+        Delete an item from a bill
+        """
+        param_dict = self.base_param_dict
+        param_dict['item'].delete()
+        return redirect("view_bill", company_id, bill_id)

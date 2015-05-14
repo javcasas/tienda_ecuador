@@ -1,0 +1,7 @@
+{% extends 'billing/base.html' %}
+{% block title %}{% block title_l1 %}{% endblock %}{{ company.name }} - {% endblock %}
+{% block body_block %}
+    <h1>{{ company.name }}</h1>
+    {% block body_l1_block %}
+    {% endblock %}
+{% endblock %}

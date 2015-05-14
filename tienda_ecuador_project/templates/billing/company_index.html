@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html>
-
-    <head>
-        <title>Billing</title>
-    </head>
-
-    <body>
+{% extends 'billing/selected_company.html' %}
+{% block title_l1 %}Menú General - {% endblock %}
+{% block body_l1_block %}
         <h1>Items</h1>
         <table border='1'>
         {% for item in items %}
@@ -15,7 +10,7 @@
         {% endfor %}
         </table>
 
-        <h1>Bills</h1>
+        <h1>Facturas</h1>
         <table border='1'>
         {% for bill in bills %}
             <tr><td>
@@ -23,6 +18,4 @@
             </td></tr>
         {% endfor %}
         </table>
-    </body>
-
-</html>
+{% endblock %}
