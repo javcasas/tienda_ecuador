@@ -183,7 +183,8 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             sku="SKU123", name='An Item',
             description='The description', company=self.company
         )
-        self.customer = add_Customer(name="Luis")
+        self.customer = add_Customer(name="Luis", company=self.company)
+        self.customer2 = add_Customer(name="Paco", company=self.company)
         self.bill = add_Bill(
             issued_to=self.customer, number='001-002-123456789',
             company=self.company, is_proforma=True
@@ -221,20 +222,25 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             reverse('company_index', args=(self.company.id,))
         )
         self.assertContainsObject(response, self.item, fields=['name', 'sku'])
-        # View item link
+        # View items
         self.assertContains(
             response,
             reverse('view_item', args=(self.company.id, self.item.id))
+        )
+        # View bills
+        self.assertContains(
+            response,
+            reverse('view_bill', args=(self.company.id, self.bill.id))
         )
         self.assertContainsObject(response, self.bill, fields=['number'])
         self.assertContainsObject(
             response, self.bill.issued_to, fields=['name']
         )
-        # View bill link
-        self.assertContains(
-            response,
-            reverse('view_bill', args=(self.company.id, self.bill.id))
+        # View customers
+        self.assertContainsObject(
+            response, self.customer2, fields=['name']
         )
+        
 
     def test_view_item(self):
         """

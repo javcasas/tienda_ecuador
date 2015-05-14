@@ -10,7 +10,7 @@ class BillTests(TestCase):
     def setUp(self):
         self.company = Company(name="Tienda 1")
         self.company.save()
-        self.customer = Customer(name="Pepe")
+        self.customer = Customer(name="Pepe", company=self.company)
         self.customer.save()
 
     def tearDown(self):
@@ -223,13 +223,20 @@ class CustomerTests(TestCase):
     """
     Tests that check the Customer model
     """
+    def setUp(self):
+        self.company = Company(name="Tienda 1")
+        self.company.save()
+
+    def tearDown(self):
+        self.company.delete()
+
     def test_Customer_has_all_the_required_fields(self):
-        pcust = Customer(name="Pepe")
+        pcust = Customer(name="Pepe", company=self.company)
         pcust.save()
         cust = Customer.objects.get(pk=pcust.pk)
         self.assertEquals(cust.name, "Pepe")
         cust.delete()
 
     def test_Customer_str(self):
-        cust = Customer(name="Pepe")
+        cust = Customer(name="Pepe", company=self.company)
         self.assertEquals(str(cust), "Pepe")

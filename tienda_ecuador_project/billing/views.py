@@ -163,6 +163,7 @@ class CompanyIndex(CompanySelectedMixin):
         param_dict = self.base_param_dict
         param_dict['items'] = Item.objects.filter(company_id=company_id)
         param_dict['bills'] = Bill.objects.filter(company_id=company_id)
+        param_dict['customers'] = Customer.objects.filter(company_id=company_id)
         return render(request, "billing/company_index.html", param_dict)
 
 
@@ -219,7 +220,8 @@ class NewBill(CompanySelectedMixin):
         Create a new bill
         """
         customer, created = Customer.objects.get_or_create(
-            name='Consumidor Final'
+            name='Consumidor Final',
+            company=self.base_param_dict['company'],
         )
         new = Bill(company_id=company_id, issued_to=customer)
         new.save()

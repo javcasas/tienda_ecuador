@@ -46,6 +46,7 @@ class Customer(models.Model):
     Represents a customer
     """
     name = models.CharField(max_length=100)
+    company = models.ForeignKey(Company)
 
     def __unicode__(self):
         return self.name
