@@ -1,4 +1,5 @@
 from functools import partial
+from contextlib import contextmanager
 
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
@@ -35,11 +36,49 @@ def add_User(**kwargs):
 
 
 def try_delete(item):
+    """
+    Tries to delete an item without exploding
+    """
     try:
         if item.pk:
             item.delete()
     except ObjectDoesNotExist:
         pass
+
+
+def make_post(data):
+    """
+    Converts a data dict into a data dict that can be used in a POST
+    """
+    def convert_field(f):
+        try:
+            return f.id
+        except:
+            return f
+    return {k: convert_field(v) for (k, v) in data.iteritems()}
+
+
+@contextmanager
+def new_item(kind):
+    """
+    Finds and returns the new item of the specified kind
+    created in the context
+    """
+    def get_set(model):
+        return set(model.objects.all())
+
+    class GetattrProxy(object):
+        ob = None
+
+        def __getattr__(self, field):
+            return getattr(self.ob, field)
+
+    items = get_set(kind)
+    res = GetattrProxy()
+    yield res
+    new_items = (get_set(kind) - items)
+    assert len(new_items) == 1
+    res.ob = new_items.pop()
 
 
 class NotLoggedInTests(TestCase):
@@ -159,6 +198,21 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             try_delete(i)
         super(self.__class__, self).tearDown()
 
+    def assertContainsObject(self, response, item, fields):
+        """
+        Checks all the fields in a general object
+        """
+        for field in fields:
+            self.assertContains(response, getattr(item, field))
+
+    def assertObjectMatchesData(self, ob, data):
+        """
+        Checks that every field in the data
+        exists in the object and is the same
+        """
+        for key, value in data.iteritems():
+            self.assertEquals(getattr(ob, key), value)
+
     def test_company_index(self):
         """
         Ensures the company index shows the items and the bills
@@ -166,22 +220,21 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         response = self.c.get(
             reverse('company_index', args=(self.company.id,))
         )
-        self.assertContains(response, self.item.name)
-        self.assertContains(response, self.item.sku)
+        self.assertContainsObject(response, self.item, fields=['name', 'sku'])
         # View item link
-        self.assertContains(response, reverse('view_item', args=(self.company.id, self.item.id)))
-        self.assertContains(response, self.bill.number)
-        self.assertContains(response, self.bill.issued_to.name)
+        self.assertContains(
+            response,
+            reverse('view_item', args=(self.company.id, self.item.id))
+        )
+        self.assertContainsObject(response, self.bill, fields=['number'])
+        self.assertContainsObject(
+            response, self.bill.issued_to, fields=['name']
+        )
         # View bill link
-        self.assertContains(response, reverse('view_bill', args=(self.company.id, self.bill.id)))
-
-    def assertContainsItem(self, response, item):
-        """
-        Checks all the fields in an item
-        """
-        self.assertContains(response, self.item.name)
-        self.assertContains(response, self.item.sku)
-        self.assertContains(response, self.item.description)
+        self.assertContains(
+            response,
+            reverse('view_bill', args=(self.company.id, self.bill.id))
+        )
 
     def test_view_item(self):
         """
@@ -190,37 +243,45 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         response = self.c.get(
             reverse('view_item', args=(self.company.id, self.item.id))
         )
-        self.assertContainsItem(response, self.item)
-        self.assertContains(response, reverse('company_index', args=(self.company.id,)))
+        self.assertContainsObject(response, self.item,
+                                  fields=['name', 'sku', 'description'])
+        self.assertContains(response,
+                            reverse('company_index', args=(self.company.id,)))
 
     def test_edit_item(self):
         """
         Ensures you can edit an item
         """
-        url = reverse('edit_item', args=(self.company.id, self.item.id))
-        response = self.c.get(url)
-        self.assertContainsItem(response, self.item)
+        r = self.c.get(
+            reverse('edit_item', args=(self.company.id, self.item.id))
+        )
+        self.assertContainsObject(
+            r, self.item, fields=['name', 'sku', 'description']
+        )
         # Cancel/Back button/link
-        self.assertContains(response, reverse('view_item', args=(self.company.id, self.item.id)))
+        self.assertContains(
+            r, reverse('view_item', args=(self.company.id, self.item.id))
+        )
 
     def test_edit_item_submit(self):
         """
         Ensures you can submit an item
         """
-        url = reverse('edit_item', args=(self.company.id, self.item.id))
-        sku = '555'
-        name = 'myitem'
-        description = 'bleh'
-        r = self.c.post(url, {
-            'sku': sku,
-            'name': name,
-            'description': description
-        })
-        item = models.Item.objects.get(id=self.item.id)
-        self.assertEquals(item.sku, sku)
-        self.assertEquals(item.name, name)
-        self.assertEquals(item.description, description)
-        self.assertRedirects(r,  reverse('view_item', args=(self.company.id, self.item.id)))
+        data = {
+            'sku': '555',
+            'name': 'myitem',
+            'description': 'bleh',
+        }
+        r = self.c.post(
+            reverse('edit_item', args=(self.company.id, self.item.id)),
+            make_post(data)
+        )
+        self.assertObjectMatchesData(
+            models.Item.objects.get(id=self.item.id), data
+        )
+        self.assertRedirects(
+            r, reverse('view_item', args=(self.company.id, self.item.id))
+        )
 
     def test_view_bill(self):
         """
@@ -232,9 +293,11 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertContains(response, self.bill.number)
         self.assertContains(response, self.bill.issued_to.name)
         for item in self.bill.items:
-            self.assertContainsItem(response, item)
+            self.assertContainsObject(response, item,
+                                      fields=['name', 'sku', 'description'])
         # Cancel/Back button/link
-        self.assertContains(response, reverse('company_index', args=(self.company.id,)))
+        self.assertContains(response,
+                            reverse('company_index', args=(self.company.id,)))
 
     def test_edit_bill(self):
         """
@@ -246,23 +309,28 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertContains(response, self.bill.number)
         self.assertContains(response, self.bill.issued_to.name)
         # Cancel/Back button/link
-        self.assertContains(response, reverse('view_bill', args=(self.company.id, self.bill.id)))
+        self.assertContains(
+            response,
+            reverse('view_bill', args=(self.company.id, self.bill.id))
+        )
 
     def test_edit_bill_submit(self):
         """
         Ensures you can submit a bill
         """
         url = reverse('edit_bill', args=(self.company.id, self.bill.id))
-        number = '555'
-        issued_to = self.customer.id
-        r = self.c.post(url, {
-            'number': number,
-            'issued_to': issued_to,
-        })
+        data = {
+            'number': '555',
+            'issued_to': self.customer.id,
+        }
+        r = self.c.post(url, data)
         bill = models.Bill.objects.get(id=self.bill.id)
-        self.assertEquals(bill.number, number)
-        self.assertEquals(bill.issued_to.id, issued_to)
-        self.assertRedirects(r, reverse('view_bill', args=(self.company.id, self.bill.id)))
+        self.assertEquals(bill.number, data['number'])
+        self.assertEquals(bill.issued_to.id, data['issued_to'])
+        self.assertRedirects(
+            r,
+            reverse('view_bill', args=(self.company.id, self.bill.id))
+        )
 
     def test_edit_final_bill_submit(self):
         """
@@ -277,27 +345,20 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             'number': number,
             'issued_to': issued_to,
         })
-        bill = models.Bill.objects.get(id=self.bill.id)
         self.assertEquals(r.status_code, 403)  # Forbidden
 
     def test_new_bill(self):
         """
         Ensures you can create a new bill using a POST
         """
-        bills = set(models.Bill.objects.all())
-        url = reverse('new_bill', args=(self.company.id,))
-        r = self.c.post(url, {})
-        new_bills = set(models.Bill.objects.all())
-        new_bill = (new_bills - bills).pop()
-        self.assertEquals(new_bill.issued_to.name, 'Consumidor Final')
-        self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, new_bill.id)))
-
-    def test_new_bill_get(self):
-        """
-        Ensures GET fails to create a new bill
-        """
-        r = self.c.get(reverse('new_bill', args=(self.company.id,)))
-        self.assertEquals(r.status_code, 405)
+        with new_item(models.Bill) as new:
+            r = self.c.post(
+                reverse('new_bill', args=(self.company.id,)),
+                {}
+            )
+        self.assertEquals(new.issued_to.name, 'Consumidor Final')
+        self.assertRedirects(
+            r, reverse('view_bill', args=(self.company.id, new.id)))
 
     def test_delete_bill(self):
         """
@@ -306,7 +367,8 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         url = reverse('delete_bill', args=(self.company.id, self.bill.id))
         r = self.c.post(url, {})
         self.assertFalse(models.Bill.objects.filter(id=self.bill.id))
-        self.assertRedirects(r,  reverse('company_index', args=(self.company.id,)))
+        self.assertRedirects(
+            r, reverse('company_index', args=(self.company.id,)))
 
     def test_delete_final_bill(self):
         """
@@ -319,47 +381,38 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertTrue(models.Bill.objects.filter(id=self.bill.id))
         self.assertEquals(r.status_code, 403)  # Forbidden
 
-    def test_delete_bill_get(self):
-        """
-        Ensures GET fails to delete a bill
-        """
-        r = self.c.get(reverse('delete_bill', args=(self.company.id, self.bill.id)))
-        self.assertEquals(r.status_code, 405)
-
     def test_add_item_to_bill(self):
         """
         Ensures you can select items to add to bills
         """
         url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
         r = self.c.get(url)
-        #for item in models.Item.objects.filter(company=self.company):
-        #    self.assertContainsItem(r, item)
+        self.assertEquals(r.status_code, 200)
+        # for item in models.Item.objects.filter(company=self.company):
+        #    self.assertContainsObject(r, item,
+        #                              fields=['name', 'sku', 'description'])
 
     def test_add_item_to_bill_submit(self):
         """
         Ensures you can add items to bills
         """
-        url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
-        sku = '555'
-        name = 'myitem'
-        description = 'bleh'
-        qty = 44
-        bill_id = self.bill.id
-        bill_items = set(models.BillItem.objects.filter(bill_id=bill_id))
-        r = self.c.post(url, {
-            'sku': sku,
-            'name': name,
-            'description': description,
-            'qty': qty,
-            'bill': bill_id,
-            'company': self.company.id,
-        })
-        new = (set(models.BillItem.objects.filter(bill_id=bill_id)) - bill_items).pop()
-        self.assertEquals(new.sku, sku)
-        self.assertEquals(new.name, name)
-        self.assertEquals(new.description, description)
-        self.assertEquals(new.qty, qty)
-        self.assertRedirects(r,  reverse('view_bill', args=(self.company.id, self.bill.id)))
+        data = {
+            'sku': '555',
+            'name': 'myitem',
+            'description': 'bleh',
+            'qty': 44,
+            'bill': self.bill,
+            'company': self.company,
+        }
+        with new_item(models.BillItem) as new:
+            r = self.c.post(
+                reverse('add_item_to_bill',
+                        args=(self.company.id, self.bill.id)),
+                make_post(data)
+            )
+        self.assertRedirects(
+            r, reverse('view_bill', args=(self.company.id, self.bill.id)))
+        self.assertObjectMatchesData(new, data)
 
     def test_add_item_to_final_bill_submit(self):
         """
@@ -367,15 +420,18 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         """
         self.bill.is_proforma = False
         self.bill.save()
-        url = reverse('add_item_to_bill', args=(self.company.id, self.bill.id))
-        r = self.c.post(url, {
+        data = {
             'sku': '555',
-            'name': 'bla',
-            'description': 'desc',
-            'qty': 3,
-            'bill': self.bill.id,
-            'company': self.company.id,
-        })
+            'name': 'myitem',
+            'description': 'bleh',
+            'qty': 44,
+            'bill': self.bill,
+            'company': self.company,
+        }
+        r = self.c.post(
+            reverse('add_item_to_bill', args=(self.company.id, self.bill.id)),
+            make_post(data)
+        )
         self.assertEquals(r.status_code, 403)
 
     def test_add_item_to_final_bill(self):
@@ -392,35 +448,35 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         """
         Ensures you can edit items in a bill
         """
-        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
-        r = self.c.get(url)
+        r = self.c.get(
+            reverse('edit_item_in_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id))
+        )
         self.assertEquals(r.status_code, 200)
-        self.assertContainsItem(r, self.bill_item)
+        self.assertContainsObject(
+            r, self.bill_item, fields=['name', 'sku', 'description'])
 
     def test_edit_item_in_bill_submit(self):
         """
         Ensures you can edit and submit items to bills
         """
-        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
-        sku = '555'
-        name = 'myitem'
-        description = 'bleh'
-        qty = 44
-        bill_id = self.bill.id
-        r = self.c.post(url, {
-            'sku': sku,
-            'name': name,
-            'description': description,
-            'qty': qty,
-            'bill': bill_id,
-            'company': self.company.id,
-        })
-        self.assertRedirects(r, reverse('view_bill', args=(self.company.id, self.bill.id)))
+        data = {
+            'sku': '555',
+            'name': 'myitem',
+            'description': 'bleh',
+            'qty': 44,
+            'bill': self.bill,
+            'company': self.company,
+        }
+        r = self.c.post(
+            reverse('edit_item_in_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id)),
+            make_post(data)
+        )
+        self.assertRedirects(
+            r, reverse('view_bill', args=(self.company.id, self.bill.id)))
         bill_item = models.BillItem.objects.get(id=self.bill_item.id)
-        self.assertEquals(bill_item.sku, sku)
-        self.assertEquals(bill_item.name, name)
-        self.assertEquals(bill_item.description, description)
-        self.assertEquals(bill_item.qty, qty)
+        self.assertObjectMatchesData(bill_item, data)
 
     def test_edit_item_in_final_bill(self):
         """
@@ -428,8 +484,10 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         """
         self.bill.is_proforma = False
         self.bill.save()
-        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
-        r = self.c.get(url)
+        r = self.c.get(
+            reverse('edit_item_in_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id))
+        )
         self.assertEquals(r.status_code, 403)
 
     def test_edit_item_in_final_bill_submit(self):
@@ -438,29 +496,32 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         """
         self.bill.is_proforma = False
         self.bill.save()
-        url = reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
-        sku = '555'
-        name = 'myitem'
-        description = 'bleh'
-        qty = 44
-        bill_id = self.bill.id
-        r = self.c.post(url, {
-            'sku': sku,
-            'name': name,
-            'description': description,
-            'qty': qty,
-            'bill': bill_id,
-            'company': self.company.id,
-        })
+        data = {
+            'sku': '555',
+            'name': 'myitem',
+            'description': 'bleh',
+            'qty': 44,
+            'bill': self.bill,
+            'company': self.company,
+        }
+        r = self.c.post(
+            reverse('edit_item_in_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id)),
+            make_post(data)
+        )
         self.assertEquals(r.status_code, 403)
 
     def test_delete_item_from_bill(self):
         """
         Ensures you can delete an item in a proforma bill using a POST
         """
-        url = reverse('delete_item_from_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
-        r = self.c.post(url, {})
-        self.assertRedirects(r, reverse('view_bill', args=(self.company.id, self.bill.id)))
+        r = self.c.post(
+            reverse('delete_item_from_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id)),
+            {}
+        )
+        self.assertRedirects(
+            r, reverse('view_bill', args=(self.company.id, self.bill.id)))
         self.assertFalse(models.BillItem.objects.filter(id=self.bill_item.id))
 
     def test_delete_item_from_final_bill(self):
@@ -469,17 +530,27 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         """
         self.bill.is_proforma = False
         self.bill.save()
-        url = reverse('delete_item_from_bill', args=(self.company.id, self.bill.id, self.bill_item.id))
-        r = self.c.post(url, {})
+        r = self.c.post(
+            reverse('delete_item_from_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id)),
+            {}
+        )
         self.assertTrue(models.Bill.objects.filter(id=self.bill.id))
         self.assertEquals(r.status_code, 403)  # Forbidden
 
-    def test_delete_item_from_bill_get(self):
+    def test_get_not_allowed(self):
         """
-        Ensures GET fails to delete an item in a bill
+        Ensures GET methods do nothing for some URLs
         """
-        r = self.c.get(reverse('delete_item_from_bill', args=(self.company.id, self.bill.id, self.bill_item.id)))
-        self.assertEquals(r.status_code, 405)
+        urls = [
+            reverse('delete_item_from_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id)),
+            reverse('new_bill', args=(self.company.id,)),
+            reverse('delete_bill', args=(self.company.id, self.bill.id)),
+        ]
+        for url in urls:
+            r = self.c.get(url)
+            self.assertEquals(r.status_code, 405)
 
     def test_access_denied(self):
         """
@@ -502,7 +573,10 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
             reverse('new_bill', args=(self.company.id,)),
             reverse('delete_bill', args=(self.company.id, self.bill.id)),
             reverse('add_item_to_bill', args=(self.company.id, self.bill.id)),
-            reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, self.bill_item.id)),
+            reverse('edit_item_in_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id)),
+            reverse('delete_item_from_bill',
+                    args=(self.company.id, self.bill.id, self.bill_item.id)),
         ]
         try:
             for url in urls:

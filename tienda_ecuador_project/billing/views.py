@@ -193,6 +193,7 @@ class DeleteBill(HasAccessToCompanyMixin):
 
 class AddItemToBill(HasAccessToCompanyMixin):
     form_class = BillItemForm
+
     def get(self, request, company_id, bill_id):
         bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
         if not bill.can_be_modified():
@@ -231,10 +232,13 @@ class AddItemToBill(HasAccessToCompanyMixin):
             }
             return render(request, "billing/add_item_to_bill.html", field_dict)
 
+
 class EditItemInBill(HasAccessToCompanyMixin):
     form_class = BillItemForm
+
     def get(self, request, company_id, bill_id, item_id):
-        item = get_object_or_404(BillItem, id=item_id, company_id=company_id, bill_id=bill_id)
+        item = get_object_or_404(BillItem, id=item_id,
+                                 company_id=company_id, bill_id=bill_id)
         bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
         if not bill.can_be_modified():
             # The bill has been issued, and can't be modified
@@ -253,7 +257,8 @@ class EditItemInBill(HasAccessToCompanyMixin):
 
     def post(self, request, company_id, bill_id, item_id):
         bill = get_object_or_404(Bill, id=bill_id, company_id=company_id)
-        bill_item = get_object_or_404(BillItem, bill_id=bill_id, company_id=company_id, id=item_id)
+        bill_item = get_object_or_404(BillItem, bill_id=bill_id,
+                                      company_id=company_id, id=item_id)
         if not bill.can_be_modified():
             # The bill has been issued, and can't be modified
             return HttpResponseForbidden("Bill is definitive")
@@ -268,14 +273,17 @@ class EditItemInBill(HasAccessToCompanyMixin):
                 'bill_id': bill_id,
                 'form': form,
                 'bill': bill,
+                'item': item,
             }
-            return render(request, "billing/add_item_to_bill.html", field_dict)
+            return render(request, "billing/edit_item_in_bill.html", field_dict)
+
 
 class DeleteItemFromBill(HasAccessToCompanyMixin):
     def post(self, request, company_id, bill_id, item_id):
         bill = get_object_or_404(Bill, pk=bill_id, company_id=company_id)
         if bill.can_be_modified():
-            item = get_object_or_404(BillItem, id=item_id, bill_id=bill_id, company_id=company_id)
+            item = get_object_or_404(BillItem, id=item_id,
+                                     bill_id=bill_id, company_id=company_id)
             item.delete()
             return redirect("view_bill", company_id, bill_id)
         else:
