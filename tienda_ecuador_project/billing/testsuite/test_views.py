@@ -246,6 +246,8 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertContainsObject(response, self.item,
                                   fields=['name', 'sku', 'description'])
         self.assertContains(response,
+                            reverse('edit_item', args=(self.company.id, self.item.id)))
+        self.assertContains(response,
                             reverse('company_index', args=(self.company.id,)))
 
     def test_edit_item(self):
@@ -463,6 +465,9 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         self.assertEquals(r.status_code, 200)
         self.assertContainsObject(
             r, self.bill_item, fields=['name', 'sku', 'description'])
+        # Back/Cancel link
+        self.assertContains(
+            r, reverse('view_bill', args=(self.company.id, self.bill.id)))
 
     def test_edit_item_in_bill_submit(self):
         """
