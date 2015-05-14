@@ -295,6 +295,14 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         for item in self.bill.items:
             self.assertContainsObject(response, item,
                                       fields=['name', 'sku', 'description'])
+            self.assertContains(response,
+                                reverse('edit_item_in_bill', args=(self.company.id, self.bill.id, item.id)))
+            self.assertContains(response,
+                                reverse('delete_item_from_bill', args=(self.company.id, self.bill.id, item.id)))
+        self.assertContains(response,
+                            reverse('edit_bill', args=(self.company.id, self.bill.id)))
+        self.assertContains(response,
+                            reverse('add_item_to_bill', args=(self.company.id, self.bill.id)))
         # Cancel/Back button/link
         self.assertContains(response,
                             reverse('company_index', args=(self.company.id,)))

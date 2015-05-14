@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html>
-
-    <head>
-        <title>Billing</title>
-    </head>
-
-    <body>
-        <h1>Bill</h1>
+{% extends 'billing/l2_bill_selected.html' %}
+{% block title_l2 %}Añadir item a factura - {% endblock %}
+{% block body_l2 %}
         Number: {{ bill.number }} <br />
         Issued to: {{ bill.issued_to }} <br />
         <h1>Add item</h1>
@@ -19,6 +13,4 @@
             <button type='submit'>Add item</button>
             </form>
         <a href="{% url 'view_bill' company_id bill_id %}">Return</a>
-    </body>
-
-</html>
+{% endblock %}

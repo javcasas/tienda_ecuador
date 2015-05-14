@@ -1,17 +1,10 @@
-<!DOCTYPE html>
-<html>
-
-    <head>
-        <title>Billing</title>
-    </head>
-
-    <body>
+{% extends 'billing/l2_item_selected.html' %}
+{% block title %}Editar item {{ item.sku }} - {% endblock %}
+{% block body_l2 %}
         <form method='post' action='.'>
             {% csrf_token %}
             {{ form.as_p }}
             <button type='submit'>Submit</button>
         </form>
         <a href='{% url 'view_item' company_id item_id %}'>Cancel</a>
-    </body>
-
-</html>
+{% endblock %}

@@ -1,6 +1,10 @@
-<form method='post' action='.'>
-{% csrf_token %}
-{{ form.as_p }}
-<button type='submit' >Update</button>
-</form>
-<a href='{% url "view_bill" company_id bill_id %}'>Back</a>
+{% extends 'billing/l2_bill_selected.html' %}
+{% block title_l2 %}Editar -{% endblock %}
+{% block body_l2 %}
+    <form method='post' action='.'>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type='submit' >Update</button>
+    </form>
+    <a href='{% url "view_bill" company_id bill_id %}'>Back</a>
+{% endblock %}

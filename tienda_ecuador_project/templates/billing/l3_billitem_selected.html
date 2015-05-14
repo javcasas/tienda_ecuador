@@ -1,0 +1,7 @@
+{% extends 'billing/l2_bill_selected.html' %}
+{% block title_l2 %}{% block title_l3 %}{% endblock %}Item {{ item.sku }} - {% endblock %}
+{% block body_l2 %}
+    <h1>{{ item.sku }} - {{ item.name }}</h1>
+    {% block body_l3 %}
+    {% endblock %}
+{% endblock %}

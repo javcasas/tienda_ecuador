@@ -1,6 +1,6 @@
-{% extends 'billing/selected_company.html' %}
-{% block title_l1 %}Ver Factura{% endblock %}
-{% block body_l1_block %}
+{% extends 'billing/l2_bill_selected.html' %}
+{% block title_l2 %}Ver Factura{% endblock %}
+{% block body_l2 %}
         <h1>Bill</h1>
         Number: {{ bill.number }} <br />
         Issued to: {{ bill.issued_to }} <br />
@@ -12,8 +12,8 @@
             Description: {{ item.description }} <br />
             Qty: {{ item.qty }} <br />
             {% if bill.can_be_modified %}
-            <a href="#">Edit</a>
-            <form action="#" method='post'>
+            <a href="{% url 'edit_item_in_bill' company_id bill_id item.id %}">Edit</a>
+            <form action="{% url 'delete_item_from_bill' company_id bill_id item.id %}" method='post'>
                 {% csrf_token %}
                 <button type='submit'>Delete</button>
             </form>
@@ -21,8 +21,8 @@
             <hr />
         {% endfor %}
         {% if bill.can_be_modified %}
-            <a href="#">Edit</a>
-            <a href="#">Add Item</a>
+            <a href="{% url 'edit_bill' company_id bill_id %}">Edit</a>
+            <a href="{% url 'add_item_to_bill' company_id bill_id %}">Add Item</a>
         {% endif %}
         <a href='{% url "company_index" company_id %}'>Back</a>
 {% endblock %}

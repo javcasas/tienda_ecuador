@@ -1,5 +1,9 @@
-<form method='post' action='.'>
-{% csrf_token %}
-{{ form.as_p }}
-<button type='submit' >Update</button>
-</form>
+{% extends 'billing/l3_billitem_selected.html' %}
+{% block title_l3 %}Editar {% endblock %}
+{% block body_l3 %}
+    <form method='post' action='.'>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type='submit' >Update</button>
+    </form>
+{% endblock %}

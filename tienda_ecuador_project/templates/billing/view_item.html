@@ -1,16 +1,7 @@
-<!DOCTYPE html>
-<html>
-
-    <head>
-        <title>Billing</title>
-    </head>
-
-    <body>
-        <h1>Item</h1>
+{% extends 'billing/l2_item_selected.html' %}
+{% block body_l2 %}
         SKU: {{ item.sku }} <br />
         Name: {{ item.name }} <br />
         Description: {{ item.description }} <br />
         <a href='{% url "company_index" company_id %}'>Back</a>
-    </body>
-
-</html>
+{% endblock %}
