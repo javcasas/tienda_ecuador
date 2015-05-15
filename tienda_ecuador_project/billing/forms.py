@@ -38,3 +38,14 @@ class BillItemForm(forms.ModelForm):
         # Provide an association between the ModelForm and a model
         model = BillItem
         fields = ('sku', 'name', 'description', 'qty', 'bill', 'company')
+
+
+class CustomerForm(forms.ModelForm):
+    name = forms.CharField(max_length=50, help_text="Please enter the name of the customer.")
+    company = forms.ModelChoiceField(widget=forms.HiddenInput, queryset=Company.objects.all(), help_text="Please select the company.")
+
+    # An inline class to provide additional information on the form.
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        model = Customer
+        fields = ('name', 'company',)

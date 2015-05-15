@@ -375,6 +375,30 @@ class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
         #    self.assertContainsObject(r, item,
         #                              fields=['name', 'sku', 'description'])
 
+    def test_new_customer(self):
+        """
+        Ensures you can create new customers
+        """
+        url = reverse('new_customer', args=(self.company.id,))
+        r = self.c.get(url)
+        self.assertEquals(r.status_code, 200)
+
+    def test_new_customer_submit(self):
+        """
+        Ensures you can create new customers
+        """
+        data = {
+            'company': self.company,
+            'name': 'Ramon',
+        }
+        with new_item(models.Customer) as new:
+            r = self.c.post(
+                reverse('new_customer', args=(self.company.id,)),
+                make_post(data)
+            )
+        self.assertRedirects(r, reverse('company_index', args=(self.company.id,)))
+        self.assertObjectMatchesData(new, data)
+
     def test_add_item_to_bill_submit(self):
         """
         Ensures you can add items to bills

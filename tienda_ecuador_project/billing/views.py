@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseForbidden
 from models import Item, Bill, BillItem, CompanyUser, Company, Customer
-from forms import ItemForm, BillForm, BillItemForm
+from forms import ItemForm, BillForm, BillItemForm, CustomerForm
 from django.contrib.auth.decorators import login_required
 from functools import wraps
 from django.views.generic import View
@@ -347,3 +347,32 @@ class DeleteItemFromBill(BillItemSelectedMixin):
         param_dict = self.base_param_dict
         param_dict['item'].delete()
         return redirect("view_bill", company_id, bill_id)
+
+class NewCustomer(CompanySelectedMixin):
+    form_class = CustomerForm
+    @CompanySelectedMixin.prepare_base_param_dict
+    def get(self, request, company_id):
+        """
+        Shows a form to create new customers
+        """
+        param_dict = self.base_param_dict
+        param_dict['new'] = True
+        data = {
+            'company': company_id,
+        }
+        param_dict['form'] = self.form_class(data)
+        return render(request, "billing/edit_customer.html", param_dict)
+
+    @CompanySelectedMixin.prepare_base_param_dict
+    def post(self, request, company_id):
+        """
+        Accepts submit
+        """
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("company_index", company_id)
+        else:
+            param_dict = self.base_param_dict
+            param_dict['form'] = form
+            return render(request, "billing/edit_customer.html", param_dict)

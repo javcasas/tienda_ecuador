@@ -40,9 +40,9 @@ def my_populate():
     i22 = add_item(sku='t2-946', name='Item T22', description='Item 2 en Tienda 2', company=t2)
     i23 = add_item(sku='t2-146', name='Item T23', description='Item 3 en Tienda 2', company=t2)
 
-    c1 = add_customer(name='Paco')
-    c2 = add_customer(name='Pepe')
-    c3 = add_customer(name='Luis')
+    c1 = add_customer(name='Paco', company=t1)
+    c2 = add_customer(name='Pepe', company=t1)
+    c3 = add_customer(name='Luis', company=t2)
 
     u1 = add_user(username='roberto', password='qwerty', email='')
     ut1 = add_company_user(user=u1, company=t1)

@@ -1,0 +1,10 @@
+{% extends 'billing/l1_company_selected.html' %}
+{% block title %}{% if new %}Nuevo Cliente{% else %}Editar Cliente {{ customer.name }}{% endif %} - {% endblock %}
+{% block body_l1 %}
+        <form method='post' action='.'>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type='submit'>Submit</button>
+        </form>
+        <a href='{% url 'company_index' company_id %}'>Cancelar</a>
+{% endblock %}
