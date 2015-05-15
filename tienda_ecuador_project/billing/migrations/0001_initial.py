@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 from django.conf import settings
+import billing.models
 
 
 class Migration(migrations.Migration):
@@ -12,6 +13,26 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.CreateModel(
+            name='BaseBill',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('number', models.CharField(max_length=20, blank=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='BaseCustomer',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=100)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
         migrations.CreateModel(
             name='BaseItem',
             fields=[
@@ -27,30 +48,38 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Bill',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('number', models.CharField(max_length=20, blank=True)),
-                ('is_proforma', models.BooleanField(default=True)),
+                ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
             ],
             options={
             },
-            bases=(models.Model,),
+            bases=('billing.basebill', billing.models.ReadOnlyMixin),
+        ),
+        migrations.CreateModel(
+            name='BillCustomer',
+            fields=[
+                ('basecustomer_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseCustomer')),
+            ],
+            options={
+            },
+            bases=('billing.basecustomer', billing.models.ReadOnlyMixin),
         ),
         migrations.CreateModel(
             name='BillItem',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
-                ('qty', models.IntegerField()),
                 ('bill', models.ForeignKey(to='billing.Bill')),
             ],
             options={
             },
-            bases=('billing.baseitem',),
+            bases=('billing.baseitem', billing.models.ReadOnlyMixin),
         ),
         migrations.CreateModel(
             name='Company',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=100)),
+                ('sri_ruc', models.CharField(unique=True, max_length=100)),
+                ('sri_razon_social', models.CharField(unique=True, max_length=100)),
             ],
             options={
             },
@@ -70,37 +99,65 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Customer',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(max_length=100)),
+                ('basecustomer_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseCustomer')),
                 ('company', models.ForeignKey(to='billing.Company')),
             ],
             options={
             },
-            bases=(models.Model,),
+            bases=('billing.basecustomer',),
         ),
         migrations.CreateModel(
             name='Item',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
+                ('company', models.ForeignKey(to='billing.Company')),
+            ],
+            options={
+            },
+            bases=('billing.baseitem',),
+        ),
+        migrations.CreateModel(
+            name='ProformaBill',
+            fields=[
+                ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
+            ],
+            options={
+            },
+            bases=('billing.basebill',),
+        ),
+        migrations.CreateModel(
+            name='ProformaBillCustomer',
+            fields=[
+                ('basecustomer_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseCustomer')),
+            ],
+            options={
+            },
+            bases=('billing.basecustomer',),
+        ),
+        migrations.CreateModel(
+            name='ProformaBillItem',
+            fields=[
+                ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
+                ('proforma_bill', models.ForeignKey(to='billing.ProformaBill')),
             ],
             options={
             },
             bases=('billing.baseitem',),
         ),
         migrations.AddField(
-            model_name='bill',
-            name='company',
-            field=models.ForeignKey(to='billing.Company'),
+            model_name='proformabill',
+            name='issued_to',
+            field=models.ForeignKey(to='billing.ProformaBillCustomer'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='bill',
             name='issued_to',
-            field=models.ForeignKey(to='billing.Customer', blank=True),
+            field=models.ForeignKey(to='billing.BillCustomer'),
             preserve_default=True,
         ),
         migrations.AddField(
-            model_name='baseitem',
+            model_name='basebill',
             name='company',
             field=models.ForeignKey(to='billing.Company'),
             preserve_default=True,

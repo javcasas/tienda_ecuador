@@ -2,11 +2,45 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class ReadOnlyMixin(object):
+    """
+    A mixin that disables overwriting or deleting objects
+    """
+    def save(self, *args, **kwargs):
+        """
+        Disable save
+        """
+        if self.id:
+            raise Exception("{} can't be saved".format(self.__class__))
+        else:
+            return models.Model.save(self, *args, **kwargs)
+
+    def secret_save(self, *args, **kwargs):
+        """
+        Secret save does save
+        """
+        return models.Model.save(self, *args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """
+        Disable delete
+        """
+        raise Exception("{} can't be deleted".format(self.__class__))
+
+    def secret_delete(self, *args, **kwargs):
+        """
+        Secret delete does delete
+        """
+        return models.Model.delete(self, *args, **kwargs)
+
+
 class Company(models.Model):
     """
     Represents a company
     """
     name = models.CharField(max_length=100, unique=True)
+    sri_ruc = models.CharField(max_length=100, unique=True)
+    sri_razon_social = models.CharField(max_length=100, unique=True)
 
     def __unicode__(self):
         return self.name
@@ -24,6 +58,72 @@ class CompanyUser(models.Model):
         return self.user.username
 
 
+##################################
+# Customers
+##################################
+class BaseCustomer(models.Model):
+    """
+    Represents a generic customer
+    """
+    name = models.CharField(max_length=100)
+
+    def __unicode__(self):
+        return self.name
+
+
+class Customer(BaseCustomer):
+    """
+    Represents a generic customer
+    """
+    company = models.ForeignKey(Company)
+
+    def __unicode__(self):
+        return self.name
+
+
+class BillCustomer(ReadOnlyMixin, BaseCustomer):
+    """
+    A customer in a final bill
+    """
+
+
+class ProformaBillCustomer(BaseCustomer):
+    """
+    A customer in a proforma bill
+    """
+
+
+#####################################
+# Bill
+#####################################
+class BaseBill(models.Model):
+    """
+    Represents a generic bill
+    """
+    number = models.CharField(max_length=20, blank=True)
+    company = models.ForeignKey(Company)
+
+    def __unicode__(self):
+        return "{} - {}".format(self.number, self.issued_to)
+
+
+class ProformaBill(BaseBill):
+    """
+    Represents a proforma bill
+    """
+    issued_to = models.ForeignKey(ProformaBillCustomer)
+
+
+class Bill(ReadOnlyMixin, BaseBill):
+    """
+    Represents a bill
+    """
+    issued_to = models.ForeignKey(BillCustomer)
+
+
+###########################
+# Items
+##########################
 class BaseItem(models.Model):
     """
     Represents an abstract stock item
@@ -31,91 +131,24 @@ class BaseItem(models.Model):
     sku = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
-    company = models.ForeignKey(Company)
 
 
 class Item(BaseItem):
     """
     Represents an item that can be sold or bought
     """
-    pass
-
-
-class Customer(models.Model):
-    """
-    Represents a customer
-    """
-    name = models.CharField(max_length=100)
     company = models.ForeignKey(Company)
 
-    def __unicode__(self):
-        return self.name
 
-
-class Bill(models.Model):
+class ProformaBillItem(BaseItem):
     """
-    Represents a bill
+    Represents an item in a proforma bill
     """
-    issued_to = models.ForeignKey(Customer, blank=True)
-    number = models.CharField(max_length=20, blank=True)
-    company = models.ForeignKey(Company)
-    is_proforma = models.BooleanField(default=True)
-
-    @property
-    def items(self):
-        return BillItem.objects.filter(bill=self, company=self.company)
-
-    def __unicode__(self):
-        return "{} - {}".format(self.number, self.issued_to)
-
-    def can_be_modified(self):
-        """
-        Returns True or False if the bill is definitive or not
-        """
-        return self.is_proforma
-
-    def save(self, *args, **kwargs):
-        """
-        Tries to save the new values, but doesn't do anything it the bill can't be modified
-        """
-        try:
-            if Bill.objects.get(pk=self.pk).can_be_modified():
-                super(Bill, self).save(*args, **kwargs)
-        except Bill.DoesNotExist:
-            super(Bill, self).save(*args, **kwargs)
-
-    def secret_save(self, *args, **kwargs):
-        """
-        Does the save() without checking
-        """
-        super(Bill, self).save(*args, **kwargs)
+    proforma_bill = models.ForeignKey(ProformaBill)
 
 
-class BillItem(BaseItem):
+class BillItem(ReadOnlyMixin, BaseItem):
     """
-    Represents an intem in a bill
+    Represents an item in a final bill
     """
     bill = models.ForeignKey(Bill)
-    qty = models.IntegerField()
-
-    def __unicode__(self):
-        return "{} x {}".format(self.sku, self.qty)
-
-    def save(self, *args, **kwargs):
-        """
-        Tries to save the new values, but doesn't do anything it the bill can't be modified
-        """
-        if not self.bill.can_be_modified():
-            return
-        try:
-            prev_item = BillItem.objects.get(pk=self.pk)
-            if prev_item.bill.can_be_modified():
-                super(BillItem, self).save(*args, **kwargs)
-        except BillItem.DoesNotExist:
-            super(BillItem, self).save(*args, **kwargs)
-
-    def secret_save(self, *args, **kwargs):
-        """
-        Does the save() without checking
-        """
-        super(BillItem, self).save(*args, **kwargs)

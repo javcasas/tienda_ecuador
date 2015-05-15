@@ -12,17 +12,22 @@ def add_instance(klass, **kwargs):
     and returns it after saving it
     """
     s = klass.objects.get_or_create(**kwargs)[0]
-    s.save()
     return s
 
 
 add_Company = partial(add_instance, models.Company)
-add_Item = partial(add_instance, models.Item)
-add_Customer = partial(add_instance, models.Customer)
 add_CompanyUser = partial(add_instance, models.CompanyUser)
+
+add_ProformaBill = partial(add_instance, models.ProformaBill)
 add_Bill = partial(add_instance, models.Bill)
+
+add_Item = partial(add_instance, models.Item)
+add_ProformaBillItem = partial(add_instance, models.ProformaBillItem)
 add_BillItem = partial(add_instance, models.BillItem)
 
+add_Customer = partial(add_instance, models.Customer)
+add_BillCustomer = partial(add_instance, models.BillCustomer)
+add_ProformaBillCustomer = partial(add_instance, models.ProformaBillCustomer)
 
 def add_User(**kwargs):
     pw = kwargs.pop("password")
@@ -41,3 +46,10 @@ def try_delete(item):
             item.delete()
     except ObjectDoesNotExist:
         pass
+
+
+class TestHelpersMixin(object): 
+    def assertObjectMatchesData(self, ob, data, msg=''):
+        for key, value in data.iteritems():
+            n_msg = msg + ' data["{0}"] != ob.{0}'.format(key)
+            self.assertEquals(getattr(ob, key), value, n_msg)
