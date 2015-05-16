@@ -1,4 +1,6 @@
 from functools import partial
+from contextlib import contextmanager
+import urllib
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -50,6 +52,47 @@ def try_delete(item):
 
 class TestHelpersMixin(object): 
     def assertObjectMatchesData(self, ob, data, msg=''):
+        """
+        Checks that every field in the data
+        exists in the object and is the same
+        """
         for key, value in data.iteritems():
             n_msg = msg + ' data["{0}"] != ob.{0}'.format(key)
             self.assertEquals(getattr(ob, key), value, n_msg)
+
+
+@contextmanager
+def new_item(kind):
+    """
+    Finds and returns the new item of the specified kind
+    created in the context
+    """
+    def get_set(model):
+        return set(model.objects.all())
+
+    class GetattrProxy(object):
+        ob = None
+
+        def __getattr__(self, field):
+            return getattr(self.ob, field)
+
+    items = get_set(kind)
+    res = GetattrProxy()
+    yield res
+    new_items = (get_set(kind) - items)
+    assert len(new_items) == 1
+    res.ob = new_items.pop()
+
+
+def make_post(data):
+    """
+    Converts a data dict into a data dict that can be used in a POST
+    """
+    def convert_field(f):
+        try:
+            return f.id
+        except:
+            return f
+    return {k: convert_field(v) for (k, v) in data.iteritems()}
+
+make_put = urllib.urlencode
