@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class ReadOnlyObject(Exception):
+    """
+    Exception for when trying to write read-only objects
+    """
 
 class ReadOnlyMixin(object):
     """
@@ -11,7 +15,7 @@ class ReadOnlyMixin(object):
         Disable save
         """
         if self.id:
-            raise Exception("{} can't be saved".format(self.__class__))
+            raise ReadOnlyObject("{} can't be saved".format(self.__class__))
         else:
             return models.Model.save(self, *args, **kwargs)
 
@@ -25,7 +29,7 @@ class ReadOnlyMixin(object):
         """
         Disable delete
         """
-        raise Exception("{} can't be deleted".format(self.__class__))
+        raise ReadOnlyObject("{} can't be deleted".format(self.__class__))
 
     def secret_delete(self, *args, **kwargs):
         """
@@ -91,6 +95,10 @@ class ProformaBillCustomer(BaseCustomer):
     """
     A customer in a proforma bill
     """
+    def toBillCustomer(self):
+        new = BillCustomer(name=self.name)
+        new.save()
+        return new
 
 
 #####################################
@@ -107,18 +115,25 @@ class BaseBill(models.Model):
         return "{} - {}".format(self.number, self.issued_to)
 
 
+class Bill(ReadOnlyMixin, BaseBill):
+    """
+    Represents a bill
+    """
+    issued_to = models.ForeignKey(BillCustomer)
+
+
 class ProformaBill(BaseBill):
     """
     Represents a proforma bill
     """
     issued_to = models.ForeignKey(ProformaBillCustomer)
 
-
-class Bill(ReadOnlyMixin, BaseBill):
-    """
-    Represents a bill
-    """
-    issued_to = models.ForeignKey(BillCustomer)
+    def toBill(self):
+        new = Bill(company=self.company,
+                   number=self.number,
+                   issued_to=self.issued_to.toBillCustomer())
+        new.save()
+        return new
 
 
 ###########################
@@ -145,6 +160,14 @@ class ProformaBillItem(BaseItem):
     Represents an item in a proforma bill
     """
     proforma_bill = models.ForeignKey(ProformaBill)
+    qty = models.DecimalField(max_digits=20, decimal_places=8)
+
+    def toBillItem(self, bill):
+        new = BillItem(sku=self.sku, name=self.name,
+                       description=self.description,
+                       bill=bill, qty=self.qty)
+        new.save()
+        return new
 
 
 class BillItem(ReadOnlyMixin, BaseItem):
@@ -152,3 +175,4 @@ class BillItem(ReadOnlyMixin, BaseItem):
     Represents an item in a final bill
     """
     bill = models.ForeignKey(Bill)
+    qty = models.DecimalField(max_digits=20, decimal_places=8)

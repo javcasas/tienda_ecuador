@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
             ],
             options={
             },
-            bases=('billing.basebill', billing.models.ReadOnlyMixin),
+            bases=(billing.models.ReadOnlyMixin, 'billing.basebill'),
         ),
         migrations.CreateModel(
             name='BillCustomer',
@@ -61,17 +61,18 @@ class Migration(migrations.Migration):
             ],
             options={
             },
-            bases=('billing.basecustomer', billing.models.ReadOnlyMixin),
+            bases=(billing.models.ReadOnlyMixin, 'billing.basecustomer'),
         ),
         migrations.CreateModel(
             name='BillItem',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
+                ('qty', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('bill', models.ForeignKey(to='billing.Bill')),
             ],
             options={
             },
-            bases=('billing.baseitem', billing.models.ReadOnlyMixin),
+            bases=(billing.models.ReadOnlyMixin, 'billing.baseitem'),
         ),
         migrations.CreateModel(
             name='Company',
@@ -138,6 +139,7 @@ class Migration(migrations.Migration):
             name='ProformaBillItem',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
+                ('qty', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('proforma_bill', models.ForeignKey(to='billing.ProformaBill')),
             ],
             options={

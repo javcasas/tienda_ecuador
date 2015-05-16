@@ -1,6 +1,7 @@
 from django.test import TestCase
 from unittest import skip
-from billing.models import (Company,
+from billing.models import (ReadOnlyObject,
+                            Company,
                             CompanyUser,
                             ProformaBill,
                             Bill,
@@ -66,6 +67,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'sku': 'T123',
                  'name': 'Widget',
                  'description': 'Widget description',
+                 'qty': 14,
                  'proforma_bill': add_ProformaBill(company=self.company,
                                                    number='3',
                                                    issued_to=add_ProformaBillCustomer(name='Pepe'))}),
@@ -73,6 +75,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'sku': 'T123',
                  'name': 'Widget',
                  'description': 'Widget description',
+                 'qty': 14,
                  'bill': add_Bill(company=self.company,
                                   number='32',
                                   issued_to=add_BillCustomer(name='Pepe'))}),
@@ -114,6 +117,7 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
                 {'sku': 'T123',
                  'name': 'Widget',
                  'description': 'Widget description',
+                 'qty': 14,
                  'bill': add_Bill(company=self.company,
                                   number='32',
                                   issued_to=add_BillCustomer(name='Pepe'))}),
@@ -126,9 +130,9 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
         for cls, data in self.tests:
             ob = cls(**data)
             ob.save()
-            with self.assertRaises(Exception):
+            with self.assertRaises(ReadOnlyObject):
                 ob.save()
-            with self.assertRaises(Exception):
+            with self.assertRaises(ReadOnlyObject):
                 ob.delete()
 
     def test_secret_methods(self):
@@ -142,3 +146,73 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
             ob.secret_delete()
             with self.assertRaises(cls.DoesNotExist):
                 cls.objects.get(id=ob.id)
+
+
+class ProformaToFinalTests(TestCase, TestHelpersMixin):
+    """
+    Tests that check converting a proforma into a final
+    """
+    def setUp(self):
+        self.company = add_Company(name="Tienda 1")
+        self.user = add_User(username="Paco", password='')
+        self.tests = [
+            (ProformaBillCustomer,
+                {'name': "Pepe"}),
+            (BillCustomer,
+                {'name': "Pepe"}),
+            (ProformaBill,
+                {'company': self.company,
+                 'number': '3',
+                 'issued_to': add_ProformaBillCustomer(name='Pepe')}),
+            (Bill,
+                {'company': self.company,
+                 'number': '3',
+                 'issued_to': add_BillCustomer(name='Pepe')}),
+            (ProformaBillItem,
+                {'sku': 'T123',
+                 'name': 'Widget',
+                 'description': 'Widget description',
+                 'qty': 14,
+                 'proforma_bill': add_ProformaBill(company=self.company,
+                                                   number='3',
+                                                   issued_to=add_ProformaBillCustomer(name='Pepe'))}),
+            (BillItem,
+                {'sku': 'T123',
+                 'name': 'Widget',
+                 'description': 'Widget description',
+                 'qty': 14,
+                 'bill': add_Bill(company=self.company,
+                                  number='32',
+                                  issued_to=add_BillCustomer(name='Pepe'))}),
+        ]
+
+    def test_ProformaBillCustomer_to_BillCustomer(self):
+        proforma = ProformaBillCustomer(name="Pepe")
+        proforma.save()
+        billcustomer = proforma.toBillCustomer()
+        self.assertEquals(billcustomer.name, 'Pepe')
+
+    def test_ProformaBill_to_Bill(self):
+        proforma = ProformaBill(issued_to=add_ProformaBillCustomer(name='Pepe'),
+                                company=self.company,
+                                number='3')
+        proforma.save()
+        bill = proforma.toBill()
+        self.assertEquals(bill.company, self.company)
+        self.assertEquals(bill.number, '3')
+        self.assertEquals(bill.issued_to.name, 'Pepe')
+
+    def test_ProformaBillItem_to_BillItem(self):
+        proforma = ProformaBill(issued_to=add_ProformaBillCustomer(name='Pepe'),
+                                company=self.company,
+                                number='3')
+        proforma.save()
+        bill = proforma.toBill()
+        data = dict(sku='T123',
+                    name='Widget',
+                    description='Widget description',
+                    qty=14)
+        proforma_item = ProformaBillItem(proforma_bill=proforma, **data)
+        proforma_item.save()
+        item = proforma_item.toBillItem(bill)
+        self.assertObjectMatchesData(item, dict(data, bill=bill))

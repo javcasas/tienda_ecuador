@@ -1,5 +1,7 @@
 from functools import partial
 from contextlib import contextmanager
+from unittest import skip
+import urllib
 
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
@@ -23,6 +25,8 @@ def make_post(data):
         except:
             return f
     return {k: convert_field(v) for (k, v) in data.iteritems()}
+
+make_put = urllib.urlencode
 
 
 @contextmanager
@@ -73,10 +77,15 @@ class LoggedInTests(TestCase):
         self.c = Client()
         r = self.c.post("/accounts/login/",
                         {'username': username, 'password': password})
-        self.assertEquals(r.status_code, 302)  # redirect to index
+        self.assertRedirects(r, reverse('index'))
 
-    def tearDown(self):
-        self.user.delete()
+    def assertContainsObject(self, response, item, fields):
+        """
+        Checks all the fields in a general object
+        """
+        for field in fields:
+            self.assertContains(response, getattr(item, field))
+
 
 
 class LoggedInWithCompanyTests(LoggedInTests):
@@ -85,14 +94,11 @@ class LoggedInWithCompanyTests(LoggedInTests):
     """
     def setUp(self):
         super(LoggedInWithCompanyTests, self).setUp()
-        self.company = add_Company(name='Tienda 1')
+        self.company = add_Company(name='Tienda 1',
+                                   sri_razon_social='Paco Pil',
+                                   sri_ruc='1234567890')
         self.company_user = add_CompanyUser(user=self.user,
                                             company=self.company)
-
-    def tearDown(self):
-        for i in [self.company_user, self.company]:
-            try_delete(i)
-        super(LoggedInWithCompanyTests, self).tearDown()
 
 
 class IndexViewTests(LoggedInWithCompanyTests):
@@ -101,18 +107,15 @@ class IndexViewTests(LoggedInWithCompanyTests):
         A logged-in user can view the billing index,
         and the index shows the available companies
         """
-        try:
-            company2 = add_Company(name="Tienda 2")
-            company2_user = add_CompanyUser(user=self.user, company=company2)
-            response = self.c.get(reverse('index'))
-            self.assertEquals(response.status_code, 200)
-            self.assertEquals(list(response.context['companies']),
-                              [self.company, company2])
-            self.assertContains(response, self.company.name)
-            self.assertContains(response, company2.name)
-        finally:
-            for i in [company2_user, company2]:
-                try_delete(i)
+        company2 = add_Company(name="Tienda 2")
+        company2_user = add_CompanyUser(user=self.user, company=company2)
+
+        response = self.c.get(reverse('index'))
+        self.assertEquals(response.status_code, 200)
+
+        for c in [self.company, company2]:
+            self.assertIn(c, response.context['companies'])
+            self.assertContains(response, c)
 
     def test_view_index_single_company(self):
         """
@@ -126,17 +129,60 @@ class IndexViewTests(LoggedInWithCompanyTests):
         """
         A logged-in user can't view the index for a company he has no access
         """
-        try:
-            company2 = add_Company(name="Tienda 2")
-            response = self.c.get(
-                reverse('company_index', args=(company2.id,))
+        company2 = add_Company(name="Tienda 2")
+        response = self.c.get(
+            reverse('company_index', args=(company2.id,))
+        )
+        self.assertEquals(response.status_code, 404)
+
+
+class LoggedInWithItemTests(LoggedInWithCompanyTests):
+    """
+    Logged in user that is associated with a company
+    Has company and items
+    """
+    def setUp(self):
+        super(LoggedInWithItemTests, self).setUp()
+        self.item = add_Item(sku='P1234',
+                             name='Item 1',
+                             description='Item 1 description',
+                             company=self.company)
+
+
+class ItemViewTests(LoggedInWithItemTests):
+    def test_view_item(self):
+        r = self.c.get(reverse('item_view', args=(self.company.id, self.item.id)))
+        self.assertContainsObject(r, self.item, ['sku', 'name', 'description'])
+
+    def test_create_item(self):
+        data = dict(sku='P1222',
+                    name='Item 2',
+                    description='Item 2 description')
+        with new_item(models.Item) as new:
+            r = self.c.post(
+                reverse('item_index', args=(self.company.id,)),
+                make_post(data),
             )
-            self.assertEquals(response.status_code, 404)
-        finally:
-            for i in [company2]:
-                try_delete(i)
+        self.assertRedirects(r, reverse('item_view', args=(self.company.id, new.id)))
 
+    def test_update_item(self):
+        data = dict(sku='P1222',
+                    name='Item 2',
+                    description='Item 2 description')
+        r = self.c.put(
+            reverse('item_edit', args=(self.company.id, self.item.id)),
+            make_put(data),
+        )
+        self.assertRedirects(r, reverse('item_view', args=(self.company.id, self.item.id)))
+        
+    def test_delete_item(self):
+        r = self.c.delete(
+            reverse('item_edit', args=(self.company.id, self.item.id)),
+        )
+        self.assertRedirects(r, reverse('item_index', args=(self.company.id,)))
+        
 
+@skip
 class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
     """
     Logged in user associated with a company that has bills and items
