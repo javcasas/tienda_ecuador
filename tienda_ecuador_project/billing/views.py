@@ -62,106 +62,152 @@ class BillingView(View):
             return fn(request, **kwargs)
         return wrapper
 
-    def prepare_base_param_dict(self, request, **kwargs):
+    def prepare_kwargs(self, request, kwargs):
         """
-        Makes self.base_param_dict
+        Modifies kwargs to convert ids to instances or 404s
+        Also generates a context dict ready to be used in render
         """
         company_id = kwargs.get('company_id')
-        bill_id = kwargs.get('bill_id')
         item_id = kwargs.get('item_id')
-        param_dict = {}
-        self._base_param_dict = param_dict
+        customer_id = kwargs.get('customer_id')
+        res = {}
         if company_id:
             get_object_or_404(  # Ensure has access to the company
                 CompanyUser, user=request.user, company_id=company_id)
-            param_dict['company_id'] = company_id
-            param_dict['company'] = get_object_or_404(Company, id=company_id)
-            if bill_id:
-                param_dict['bill_id'] = bill_id
-                param_dict['bill'] = get_object_or_404(Bill, id=bill_id, company_id=company_id)
-                if item_id:
-                    param_dict['item_id'] = item_id
-                    param_dict['item'] = get_object_or_404(BillItem, id=item_id, bill_id=bill_id),
-            elif item_id:
-                param_dict['item_id'] = item_id
-                param_dict['item'] = get_object_or_404(Item, id=item_id, company_id=company_id)
+            res['company'] = get_object_or_404(Company, id=company_id)
+            if item_id:
+                res['item'] = get_object_or_404(Item, id=item_id, company_id=company_id)
+            elif customer_id:
+                res['customer'] = get_object_or_404(Customer, id=customer_id, company_id=company_id)
+        return res
 
     def dispatch(self, request, *args, **kwargs):
-        self.prepare_base_param_dict(request, **kwargs)
-        return super(BillingView, self).dispatch(request, *args, **kwargs)
+        """
+        Modified dispatch to apply:
+            * prepare_kwargs
+        """
+        new_kwargs = self.prepare_kwargs(request, kwargs)
+        return super(BillingView, self).dispatch(request, context=new_kwargs, **new_kwargs)
 
     @classmethod
     def as_view(cls, **initkwargs):
         """
-        Generates a view
+        modified as_view to apply:
+            * has_access_to_company
         """
         view = super(BillingView, cls).as_view(**initkwargs)
         view = has_access_to_company(view)
         return view
 
-    @property
-    def base_param_dict(self):
-        return self._base_param_dict.copy()
-
 
 class CompanyIndex(BillingView):
-    def get(self, request, company_id):
+    def get(self, request, context, company):
         """
         Shows an index for a company
         """
-        param_dict = self.base_param_dict
-        param_dict['items'] = Item.objects.filter(company_id=company_id)
-        param_dict['bills'] = Bill.objects.filter(company_id=company_id)
-        param_dict['customers'] = Customer.objects.filter(company_id=company_id)
-        return render(request, "billing/company_index.html", param_dict)
+        context['items'] = Item.objects.filter(company=company)
+        context['bills'] = Bill.objects.filter(company=company)
+        context['customers'] = Customer.objects.filter(company=company)
+        return render(request, "billing/company_index.html", context)
 
 
 class ItemView(BillingView):
-    def get(self, request, company_id, item_id=None):
+    index_template = 'billing/item_view.html'
+    view_template = 'billing/item_view.html'
+    edit_template = 'billing/edit_item.html'
+    form = ItemForm
+    def get(self, request, context, company, item=None):
         """
         View an inventory item
         """
-        return render(request, "billing/item_view.html", self.base_param_dict)
+        template = self.view_template if item else self.index_template
+        return render(request, template, context)
 
-    def post(self, request, company_id, item_id=None):
+    def post(self, request, context, company, item=None):
         """
         Create or update an inventory item
         """
         data = request.POST.copy()
-        data['company'] = company_id
-        form = ItemForm(data)
+        data['company'] = company.id
+        form = self.form(data, instance=item)
         if form.is_valid():
             new = form.save()
-            return redirect('item_view', company_id, new.id)
+            return redirect('item_view', company.id, new.id)
         else:
-            param_dict = self.base_param_dict
-            param_dict['form'] = form
-            return render(request, 'billing/edit_item.html', param_dict)
+            context['form'] = form
+            return render(request, self.edit_template, context)
 
-    def put(self, request, company_id, item_id):
+    def put(self, request, context, company, item):
         """
         update an inventory item
         """
         data = QueryDict(request.body).copy()
-        data['company'] = company_id
-        instance = get_object_or_404(Item, id=item_id, company=company_id)
-        form = ItemForm(data, instance=instance)
+        data['company'] = company.id
+        form = self.form(data, instance=item)
         if form.is_valid():
             form.save()
-            return redirect('item_view', company_id, item_id)
+            return redirect('item_view', company.id, item.id)
         else:
-            print form.errors
-            param_dict = self.base_param_dict
-            param_dict['form'] = form
-            return render(request, 'billing/edit_item.html', param_dict)
+            context['form'] = form
+            return render(request, self.edit_template, context)
 
-    def delete(self, request, company_id, item_id):
+    def delete(self, request, context, company, item):
         """
         delete an inventory item
         """
-        self.base_param_dict['item'].delete()
-        return redirect('item_index', company_id)
+        item.delete()
+        return redirect('item_index', company.id)
 
+
+class CustomerView(BillingView):
+    entity = 'customer'
+    form = CustomerForm
+
+    index_template = 'billing/{}_view.html'.format(entity)
+    view_template = 'billing/{}_view.html'.format(entity)
+    edit_template = 'billing/{}_edit.html'.format(entity)
+    view_name = '{}_view'.format(entity)
+    index_name = '{}_index'.format(entity)
+
+    def get(self, request, context, company, customer=None):
+        """
+        """
+        template = self.view_template if customer else self.index_template
+        return render(request, template, context)
+
+    def post(self, request, context, company, customer=None):
+        """
+        """
+        data = request.POST.copy()
+        data['company'] = company.id
+        form = self.form(data, instance=customer)
+        if form.is_valid():
+            new = form.save()
+            return redirect(self.view_name, company.id, new.id)
+        else:
+            context['form'] = form
+            return render(request, self.edit_template, context)
+
+    def put(self, request, context, company, customer):
+        """
+        update an inventory item
+        """
+        data = QueryDict(request.body).copy()
+        data['company'] = company.id
+        form = self.form(data, instance=customer)
+        if form.is_valid():
+            form.save()
+            return redirect(self.view_name, company.id, customer.id)
+        else:
+            context['form'] = form
+            return render(request, self.edit_template, context)
+
+    def delete(self, request, context, company, customer):
+        """
+        delete an inventory item
+        """
+        customer.delete()
+        return redirect('customer_index', company.id)
 
 # class EditItem(ItemSelectedMixin):
     # template = "billing/edit_item.html"

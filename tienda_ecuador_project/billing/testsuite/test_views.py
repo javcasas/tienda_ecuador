@@ -182,6 +182,45 @@ class ItemViewTests(LoggedInWithItemTests):
         self.assertRedirects(r, reverse('item_index', args=(self.company.id,)))
         
 
+class LoggedInWithCustomerTests(LoggedInWithCompanyTests):
+    """
+    Logged in user that is associated with a company
+    Has company and customers
+    """
+    def setUp(self):
+        super(LoggedInWithCustomerTests, self).setUp()
+        self.customer = add_Customer(name='Pepe',
+                                     company=self.company)
+
+
+class CustomerViewTests(LoggedInWithCustomerTests):
+    def test_view(self):
+        r = self.c.get(reverse('customer_view', args=(self.company.id, self.customer.id)))
+        self.assertContainsObject(r, self.customer, ['name'])
+
+    def test_create(self):
+        data = dict(name='Paco')
+        with new_item(models.Customer) as new:
+            r = self.c.post(
+                reverse('customer_index', args=(self.company.id,)),
+                make_post(data),
+            )
+        self.assertRedirects(r, reverse('customer_view', args=(self.company.id, new.id)))
+
+    def test_update(self):
+        data = dict(name='Wis')
+        r = self.c.put(
+            reverse('customer_edit', args=(self.company.id, self.customer.id)),
+            make_put(data),
+        )
+        self.assertRedirects(r, reverse('customer_view', args=(self.company.id, self.customer.id)))
+
+    def test_delete(self):
+        r = self.c.delete(
+            reverse('customer_edit', args=(self.company.id, self.customer.id)),
+        )
+        self.assertRedirects(r, reverse('customer_index', args=(self.company.id,)))
+
 @skip
 class LoggedInWithBillsItemsTests(LoggedInWithCompanyTests):
     """

@@ -1,0 +1,7 @@
+{% extends 'billing/l1_company_selected.html' %}
+{% block title_l1 %}{% block title_l2 %}{% endblock %}{{ customer.name }} - {% endblock %}
+{% block body_l1 %}
+    <h1>{{ customer.name }}</h1>
+    {% block body_l2 %}
+    {% endblock %}
+{% endblock %}
