@@ -1,5 +1,4 @@
 from django.test import TestCase, Client
-from unittest import skip
 from django.core.urlresolvers import reverse
 
 from billing import models
@@ -148,7 +147,7 @@ class GenericObjectCRUDTest(object):
             self.assertContains(r, key)
         # Back link
         self.assertContains(
-            r,reverse(self.index_view, args=(self.company.id,)))
+            r, reverse(self.index_view, args=(self.company.id,)))
 
     def test_create(self):
         """
