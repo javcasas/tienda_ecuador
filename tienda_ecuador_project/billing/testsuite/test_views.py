@@ -165,6 +165,26 @@ class GenericObjectCRUDTest(object):
             r, reverse(self.detail_view, args=(self.company.id, new.id)))
         self.assertObjectMatchesData(new, self.data)
 
+    def test_create_crossed_company_denied(self):
+        """
+        Tests creating a new object using a crossed request
+        that pretends to create a new object under a different company
+        The test passes if:
+            The object is created with the specified data
+            The company of the object is the one specified in the URL
+            The client is redirected to the object view
+        """
+        company2 = add_Company(name='Tienda2')
+        with self.new_item(self.cls) as new:
+            r = self.c.post(
+                reverse(self.create_view, args=(self.company.id,)),
+                make_post(dict(self.data, company_id=company2.id)),
+            )
+        self.assertRedirects(
+            r, reverse(self.detail_view, args=(self.company.id, new.id)))
+        self.assertObjectMatchesData(new, self.data)
+        self.assertEquals(new.company, self.company)
+
     def test_update_show_form(self):
         """
         Tests the form being shown.
@@ -246,6 +266,30 @@ class GenericObjectCRUDTest(object):
             r, reverse(self.index_view, args=(self.company.id,)))
         with self.assertRaises(self.cls.DoesNotExist):
             self.cls.objects.get(id=self.ob.id)
+
+    def test_not_logged_in_access_denied(self):
+        """
+        Tests that no url can be reached without authentication
+        """
+        urls = [
+            reverse(self.index_view, args=(self.company.id,)),
+            reverse(self.detail_view, args=(self.company.id, self.ob.id)),
+            reverse(self.create_view, args=(self.company.id,)),
+            reverse(self.update_view, args=(self.company.id, self.ob.id)),
+            reverse(self.delete_view, args=(self.company.id, self.ob.id)),
+        ]
+        # Test get
+        for url in urls:
+            r = Client().get(url)
+            msg = "Url {} can be GETted without authentication".format(url)
+            self.assertEqual(r.status_code, 302, msg)
+            self.assertRedirects(r, "/accounts/login/?next={}".format(url))
+        # Test post
+        for url in urls:
+            r = Client().post(url, {})
+            msg = "Url {} can be POSTed without authentication".format(url)
+            self.assertEqual(r.status_code, 302, msg)
+            self.assertRedirects(r, "/accounts/login/?next={}".format(url))
 
 
 class LoggedInWithCustomerTests(LoggedInWithCompanyTests,
