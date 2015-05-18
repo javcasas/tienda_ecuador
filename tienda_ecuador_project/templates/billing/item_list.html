@@ -1,0 +1,10 @@
+{% extends 'billing/l1_company_selected.html' %}
+{% block body_l1 %}
+    {% for item in item_list %}
+        SKU: {{ item.sku }} <br />
+        Name: {{ item.name }} <br />
+        Description: {{ item.description }} <br />
+        <a href='{% url "item_update" company.id item.id %}'>Editar</a>
+    {% endfor %}
+    <a href='{% url "company_index" company.id %}'>Back</a>
+{% endblock %}

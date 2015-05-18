@@ -6,5 +6,5 @@
             {{ form.as_p }}
             <button type='submit'>Submit</button>
         </form>
-        <a href='{% url 'item_view' company_id item_id %}'>Cancel</a>
+        <a href='{% url 'item_detail' company.id item.id %}'>Cancel</a>
 {% endblock %}

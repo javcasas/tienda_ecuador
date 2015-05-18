@@ -1,0 +1,9 @@
+{% extends 'billing/l2_item_selected.html' %}
+{% block title %}Eliminar item {{ item.sku }} - {% endblock %}
+{% block body_l2 %}
+    <form action="" method="post">{% csrf_token %}
+        <p>Are you sure you want to delete "{{ item }}"?</p>
+        <input type="submit" value="Confirm" />
+    </form>
+    <a href='{% url 'item_detail' company.id item.id %}'>Cancel</a>
+{% endblock %}

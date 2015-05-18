@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
 class ReadOnlyObject(Exception):
@@ -81,6 +82,9 @@ class Customer(BaseCustomer):
     """
     company = models.ForeignKey(Company)
 
+    def get_absolute_url(self):
+        return reverse('customer_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
+
     def __unicode__(self):
         return self.name
 
@@ -153,6 +157,9 @@ class Item(BaseItem):
     Represents an item that can be sold or bought
     """
     company = models.ForeignKey(Company)
+
+    def get_absolute_url(self):
+        return reverse('item_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
 
 
 class ProformaBillItem(BaseItem):

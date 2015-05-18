@@ -1,11 +1,12 @@
 from django.test import TestCase, Client
+from unittest import skip
 from django.core.urlresolvers import reverse
 
 from billing import models
 
 from helpers import (add_Company,
                      add_CompanyUser,
-                     add_User, TestHelpersMixin, new_item,
+                     add_User, TestHelpersMixin,
                      make_post, make_put)
 
 
@@ -106,11 +107,21 @@ class GenericObjectCRUDTest(object):
         Makes the testing instance of the object,
         and initialises some variables
         """
-        self.view_name = "{}_view".format(self.entity)
-        self.index_name = "{}_index".format(self.entity)
-        self.edit_name = "{}_edit".format(self.entity)
+        self.index_view = "{}_index".format(self.entity)
+        self.create_view = "{}_create".format(self.entity)
+        self.detail_view = "{}_detail".format(self.entity)
+        self.update_view = "{}_update".format(self.entity)
+        self.delete_view = "{}_delete".format(self.entity)
         self.ob = self.cls(**dict(self.data, company=self.company))
         self.ob.save()
+
+    def test_index(self):
+        """
+        Tests the index
+        """
+        r = self.c.get(
+            reverse(self.index_view, args=(self.company.id,)))
+        self.assertContainsObject(r, self.ob, self.data.keys())
 
     def test_view(self):
         """
@@ -119,8 +130,25 @@ class GenericObjectCRUDTest(object):
             The view shows the attributes of the object
         """
         r = self.c.get(
-            reverse(self.view_name, args=(self.company.id, self.ob.id)))
+            reverse(self.detail_view, args=(self.company.id, self.ob.id)))
         self.assertContainsObject(r, self.ob, self.data.keys())
+
+    def test_create_show_form(self):
+        """
+        Tests the form being shown.
+        The test passes if:
+            * All the data fields are in the form
+            * There is a back link
+        """
+        r = self.c.get(
+            reverse(self.create_view, args=(self.company.id,)),
+        )
+        # Fields
+        for key in self.data.keys():
+            self.assertContains(r, key)
+        # Back link
+        self.assertContains(
+            r,reverse(self.index_view, args=(self.company.id,)))
 
     def test_create(self):
         """
@@ -129,14 +157,34 @@ class GenericObjectCRUDTest(object):
             The object is created with the specified data
             The client is redirected to the object view
         """
-        with new_item(self.cls) as new:
+        with self.new_item(self.cls) as new:
             r = self.c.post(
-                reverse(self.index_name, args=(self.company.id,)),
+                reverse(self.create_view, args=(self.company.id,)),
                 make_post(self.data),
             )
         self.assertRedirects(
-            r, reverse(self.view_name, args=(self.company.id, new.id)))
+            r, reverse(self.detail_view, args=(self.company.id, new.id)))
         self.assertObjectMatchesData(new, self.data)
+
+    def test_update_show_form(self):
+        """
+        Tests the form being shown.
+        The test passes if:
+            * All the data fields are in the form
+            * The data fields contain the current values
+            * There is a back link
+        """
+        r = self.c.get(
+            reverse(self.update_view, args=(self.company.id, self.ob.id)),
+        )
+        # Fields
+        for key in self.data.keys():
+            self.assertContains(r, key)
+        # Field values
+        self.assertContainsObject(r, self.ob, self.data.keys())
+        # Back link
+        self.assertContains(
+            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
 
     def test_update(self):
         """
@@ -145,12 +193,42 @@ class GenericObjectCRUDTest(object):
             The object has the new data
             The client is redirected to the object view
         """
+        r = self.c.post(
+            reverse(self.update_view, args=(self.company.id, self.ob.id)),
+            make_post(self.newdata),
+        )
+        self.assertRedirects(
+            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
+        self.assertObjectMatchesData(
+            self.cls.objects.get(id=self.ob.id), self.newdata)
+
+    def disabled_test_update_using_put(self):
+        """
+        Tests updating an object with self.newdata
+        The test passes if:
+            The object has the new data
+            The client is redirected to the object view
+        """
         r = self.c.put(
-            reverse(self.edit_name, args=(self.company.id, self.ob.id)),
+            reverse(self.update_view, args=(self.company.id, self.ob.id)),
             make_put(self.newdata),
         )
         self.assertRedirects(
-            r, reverse(self.view_name, args=(self.company.id, self.ob.id)))
+            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
+        self.assertObjectMatchesData(
+            self.cls.objects.get(id=self.ob.id), self.newdata)
+
+    def _test_crossed_update_denied(self):
+        """
+        """
+        ob2 = self.cls(**self.newdata)
+        ob2.save()
+        r = self.c.put(
+            reverse(self.update_view, args=(self.company.id, self.ob.id)),
+            make_put(self.data),
+        )
+        self.assertRedirects(
+            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
         self.assertObjectMatchesData(
             self.cls.objects.get(id=self.ob.id), self.newdata)
 
@@ -161,11 +239,12 @@ class GenericObjectCRUDTest(object):
             The object is deleted
             The client is redirected to the object index
         """
-        r = self.c.delete(
-            reverse(self.edit_name, args=(self.company.id, self.ob.id)),
+        r = self.c.post(
+            reverse(self.delete_view, args=(self.company.id, self.ob.id)),
+            {}
         )
         self.assertRedirects(
-            r, reverse(self.index_name, args=(self.company.id,)))
+            r, reverse(self.index_view, args=(self.company.id,)))
         with self.assertRaises(self.cls.DoesNotExist):
             self.cls.objects.get(id=self.ob.id)
 

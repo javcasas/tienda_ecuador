@@ -5,6 +5,10 @@ from forms import ItemForm, BillForm, BillItemForm, CustomerForm
 from django.contrib.auth.decorators import login_required
 from functools import wraps
 from django.views.generic import View
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.core.urlresolvers import reverse
 
 
 @login_required
@@ -111,76 +115,253 @@ class CompanyIndex(BillingView):
         return render(request, "billing/company_index.html", context)
 
 
-class ItemView(BillingView):
-    index_template = 'billing/item_view.html'
-    view_template = 'billing/item_view.html'
-    edit_template = 'billing/edit_item.html'
+class ItemListView(ListView):
+    model = Item
+    context_object_name = "item_list"
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(ItemListView, self).get_context_data(**kwargs)
+        context['item_list'] = Item.objects.filter(company_id=self.kwargs['company_id'])
+        context['company'] = self.company
+        return context
+
+
+class ItemDetailView(DetailView):
+    model = Item
+    context_object_name = 'item'
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
+
+
+class ItemCreateView(CreateView):
+    model = Item
+    fields = ['sku', 'name', 'description']
+    context_object_name = 'item'
+    template_name_suffix = '_create_form'
     form = ItemForm
-    def get(self, request, context, company, item=None):
-        """
-        View an inventory item
-        """
-        template = self.view_template if item else self.index_template
-        return render(request, template, context)
 
-    def post(self, request, context, company, item=None):
-        """
-        Create or update an inventory item
-        """
-        data = request.POST.copy()
-        data['company'] = company.id
-        form = self.form(data, instance=item)
-        if form.is_valid():
-            new = form.save()
-            return redirect('item_view', company.id, new.id)
-        else:
-            context['form'] = form
-            return render(request, self.edit_template, context)
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
 
-    def put(self, request, context, company, item):
-        """
-        update an inventory item
-        """
-        data = QueryDict(request.body).copy()
-        data['company'] = company.id
-        form = self.form(data, instance=item)
-        if form.is_valid():
-            form.save()
-            return redirect('item_view', company.id, item.id)
-        else:
-            context['form'] = form
-            return render(request, self.edit_template, context)
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
 
-    def delete(self, request, context, company, item):
-        """
-        delete an inventory item
-        """
-        item.delete()
-        return redirect('item_index', company.id)
+    def form_valid(self, form):
+        form.instance.company = self.company
+        return super(ItemCreateView, self).form_valid(form)
+
+
+class ItemUpdateView(UpdateView):
+    model = Item
+    fields = ['sku', 'name', 'description']
+    context_object_name = 'item'
+    form = ItemForm
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = get_object_or_404(Company, id=self.kwargs['company_id'])
+        return context
+    
+
+class ItemDeleteView(DeleteView):
+    model = Item
+    context_object_name = 'item'
+
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
+
+    @property
+    def success_url(self):
+        return reverse("item_index", args=(self.company.id, ))
+            
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = get_object_or_404(Company, id=self.kwargs['company_id'])
+        return context
+
+
+class CustomerListView(ListView):
+    model = Customer
+    context_object_name = "customer_list"
+
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['customer_list'] = self.model.objects.filter(company_id=self.kwargs['company_id'])
+        context['company'] = self.company
+        return context
+
+
+class CustomerDetailView(DetailView):
+    model = Customer
+    context_object_name = 'customer'
+
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
+
+
+class CustomerCreateView(CreateView):
+    model = Customer
+    fields = ['name', ]
+    context_object_name = 'customer'
+    template_name_suffix = '_create_form'
+    form = CustomerForm
+
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
+
+    def form_valid(self, form):
+        form.instance.company = self.company
+        return super(self.__class__, self).form_valid(form)
+
+
+class CustomerUpdateView(UpdateView):
+    model = Customer
+    fields = ['name',]
+    context_object_name = 'customer'
+    form = CustomerForm
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = get_object_or_404(Company, id=self.kwargs['company_id'])
+        return context
+    
+
+class CustomerDeleteView(DeleteView):
+    model = Customer
+    context_object_name = 'customer'
+
+    @property
+    def company(self):
+        return get_object_or_404(Company, id=self.kwargs['company_id'])
+
+    @property
+    def success_url(self):
+        view_name = "{}_index".format(self.context_object_name)
+        return reverse(view_name, args=(self.company.id, ))
+            
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = get_object_or_404(Company, id=self.kwargs['company_id'])
+        return context
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class CustomerView(BillingView):
     entity = 'customer'
     form = CustomerForm
+    entity_path = ['company']  # The expected parameters
 
-    index_template = 'billing/{}_view.html'.format(entity)
-    view_template = 'billing/{}_view.html'.format(entity)
-    edit_template = 'billing/{}_edit.html'.format(entity)
-    view_name = '{}_view'.format(entity)
-    index_name = '{}_index'.format(entity)
+    @classmethod
+    def as_view(cls, **initkwargs):
+        """
+        Used as creator, like __init__
+        """
+        cls.index_template = 'billing/{}_view.html'.format(cls.entity)
+        cls.view_template = 'billing/{}_view.html'.format(cls.entity)
+        cls.edit_template = 'billing/{}_edit.html'.format(cls.entity)
+        cls.view_name = '{}_view'.format(cls.entity)
+        cls.index_name = '{}_index'.format(cls.entity)
+        return super(CustomerView, cls).as_view(**initkwargs)
 
-    def get(self, request, context, company, customer=None):
+    def sanitise_parameters(self, request, kwargs):
         """
+        @param:
+            kwargs: dict
+        Returns a tuple (main param, sanitised kwargs)
         """
-        template = self.view_template if customer else self.index_template
+        method = request.method.lower()
+        # Make query dict
+        if method == 'get':
+            query = request.GET.copy()
+        elif method == 'post':
+            query = request.POST.copy()
+        elif method in ['put', 'delete']:
+            query = QueryDict(request.body).copy()
+        else:
+            raise ValueError("Unknown request method: ", method)
+        # Make a new context
+        newcontext = {}
+        # Check if the optional entity exists
+        ob = kwargs.pop(self.entity, None)
+        query[self.entity] = ob
+        # Copy the old context to the new
+        try:
+            for item in self.entity_path:
+                newcontext[item] = kwargs.pop(item)
+                query[item] = newcontext[item]
+        except KeyError:
+            raise TypeError("Missing parameter in {}(): {} ".format(method, item))
+        # Ensure no stuff is left from the old context
+        if kwargs:
+            raise TypeError("{}() got an unexpected keyword argument: ".format(method, kwargs.keys()[0]))
+        # Add the entry to the new context
+        newcontext[self.entity] = ob
+        return ob, newcontext, query
+
+    def get(self, request, context, **kwargs):
+        """
+        Generic get
+        """
+        ob, context, data = self.sanitise_parameters(request, kwargs)
+        # Select the template
+        template = self.view_template if ob else self.index_template
+        # Render
         return render(request, template, context)
 
-    def post(self, request, context, company, customer=None):
+    def post(self, request, context, **kwargs):
         """
+        Generic post
         """
-        data = request.POST.copy()
-        data['company'] = company.id
-        form = self.form(data, instance=customer)
+        ob, context, query = self.sanitise_parameters(request, kwargs)
+        company = context['company']
+        query['company'] = company.id
+        if ob:
+            query[self.entity] = context[self.entity].id
+        form = self.form(query, instance=ob)
         if form.is_valid():
             new = form.save()
             return redirect(self.view_name, company.id, new.id)
@@ -188,16 +369,18 @@ class CustomerView(BillingView):
             context['form'] = form
             return render(request, self.edit_template, context)
 
-    def put(self, request, context, company, customer):
+    def put(self, request, context, **kwargs):
         """
         update an inventory item
         """
-        data = QueryDict(request.body).copy()
-        data['company'] = company.id
-        form = self.form(data, instance=customer)
+        ob, context, query = self.sanitise_parameters(request, kwargs)
+        company = context['company']
+        query['company'] = company.id
+        query[self.entity] = context[self.entity].id
+        form = self.form(query, instance=ob)
         if form.is_valid():
             form.save()
-            return redirect(self.view_name, company.id, customer.id)
+            return redirect(self.view_name, company.id, ob.id)
         else:
             context['form'] = form
             return render(request, self.edit_template, context)

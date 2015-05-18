@@ -3,6 +3,7 @@
         SKU: {{ item.sku }} <br />
         Name: {{ item.name }} <br />
         Description: {{ item.description }} <br />
-        <a href='{#% url "edit_item" company_id item_id %#}'>Editar</a>
+        <a href='{% url "item_update" company.id item.id %}'>Editar</a>
+        <a href='{% url "item_index" company.id %}'>Items</a>
         <a href='{% url "company_index" company.id %}'>Back</a>
 {% endblock %}

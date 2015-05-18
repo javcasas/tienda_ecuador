@@ -4,9 +4,21 @@ from billing import views
 urlpatterns = patterns('',
     url(r'^$', views.index, name='index'),
     url(r'^(?P<company_id>[0-9]+)/$', views.CompanyIndex.as_view(), name='company_index'),
-    url(r'^(?P<company_id>[0-9]+)/item/$', views.ItemView.as_view(), name='item_index'),
-    url(r'^(?P<company_id>[0-9]+)/item/(?P<item_id>[0-9]+)/$', views.ItemView.as_view(), name='item_view'),
-    url(r'^(?P<company_id>[0-9]+)/item/(?P<item_id>[0-9]+)/edit/$', views.ItemView.as_view(), name='item_edit'),
+
+    url(r'^(?P<company_id>[0-9]+)/item/$', views.ItemListView.as_view(), name='item_index'),
+    url(r'^(?P<company_id>[0-9]+)/item/new/$', views.ItemCreateView.as_view(), name='item_create'),
+    url(r'^(?P<company_id>[0-9]+)/item/(?P<pk>[0-9]+)/$', views.ItemDetailView.as_view(), name='item_detail'),
+    url(r'^(?P<company_id>[0-9]+)/item/(?P<pk>[0-9]+)/edit/$', views.ItemUpdateView.as_view(), name='item_update'),
+    url(r'^(?P<company_id>[0-9]+)/item/(?P<pk>[0-9]+)/delete/$', views.ItemDeleteView.as_view(), name='item_delete'),
+
+    url(r'^(?P<company_id>[0-9]+)/customer/$', views.CustomerListView.as_view(), name='customer_index'),
+    url(r'^(?P<company_id>[0-9]+)/customer/new/$', views.CustomerCreateView.as_view(), name='customer_create'),
+    url(r'^(?P<company_id>[0-9]+)/customer/(?P<pk>[0-9]+)/$', views.CustomerDetailView.as_view(), name='customer_detail'),
+    url(r'^(?P<company_id>[0-9]+)/customer/(?P<pk>[0-9]+)/edit/$', views.CustomerUpdateView.as_view(), name='customer_update'),
+    url(r'^(?P<company_id>[0-9]+)/customer/(?P<pk>[0-9]+)/delete/$', views.CustomerDeleteView.as_view(), name='customer_delete'),
+
+
+
 
     url(r'^(?P<company_id>[0-9]+)/customer/$', views.CustomerView.as_view(), name='customer_index'),
     url(r'^(?P<company_id>[0-9]+)/customer/(?P<customer_id>[0-9]+)/$', views.CustomerView.as_view(), name='customer_view'),

@@ -61,27 +61,27 @@ class TestHelpersMixin(object):
             self.assertEquals(getattr(ob, key), value, n_msg)
 
 
-@contextmanager
-def new_item(kind):
-    """
-    Finds and returns the new item of the specified kind
-    created in the context
-    """
-    def get_set(model):
-        return set(model.objects.all())
+    @contextmanager
+    def new_item(self, kind):
+        """
+        Finds and returns the new item of the specified kind
+        created in the context
+        """
+        def get_set(model):
+            return set(model.objects.all())
 
-    class GetattrProxy(object):
-        ob = None
+        class GetattrProxy(object):
+            ob = None
 
-        def __getattr__(self, field):
-            return getattr(self.ob, field)
+            def __getattr__(self, field):
+                return getattr(self.ob, field)
 
-    items = get_set(kind)
-    res = GetattrProxy()
-    yield res
-    new_items = (get_set(kind) - items)
-    assert len(new_items) == 1
-    res.ob = new_items.pop()
+        items = get_set(kind)
+        res = GetattrProxy()
+        yield res
+        new_items = (get_set(kind) - items)
+        self.assertEquals(len(new_items), 1)
+        res.ob = new_items.pop()
 
 
 def make_post(data):

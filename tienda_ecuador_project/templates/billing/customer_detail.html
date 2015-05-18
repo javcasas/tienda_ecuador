@@ -1,0 +1,7 @@
+{% extends 'billing/l2_customer_selected.html' %}
+{% block body_l2 %}
+        Name: {{ customer.name }} <br />
+        <a href='{% url "customer_update" company.id customer.id %}'>Editar</a>
+        <a href='{% url "customer_index" company.id %}'>Clientes</a>
+        <a href='{% url "company_index" company.id %}'>Back</a>
+{% endblock %}

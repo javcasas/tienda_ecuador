@@ -1,0 +1,9 @@
+{% extends 'billing/l2_customer_selected.html' %}
+{% block title %}Eliminar cliente {{ customer.name }} - {% endblock %}
+{% block body_l2 %}
+    <form action="" method="post">{% csrf_token %}
+        <p>Are you sure you want to delete "{{ customer }}"?</p>
+        <input type="submit" value="Confirm" />
+    </form>
+    <a href='{% url 'customer_detail' company.id customer.id %}'>Cancel</a>
+{% endblock %}
