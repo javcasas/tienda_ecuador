@@ -221,36 +221,6 @@ class GenericObjectCRUDTest(object):
         self.assertObjectMatchesData(
             self.cls.objects.get(id=self.ob.id), self.newdata)
 
-    def disabled_test_update_using_put(self):
-        """
-        Tests updating an object with self.newdata
-        The test passes if:
-            The object has the new data
-            The client is redirected to the object view
-        """
-        r = self.c.put(
-            reverse(self.update_view, args=(self.company.id, self.ob.id)),
-            make_put(self.newdata),
-        )
-        self.assertRedirects(
-            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
-        self.assertObjectMatchesData(
-            self.cls.objects.get(id=self.ob.id), self.newdata)
-
-    def _test_crossed_update_denied(self):
-        """
-        """
-        ob2 = self.cls(**self.newdata)
-        ob2.save()
-        r = self.c.put(
-            reverse(self.update_view, args=(self.company.id, self.ob.id)),
-            make_put(self.data),
-        )
-        self.assertRedirects(
-            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
-        self.assertObjectMatchesData(
-            self.cls.objects.get(id=self.ob.id), self.newdata)
-
     def test_delete(self):
         """
         Tests deleting the object
