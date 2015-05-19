@@ -3,27 +3,36 @@
 {% block body_l1 %}
         <h1>Items</h1>
         <table border='1'>
-        {% for item in items %}
+        {% for item in item_list %}
             <tr><td>
-            <a href="{% url 'view_item' company_id item.id %}">{{ item.sku }}- {{ item.name }}</a>
+            <a href="{% url 'item_detail' company.id item.id %}">{{ item.sku }}- {{ item.name }}</a>
+            </td></tr>
+        {% endfor %}
+        </table>
+
+        <h1>Proformas</h1>
+        <table border='1'>
+        {% for proformabill in proformabill_list %}
+            <tr><td>
+            <a href="{% url 'proformabill_detail' company.id proformabill.id %}">{{ proformabill.number }} - {{ proformabill.issued_to.name }}</a>
             </td></tr>
         {% endfor %}
         </table>
 
         <h1>Facturas</h1>
         <table border='1'>
-        {% for bill in bills %}
+        {% for bill in bill_list %}
             <tr><td>
-            <a href="{% url 'view_bill' company_id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
+            <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
             </td></tr>
         {% endfor %}
         </table>
 
         <h1>Clientes</h1>
         <table border='1'>
-        {% for customer in customers %}
+        {% for customer in customer_list %}
             <tr><td>
-            <a href="#">{{ customer.name }}</a>
+            <a href="{% url 'customer_detail' company.id customer.id %}">{{ customer.name }}</a>
             </td></tr>
         {% endfor %}
         </table>

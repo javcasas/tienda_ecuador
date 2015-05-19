@@ -85,9 +85,6 @@ class Customer(BaseCustomer):
     def get_absolute_url(self):
         return reverse('customer_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
 
-    def __unicode__(self):
-        return self.name
-
 
 class BillCustomer(ReadOnlyMixin, BaseCustomer):
     """
@@ -99,6 +96,8 @@ class ProformaBillCustomer(BaseCustomer):
     """
     A customer in a proforma bill
     """
+    def get_absolute_url(self):
+        return reverse('proformabillcustomer_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
     def toBillCustomer(self):
         new = BillCustomer(name=self.name)
         new.save()
@@ -138,6 +137,16 @@ class ProformaBill(BaseBill):
                    issued_to=self.issued_to.toBillCustomer())
         new.save()
         return new
+
+    @property
+    def items(self):
+        return ProformaBillItem.objects.filter(proforma_bill=self)
+
+    def get_absolute_url(self):
+        return reverse('proformabill_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
+
+    def __unicode__(self):
+        return "{} - {}".format(self.number, self.issued_to)
 
 
 ###########################

@@ -1,0 +1,24 @@
+{% extends 'billing/l2_proformabill_selected.html' %}
+{% block title_l1 %}Ver Proforma {{ proformabill }}- {% endblock %}
+{% block body_l1 %}
+        <h1>Proforma</h1>
+        Number: {{ proformabill.number }} <br />
+        Issued to: {{ proformabill.issued_to }} <br />
+        <hr />
+        {% for item in proformabill.items %}
+            SKU: {{ item.sku }} <br />
+            Name: {{ item.name }} <br />
+            Description: {{ item.description }} <br />
+            Qty: {{ item.qty }} <br />
+            <a href="{#% url 'edit_item_in_bill' company_id bill_id item.id %#}">Edit</a>
+            <form action="{#% url 'delete_item_from_bill' company_id bill_id item.id %#}" method='post'>
+                {% csrf_token %}
+                <button type='submit'>Delete</button>
+            </form>
+            <hr />
+        {% endfor %}
+        <a href="{#% url 'proformabill_update' company.id proformabill.id %#}">Edit</a>
+        <a href="{#% url 'proformabill_add_item' company.id proformabill.id %#}">Add Item</a>
+        <a href='{% url "proformabill_index" company.id %}'>Back</a>
+        <a href='{% url "company_index" company.id %}'>Back</a>
+{% endblock %}

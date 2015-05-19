@@ -1,5 +1,5 @@
 from django import forms
-from billing.models import Item, Customer, Bill, BillItem, Company
+from billing.models import Item, Customer, ProformaBill, ProformaBillItem, Company, Bill, BillItem
 
 
 class ItemForm(forms.ModelForm):
@@ -12,17 +12,27 @@ class ItemForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = Item
-        fields = ('sku', 'name', 'description', 'company')
+        fields = ('sku', 'name', 'description')
 
 
-class BillForm(forms.ModelForm):
-    issued_to = forms.ModelChoiceField(queryset=Customer.objects.all(), help_text="Please select the customer.")
+class ProformaBillForm(forms.ModelForm):
+    issued_to = forms.ModelChoiceField(queryset=None, help_text="Please select the customer.")
     number = forms.CharField(max_length=50, help_text="Please enter the number of the bill.")
 
-    # An inline class to provide additional information on the form.
+    def is_valid(self):
+        return False
+
+    def clean_issued_to(self):
+        cleaned_data = self.cleaned_data
+        if type(cleaned_data['issued_to']) == Customer:
+            selected_customer = cleaned_data['issued_to']
+            new = selected_customer.toProformaBillCustomer()
+            cleaned_data['issued_to'] = new
+        return super(self.__class__, self).clean_issued_to()
+
     class Meta:
         # Provide an association between the ModelForm and a model
-        model = Bill
+        model = ProformaBill
         fields = ('issued_to', 'number')
 
 
@@ -43,10 +53,10 @@ class BillItemForm(forms.ModelForm):
 
 class CustomerForm(forms.ModelForm):
     name = forms.CharField(max_length=50, help_text="Please enter the name of the customer.")
-    company = forms.ModelChoiceField(widget=forms.HiddenInput, queryset=Company.objects.all(), help_text="Please select the company.")
+    #company = forms.ModelChoiceField(widget=forms.HiddenInput, queryset=Company.objects.all(), help_text="Please select the company.")
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
         model = Customer
-        fields = ('name', 'company',)
+        fields = ('name',)

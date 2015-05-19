@@ -17,6 +17,12 @@ urlpatterns = patterns('',
     url(r'^(?P<company_id>[0-9]+)/customer/(?P<pk>[0-9]+)/edit/$', views.CustomerUpdateView.as_view(), name='customer_update'),
     url(r'^(?P<company_id>[0-9]+)/customer/(?P<pk>[0-9]+)/delete/$', views.CustomerDeleteView.as_view(), name='customer_delete'),
 
+
+    url(r'^(?P<company_id>[0-9]+)/proforma_bill/$', views.ProformaBillListView.as_view(), name='proformabill_index'),
+    url(r'^(?P<company_id>[0-9]+)/proforma_bill/new/$', views.ProformaBillCreateView.as_view(), name='proformabill_create'),
+    url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/$', views.ProformaBillDetailView.as_view(), name='proformabill_detail'),
+
+
 #    url(r'^(?P<company_id>[0-9]+)/bill/new/$', views.NewBill.as_view(), name='new_bill'),
 #    url(r'^(?P<company_id>[0-9]+)/bill/(?P<bill_id>[0-9]+)/$', views.ViewBill.as_view(), name='view_bill'),
 #    url(r'^(?P<company_id>[0-9]+)/bill/(?P<bill_id>[0-9]+)/edit/$', views.EditBill.as_view(), name='edit_bill'),

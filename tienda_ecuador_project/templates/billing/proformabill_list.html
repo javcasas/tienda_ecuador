@@ -1,0 +1,12 @@
+{% extends 'billing/l1_company_selected.html' %}
+{% block title_l1 %}Proformas - {% endblock %}
+{% block body_l1 %}
+        <h1>Proformas</h1>
+        <table border='1'>
+        {% for proformabill in proformabill_list %}
+            <tr><td>
+            <a href="{% url 'proformabill_detail' company.id proformabill.id %}">{{ proformabill }}</a>
+            </td></tr>
+        {% endfor %}
+        </table>
+{% endblock %}

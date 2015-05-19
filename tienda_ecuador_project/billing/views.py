@@ -6,8 +6,8 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 
-from models import Item, Bill, BillItem, CompanyUser, Company, Customer
-from forms import ItemForm, BillForm, BillItemForm, CustomerForm
+from models import Item, Bill, BillItem, CompanyUser, Company, Customer, ProformaBill
+from forms import ItemForm, ProformaBillForm, BillItemForm, CustomerForm
 
 
 @login_required
@@ -56,9 +56,11 @@ class CompanyIndex(RequiresCompany, View):
         """
         company = self.company
         context = {}
-        context['items'] = Item.objects.filter(company=company)
-        context['bills'] = Bill.objects.filter(company=company)
-        context['customers'] = Customer.objects.filter(company=company)
+        context['item_list'] = Item.objects.filter(company=company)
+        context['bill_list'] = Bill.objects.filter(company=company)
+        context['proformabill_list'] = ProformaBill.objects.filter(company=company)
+        context['customer_list'] = Customer.objects.filter(company=company)
+        context['company'] = self.company
         return render(request, "billing/company_index.html", context)
 
 
@@ -92,7 +94,7 @@ class ItemCreateView(RequiresCompany, CreateView):
     fields = ['sku', 'name', 'description']
     context_object_name = 'item'
     template_name_suffix = '_create_form'
-    form = ItemForm
+    form_class = ItemForm
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
@@ -108,7 +110,7 @@ class ItemUpdateView(RequiresCompany, UpdateView):
     model = Item
     fields = ['sku', 'name', 'description']
     context_object_name = 'item'
-    form = ItemForm
+    form_class = ItemForm
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
@@ -161,7 +163,7 @@ class CustomerCreateView(RequiresCompany, CreateView):
     fields = ['name', ]
     context_object_name = 'customer'
     template_name_suffix = '_create_form'
-    form = CustomerForm
+    form_class = CustomerForm
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
@@ -177,7 +179,7 @@ class CustomerUpdateView(RequiresCompany, UpdateView):
     model = Customer
     fields = ['name', ]
     context_object_name = 'customer'
-    form = CustomerForm
+    form_class = CustomerForm
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
@@ -198,3 +200,51 @@ class CustomerDeleteView(RequiresCompany, DeleteView):
         context = super(self.__class__, self).get_context_data(**kwargs)
         context['company'] = self.company
         return context
+
+
+#############################################################
+#   Proforma Bill views
+#############################################################
+
+class ProformaBillListView(RequiresCompany, ListView):
+    model = ProformaBill
+    context_object_name = "proformabill_list"
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['proformabill_list'] = self.model.objects.filter(
+            company=self.company)
+        context['company'] = self.company
+        return context
+
+
+class ProformaBillDetailView(RequiresCompany, DetailView):
+    model = ProformaBill
+    context_object_name = 'proformabill'
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
+
+class ProformaBillCreateView(RequiresCompany, CreateView):
+    model = ProformaBill
+    fields = ['number', 'issued_to']
+    context_object_name = 'proformabill'
+    template_name_suffix = '_create_form'
+    form_class = ProformaBillForm
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
+
+    def get_form(self, *args, **kwargs):
+        form = super(self.__class__, self).get_form(*args, **kwargs)
+        form.fields['issued_to'].queryset = Customer.objects.filter(company=self.company)
+        return form
+
+    def form_valid(self, form):
+        form.instance.issued_to = None
+        form.instance.company = self.company
+        return super(self.__class__, self).form_valid(form)

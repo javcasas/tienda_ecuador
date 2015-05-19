@@ -6,7 +6,8 @@ from billing import models
 from helpers import (add_Company,
                      add_CompanyUser,
                      add_User, TestHelpersMixin,
-                     make_post, make_put)
+                     add_instance,
+                     make_post)
 
 
 class NotLoggedInTests(TestCase):
@@ -80,6 +81,10 @@ class IndexViewTests(LoggedInWithCompanyTests):
         response = self.c.get(reverse('index'))
         self.assertRedirects(response,
                              reverse('company_index', args=(self.company.id,)))
+
+    def test_view_company_index(self):
+        r = self.c.get(reverse('company_index', args=(self.company.id,)))
+        self.assertContains(r, self.company.name)
 
     def test_view_company_index_access_denied(self):
         """
@@ -295,3 +300,80 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
         self.make_object()
+
+from unittest import skip
+class ProformaBillTests(LoggedInWithCompanyTests):
+    """
+    Logged in user that is associated with a company
+    Has company and items
+    """
+    entity = 'proforma'
+    cls = models.ProformaBill
+    data = {'issued_to': lambda: add_instance(models.ProformaBillCustomer, name="Pepe"),
+            'number': '001-002-1234567890',}
+    newdata = {'number': '002-004-0987654321',
+               'issued_to': lambda: add_instance(models.ProformaBillCustomer, name="Paco"),}
+
+    def prepare_dict(self, d):
+        def try_call(f):
+            if callable(f):
+                return f()
+            else:
+                return f
+        return {k: try_call(f) for k, f in d.iteritems()}
+
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.proforma_bill = add_instance(
+            models.ProformaBill,
+            **dict(self.prepare_dict(self.data), company=self.company)
+        )
+        self.items = []
+        for i in range(5):
+            self.items.append(
+                add_instance(
+                    models.ProformaBillItem,
+                    sku="SKU00{}".format(i),
+                    name='Item {}'.format(i),
+                    description='Description of item {}'.format(i),
+                    qty=3+i,
+                    proforma_bill=self.proforma_bill))
+
+    def test_proformabill_index(self):
+        """
+        Check the proforma bill index view
+        """
+        r = self.c.get(reverse('proformabill_index', args=(self.company.id,)))
+        self.assertContainsObject(r, self.proforma_bill, ['number', 'issued_to'])
+        # Edit link
+        self.assertContains(r, reverse('proformabill_detail', args=(self.company.id, self.proforma_bill.id)))
+
+    def test_proformabill_detail(self):
+        """
+        Check the proforma bill detail view
+        """
+        r = self.c.get(reverse('proformabill_detail', args=(self.company.id, self.proforma_bill.id)))
+        self.assertContainsObject(r, self.proforma_bill, self.data.keys())
+        for item in self.items:
+            self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
+
+    def test_proformabill_create_show_form(self):
+        """
+        Check the proforma bill creation view
+        """
+        r = self.c.get(reverse('proformabill_create', args=(self.company.id,)))
+        for field in ['number', 'issued_to']:
+            self.assertContains(r, field)
+
+    def disabled_test_proformabill_create(self):
+        """
+        Check the proforma bill creation view
+        """
+        with self.new_item(self.cls) as new:
+            r = self.c.post(
+                reverse('proformabill_create', args=(self.company.id,)),
+                make_post(self.data),
+            )
+        self.assertRedirects(
+            r, reverse(self.detail_view, args=(self.company.id, new.id)))
+        self.assertObjectMatchesData(new, self.data)
