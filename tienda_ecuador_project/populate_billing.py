@@ -11,7 +11,7 @@ from functools import partial
 
 def add_instance(klass, **kwargs):
     print "Adding", klass.__name__, ", ".join(["{}={}".format(k, v) for (k, v) in kwargs.iteritems()])
-    s = klass.objects.get_or_create(**kwargs)[0]
+    s = klass.objects.update_or_create(**kwargs)[0]
     s.save()
     return s
 
@@ -32,6 +32,12 @@ def add_User(**kwargs):
     return u
 
 def my_populate():
+    u3, created = User.objects.get_or_create(username='javier')
+    u3.set_password("tiaputa")
+    u3.is_staff = True
+    u3.is_superuser = True
+    u3.save()
+
     t1 = add_Company(name="Tienda 1", sri_ruc='1234567890', sri_razon_social='Tienda1')
     t2 = add_Company(name="Tienda 2", sri_ruc='1234567891', sri_razon_social='Tienda2')
 
@@ -49,10 +55,6 @@ def my_populate():
     ut1 = add_CompanyUser(user=u1, company=t1)
     u2 = add_User(username='luis', password='qwerty', email='')
     ut2 = add_CompanyUser(user=u2, company=t2)
-    u3, created = User.objects.get_or_create(username='javier')
-    if created:
-        u3.set_password("tiaputa")
-        u3.save()
     ut3 = add_CompanyUser(user=u3, company=t1)
 
     b1 = add_ProformaBill(issued_to=c1, number='145', company=t1)

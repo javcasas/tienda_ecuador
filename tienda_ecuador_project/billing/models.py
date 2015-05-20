@@ -102,7 +102,11 @@ class ProformaBillCustomer(BaseCustomer):
         new = BillCustomer(name=self.name)
         new.save()
         return new
-
+    def clone_from_customer(self, ob):
+        fields = ['name']
+        for field in fields:
+            setattr(self, field, getattr(ob, field))
+        return self
 
 #####################################
 # Bill
@@ -146,7 +150,10 @@ class ProformaBill(BaseBill):
         return reverse('proformabill_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
 
     def __unicode__(self):
-        return "{} - {}".format(self.number, self.issued_to)
+        try:
+            return "{} - {}".format(self.number, self.issued_to)
+        except:
+            return "{} - {}".format(self.number, "<Not set>")
 
 
 ###########################

@@ -245,6 +245,6 @@ class ProformaBillCreateView(RequiresCompany, CreateView):
         return form
 
     def form_valid(self, form):
-        form.instance.issued_to = None
         form.instance.company = self.company
+        print form.errors
         return super(self.__class__, self).form_valid(form)
