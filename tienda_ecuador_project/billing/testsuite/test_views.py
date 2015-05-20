@@ -365,15 +365,24 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         for field in ['number', 'issued_to']:
             self.assertContains(r, field)
 
-    def disabled_test_proformabill_create(self):
+    def test_proformabill_create(self):
         """
         Check the proforma bill creation view
         """
+        customer_data = {
+            'name': 'Roberto',
+        }
+        proformabill_data = {
+            'number': '6666',
+        }
+        customer = models.Customer(**dict(customer_data, company=self.company))
+        customer.save()
         with self.new_item(self.cls) as new:
             r = self.c.post(
                 reverse('proformabill_create', args=(self.company.id,)),
-                make_post(self.data),
+                make_post(dict(proformabill_data, issued_to=customer.id)),
             )
         self.assertRedirects(
-            r, reverse(self.detail_view, args=(self.company.id, new.id)))
-        self.assertObjectMatchesData(new, self.data)
+            r, reverse('proformabill_detail', args=(self.company.id, new.id)))
+        self.assertObjectMatchesData(new, proformabill_data)
+        self.assertObjectMatchesData(new.issued_to, customer_data)
