@@ -276,3 +276,18 @@ class ProformaBillUpdateView(RequiresCompany, UpdateView):
         form.fields['issued_to'].queryset = Customer.objects.filter(
             company=self.company)
         return form
+
+
+class ProformaBillDeleteView(RequiresCompany, DeleteView):
+    model = ProformaBill
+    context_object_name = 'proformabill'
+
+    @property
+    def success_url(self):
+        view_name = "{}_index".format(self.context_object_name)
+        return reverse(view_name, args=(self.company.id, ))
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context

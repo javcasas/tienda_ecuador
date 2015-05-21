@@ -322,21 +322,28 @@ class ProformaBillTests(LoggedInWithCompanyTests):
 
     def setUp(self):
         super(self.__class__, self).setUp()
+        self.customer_data = {
+            'name': 'Pepe',
+        }
+        self.new_customer_data = {
+            'name': 'Pepe',
+        }
         self.data = {
-            'issued_to': lambda: add_instance(models.Customer,
-                                              name="Pepe",
-                                              company=self.company),
             'number': '001-002-1234567890',
         }
-        self.newdata = {
+        self.new_data = {
             'number': '002-004-0987654321',
-            'issued_to': lambda: add_instance(models.Customer,
-                                              name="Paco",
-                                              company=self.company),
         }
-        self.proforma_bill = add_instance(
+        self.customer = add_instance(models.Customer,
+                                     **dict(self.customer_data,
+                                            company=self.company))
+        self.new_customer = add_instance(models.Customer,
+                                         **dict(self.new_customer_data,
+                                                company=self.company))
+
+        self.proformabill = add_instance(
             models.ProformaBill,
-            **dict(self.prepare_dict(self.data), company=self.company)
+            **dict(self.data, company=self.company, issued_to=self.customer)
         )
         self.items = []
         for i in range(5):
@@ -347,7 +354,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                     name='Item {}'.format(i),
                     description='Description of item {}'.format(i),
                     qty=3+i,
-                    proforma_bill=self.proforma_bill))
+                    proforma_bill=self.proformabill))
 
     def test_proformabill_index(self):
         """
@@ -355,11 +362,11 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         r = self.c.get(reverse('proformabill_index', args=(self.company.id,)))
         self.assertContainsObject(
-            r, self.proforma_bill, ['number', 'issued_to'])
+            r, self.proformabill, ['number', 'issued_to'])
         # Edit link
         self.assertContains(
             r, reverse('proformabill_detail',
-                       args=(self.company.id, self.proforma_bill.id)))
+                       args=(self.company.id, self.proformabill.id)))
 
     def test_proformabill_detail(self):
         """
@@ -367,8 +374,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         r = self.c.get(
             reverse('proformabill_detail',
-                    args=(self.company.id, self.proforma_bill.id)))
-        self.assertContainsObject(r, self.proforma_bill, self.data.keys())
+                    args=(self.company.id, self.proformabill.id)))
+        self.assertContainsObject(r, self.proformabill, self.data.keys())
         for item in self.items:
             self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
 
@@ -380,7 +387,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         for field in ['number', 'issued_to']:
             self.assertContains(r, field)
 
-    def test_proformabill_create(self):
+    def test_proformabill_create_submit(self):
         """
         Check the proforma bill creation view
         """
@@ -402,37 +409,54 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         self.assertObjectMatchesData(new, proformabill_data)
         self.assertObjectMatchesData(new.issued_to, customer_data)
 
-    def test_proformabill_update(self):
+    def test_proformabill_update_show_form(self):
         """
         Check the proforma bill update view
         """
-        customer_data = {
-            'name': 'Roberto',
-        }
-        proformabill_data = {
-            'number': '6666',
-        }
-        new_proformabill_data = {
-            'number': '7777',
-        }
-        customer, created = models.Customer.objects.get_or_create(
-            **dict(customer_data, company=self.company))
-        proformabill, created = models.ProformaBill.objects.get_or_create(
-            **dict(proformabill_data,
-                   issued_to=customer,
-                   company=self.company))
         r = self.c.get(
             reverse('proformabill_update',
-                    args=(self.company.id, proformabill.id)))
-        self.assertContainsObject(r, customer, customer_data.keys())
-        self.assertContainsObject(r, proformabill, proformabill_data.keys())
+                    args=(self.company.id, self.proformabill.id)))
+        self.assertContainsObject(r, self.customer, self.customer_data.keys())
+        self.assertContainsObject(r, self.proformabill, self.data.keys())
+
+    def test_proformabill_update_submit(self):
+        """
+        Check the proforma bill update view
+        """
         r = self.c.post(
             reverse('proformabill_update',
-                    args=(self.company.id, proformabill.id)),
-            make_post(dict(new_proformabill_data, issued_to=customer.id)))
+                    args=(self.company.id, self.proformabill.id)),
+            make_post(dict(self.new_data, issued_to=self.new_customer.id)))
         self.assertRedirects(
             r, reverse('proformabill_detail',
-                       args=(self.company.id, proformabill.id)))
+                       args=(self.company.id, self.proformabill.id)))
         self.assertObjectMatchesData(
-            models.ProformaBill.objects.get(id=proformabill.id),
-            new_proformabill_data)
+            models.ProformaBill.objects.get(id=self.proformabill.id),
+            self.new_data)
+
+    def test_proformabill_delete_show_form(self):
+        """
+        Tests deleting the object
+        The test passes if:
+            The delete form is shown
+        """
+        r = self.c.get(
+            reverse("proformabill_delete", args=(self.company.id, self.proformabill.id)))
+        self.assertContains(r, self.proformabill.number)
+        self.assertContains(r, self.proformabill.issued_to.name)
+
+    def test_proformabill_delete_submit(self):
+        """
+        Tests deleting the object
+        The test passes if:
+            The object is deleted
+            The client is redirected to the object index
+        """
+        r = self.c.post(
+            reverse("proformabill_delete", args=(self.company.id, self.proformabill.id)),
+            {}
+        )
+        self.assertRedirects(
+            r, reverse("proformabill_index", args=(self.company.id,)))
+        with self.assertRaises(models.ProformaBill.DoesNotExist):
+            models.ProformaBill.objects.get(id=self.proformabill.id)

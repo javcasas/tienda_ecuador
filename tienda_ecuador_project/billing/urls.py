@@ -22,6 +22,7 @@ urlpatterns = patterns('',
     url(r'^(?P<company_id>[0-9]+)/proforma_bill/new/$', views.ProformaBillCreateView.as_view(), name='proformabill_create'),
     url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/$', views.ProformaBillDetailView.as_view(), name='proformabill_detail'),
     url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/edit/$', views.ProformaBillUpdateView.as_view(), name='proformabill_update'),
+    url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/delete/$', views.ProformaBillDeleteView.as_view(), name='proformabill_delete'),
 
 
 #    url(r'^(?P<company_id>[0-9]+)/bill/new/$', views.NewBill.as_view(), name='new_bill'),
