@@ -4,7 +4,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tienda_ecuador_project.settings
 import django
 django.setup()
 
-from billing.models import Company, Item, ProformaBill, ProformaBillItem, ProformaBillCustomer, CompanyUser, Customer
+from billing.models import Company, Item, ProformaBill, ProformaBillItem, CompanyUser, Customer
 from django.contrib.auth.models import User
 from functools import partial
 
@@ -21,7 +21,6 @@ add_Customer = partial(add_instance, Customer)
 add_CompanyUser = partial(add_instance, CompanyUser)
 add_ProformaBill = partial(add_instance, ProformaBill)
 add_ProformaBillItem = partial(add_instance, ProformaBillItem)
-add_ProformaBillCustomer = partial(add_instance, ProformaBillCustomer)
 
 
 def add_User(**kwargs):
@@ -47,9 +46,9 @@ def my_populate():
     i22 = add_Item(sku='t2-946', name='Item T22', description='Item 2 en Tienda 2', company=t2)
     i23 = add_Item(sku='t2-146', name='Item T23', description='Item 3 en Tienda 2', company=t2)
 
-    c1 = add_ProformaBillCustomer(name='Paco')
-    c2 = add_ProformaBillCustomer(name='Pepe')
-    c3 = add_ProformaBillCustomer(name='Luis')
+    c1 = add_Customer(name='Paco', company=t1)
+    c2 = add_Customer(name='Pepe', company=t1)
+    c3 = add_Customer(name='Luis', company=t2)
 
     u1 = add_User(username='roberto', password='qwerty', email='')
     ut1 = add_CompanyUser(user=u1, company=t1)

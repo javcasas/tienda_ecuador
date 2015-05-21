@@ -9,8 +9,7 @@ from billing.models import (ReadOnlyObject,
                             ProformaBillItem,
                             BillItem,
                             Customer,
-                            BillCustomer,
-                            ProformaBillCustomer)
+                            BillCustomer)
 from django.contrib.auth.models import User
 from helpers import (add_instance,
                      add_User,
@@ -23,7 +22,6 @@ from helpers import (add_instance,
                      add_BillItem,
                      add_Customer,
                      add_BillCustomer,
-                     add_ProformaBillCustomer,
                      try_delete,
                      TestHelpersMixin)
 
@@ -48,12 +46,10 @@ class FieldsTests(TestCase, TestHelpersMixin):
                  'company': self.company}),
             (BillCustomer,
                 {'name': "Pepe"}),
-            (ProformaBillCustomer,
-                {'name': "Pepe"}),
             (ProformaBill,
                 {'company': self.company,
                  'number': '3',
-                 'issued_to': add_ProformaBillCustomer(name='Pepe')}),
+                 'issued_to': add_Customer(name='Pepe', company=self.company)}),
             (Bill,
                 {'company': self.company,
                  'number': '3',
@@ -70,7 +66,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
                  'qty': 14,
                  'proforma_bill': add_ProformaBill(company=self.company,
                                                    number='3',
-                                                   issued_to=add_ProformaBillCustomer(name='Pepe'))}),
+                                                   issued_to=add_Customer(name='Pepe', company=self.company))}),
             (BillItem,
                 {'sku': 'T123',
                  'name': 'Widget',
@@ -155,15 +151,13 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
     def setUp(self):
         self.company = add_Company(name="Tienda 1")
         self.user = add_User(username="Paco", password='')
-        self.tests = [
-            (ProformaBillCustomer,
-                {'name': "Pepe"}),
+        self.testsa = [
             (BillCustomer,
                 {'name': "Pepe"}),
             (ProformaBill,
                 {'company': self.company,
                  'number': '3',
-                 'issued_to': add_ProformaBillCustomer(name='Pepe')}),
+                 'issued_to': add_Customer(name='Pepe', company=self.company)}),
             (Bill,
                 {'company': self.company,
                  'number': '3',
@@ -175,7 +169,7 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
                  'qty': 14,
                  'proforma_bill': add_ProformaBill(company=self.company,
                                                    number='3',
-                                                   issued_to=add_ProformaBillCustomer(name='Pepe'))}),
+                                                   issued_to=add_Customer(name='Pepe', company=self.company))}),
             (BillItem,
                 {'sku': 'T123',
                  'name': 'Widget',
@@ -186,33 +180,32 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
                                   issued_to=add_BillCustomer(name='Pepe'))}),
         ]
 
-    def test_ProformaBillCustomer_to_BillCustomer(self):
-        proforma = ProformaBillCustomer(name="Pepe")
-        proforma.save()
-        billcustomer = proforma.toBillCustomer()
+    def test_Customer_to_BillCustomer(self):
+        customer = Customer(name="Pepe", company=self.company)
+        customer.save()
+        billcustomer = BillCustomer.fromCustomer(customer)
         self.assertEquals(billcustomer.name, 'Pepe')
 
     def test_ProformaBill_to_Bill(self):
-        proforma = ProformaBill(issued_to=add_ProformaBillCustomer(name='Pepe'),
+        proforma = ProformaBill(issued_to=add_Customer(name='Pepe', company=self.company),
                                 company=self.company,
                                 number='3')
         proforma.save()
-        bill = proforma.toBill()
+        bill = Bill.fromProformaBill(proforma)
         self.assertEquals(bill.company, self.company)
         self.assertEquals(bill.number, '3')
         self.assertEquals(bill.issued_to.name, 'Pepe')
 
     def test_ProformaBillItem_to_BillItem(self):
-        proforma = ProformaBill(issued_to=add_ProformaBillCustomer(name='Pepe'),
+        proforma = ProformaBill(issued_to=add_Customer(name='Pepe', company=self.company),
                                 company=self.company,
                                 number='3')
         proforma.save()
-        bill = proforma.toBill()
         data = dict(sku='T123',
                     name='Widget',
                     description='Widget description',
                     qty=14)
         proforma_item = ProformaBillItem(proforma_bill=proforma, **data)
         proforma_item.save()
-        item = proforma_item.toBillItem(bill)
-        self.assertObjectMatchesData(item, dict(data, bill=bill))
+        bill = Bill.fromProformaBill(proforma)
+        self.assertObjectMatchesData(bill.items[0], dict(data, bill=bill))

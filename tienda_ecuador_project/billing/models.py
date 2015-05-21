@@ -90,23 +90,16 @@ class BillCustomer(ReadOnlyMixin, BaseCustomer):
     """
     A customer in a final bill
     """
-
-
-class ProformaBillCustomer(BaseCustomer):
-    """
-    A customer in a proforma bill
-    """
-    def get_absolute_url(self):
-        return reverse('proformabillcustomer_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
-    def toBillCustomer(self):
-        new = BillCustomer(name=self.name)
-        new.save()
-        return new
-    def clone_from_customer(self, ob):
+    @classmethod
+    def fromCustomer(cls, c):
         fields = ['name']
+        data = {}
         for field in fields:
-            setattr(self, field, getattr(ob, field))
-        return self
+            data[field] = getattr(c, field)
+        new = BillCustomer(**data)
+        new.secret_save()
+        return new
+
 
 #####################################
 # Bill
@@ -127,13 +120,31 @@ class Bill(ReadOnlyMixin, BaseBill):
     Represents a bill
     """
     issued_to = models.ForeignKey(BillCustomer)
+    @classmethod
+    def fromProformaBill(cls, proforma):
+        customer = BillCustomer.fromCustomer(proforma.issued_to)
+        fields = ['number', 'company']
+        data = {}
+        for field in fields:
+            data[field] = getattr(proforma, field)
+        data['issued_to'] = customer
+        new = Bill(**data)
+        new.secret_save()
+        for proformaitem in proforma.items:
+            item = BillItem.fromProformaBillItem(proformaitem, bill=new)
+            item.secret_save()
+        return new
+
+    @property
+    def items(self):
+        return BillItem.objects.filter(bill=self)
 
 
 class ProformaBill(BaseBill):
     """
     Represents a proforma bill
     """
-    issued_to = models.ForeignKey(ProformaBillCustomer)
+    issued_to = models.ForeignKey(Customer)
 
     def toBill(self):
         new = Bill(company=self.company,
@@ -185,13 +196,6 @@ class ProformaBillItem(BaseItem):
     proforma_bill = models.ForeignKey(ProformaBill)
     qty = models.DecimalField(max_digits=20, decimal_places=8)
 
-    def toBillItem(self, bill):
-        new = BillItem(sku=self.sku, name=self.name,
-                       description=self.description,
-                       bill=bill, qty=self.qty)
-        new.save()
-        return new
-
 
 class BillItem(ReadOnlyMixin, BaseItem):
     """
@@ -199,3 +203,14 @@ class BillItem(ReadOnlyMixin, BaseItem):
     """
     bill = models.ForeignKey(Bill)
     qty = models.DecimalField(max_digits=20, decimal_places=8)
+
+    @classmethod
+    def fromProformaBillItem(self, billitem, bill):
+        fields = ['sku', 'name', 'description', 'qty']
+        data = {}
+        for field in fields:
+            data[field] = getattr(billitem, field)
+        data['bill'] = bill
+        new = BillItem(**data)
+        new.secret_save()
+        return new

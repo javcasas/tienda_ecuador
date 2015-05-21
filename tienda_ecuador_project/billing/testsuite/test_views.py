@@ -309,10 +309,6 @@ class ProformaBillTests(LoggedInWithCompanyTests):
     """
     entity = 'proforma'
     cls = models.ProformaBill
-    data = {'issued_to': lambda: add_instance(models.ProformaBillCustomer, name="Pepe"),
-            'number': '001-002-1234567890',}
-    newdata = {'number': '002-004-0987654321',
-               'issued_to': lambda: add_instance(models.ProformaBillCustomer, name="Paco"),}
 
     def prepare_dict(self, d):
         def try_call(f):
@@ -324,6 +320,10 @@ class ProformaBillTests(LoggedInWithCompanyTests):
 
     def setUp(self):
         super(self.__class__, self).setUp()
+        self.data = {'issued_to': lambda: add_instance(models.Customer, name="Pepe", company=self.company),
+                'number': '001-002-1234567890',}
+        self.newdata = {'number': '002-004-0987654321',
+                   'issued_to': lambda: add_instance(models.Customer, name="Paco", company=self.company),}
         self.proforma_bill = add_instance(
             models.ProformaBill,
             **dict(self.prepare_dict(self.data), company=self.company)
@@ -375,8 +375,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         proformabill_data = {
             'number': '6666',
         }
-        customer = models.Customer(**dict(customer_data, company=self.company))
-        customer.save()
+        customer, created = models.Customer.objects.get_or_create(**dict(customer_data, company=self.company))
         with self.new_item(self.cls) as new:
             r = self.c.post(
                 reverse('proformabill_create', args=(self.company.id,)),
@@ -386,3 +385,30 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             r, reverse('proformabill_detail', args=(self.company.id, new.id)))
         self.assertObjectMatchesData(new, proformabill_data)
         self.assertObjectMatchesData(new.issued_to, customer_data)
+
+    def test_proformabill_update(self):
+        """
+        Check the proforma bill update view
+        """
+        customer_data = {
+            'name': 'Roberto',
+        }
+        proformabill_data = {
+            'number': '6666',
+        }
+        new_proformabill_data = {
+            'number': '7777',
+        }
+        customer, created = models.Customer.objects.get_or_create(dict(customer_data, company=self.company))
+        proformabill, created = models.ProformaBill.objects.get_or_create(
+            **dict(proformabill_data, issued_to=customer, company=self.company))
+        r = self.c.get(
+            reverse('proformabill_update', args=(self.company.id, proformabill.id)))
+        self.assertContainsObject(r, customer, customer_data.keys())
+        self.assertContainsObject(r, proformabill, proformabill_data.keys())
+        r = self.c.post(
+            reverse('proformabill_update', args=(self.company.id, proformabill.id)),
+            make_post(dict(new_proformabill_data, issued_to=customer.id)))
+        self.assertRedirects(
+            r, reverse('proformabill_detail', args=(self.company.id, proformabill.id)))
+        self.assertObjectMatchesData(models.ProformaBill.objects.get(id=proformabill.id), new_proformabill_data)

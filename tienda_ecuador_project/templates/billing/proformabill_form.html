@@ -1,0 +1,10 @@
+{% extends 'billing/l2_proformabill_selected.html' %}
+{% block title %}Editar Proforma {{ proformabill.number }} - {% endblock %}
+{% block body_l2 %}
+        <form method='post' action='.'>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type='submit'>Submit</button>
+        </form>
+        <a href='{% url 'proformabill_detail' company.id proformabill.id %}'>Cancel</a>
+{% endblock %}

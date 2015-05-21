@@ -1,5 +1,5 @@
 from django import forms
-from billing.models import Item, Customer, ProformaBill, ProformaBillItem, Company, Bill, BillItem, ProformaBillCustomer
+from billing.models import Item, Customer, ProformaBill, ProformaBillItem, Company, Bill, BillItem
 
 
 class ItemForm(forms.ModelForm):
@@ -18,24 +18,6 @@ class ItemForm(forms.ModelForm):
 class ProformaBillForm(forms.ModelForm):
     issued_to = forms.ModelChoiceField(queryset=None, help_text="Please select the customer.")
     number = forms.CharField(max_length=50, help_text="Please enter the number of the bill.")
-
-    def clean(self):
-        """
-        Converts potential Customers into ProformaBillCustomer
-        """
-        cleaned_data = super(ProformaBillForm, self).clean()
-        if 'issued_to' in cleaned_data:
-            if type(cleaned_data['issued_to']) == Customer:
-                try:
-                    issued_to = self.instance.issued_to
-                except:
-                    issued_to = ProformaBillCustomer()
-                    self.instance.issued_to = issued_to
-                issued_to.clone_from_customer(cleaned_data['issued_to'])
-                issued_to.save()
-                cleaned_data['issued_to'] = issued_to
-        return cleaned_data
-
 
     class Meta:
         # Provide an association between the ModelForm and a model

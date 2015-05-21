@@ -29,7 +29,6 @@ add_BillItem = partial(add_instance, models.BillItem)
 
 add_Customer = partial(add_instance, models.Customer)
 add_BillCustomer = partial(add_instance, models.BillCustomer)
-add_ProformaBillCustomer = partial(add_instance, models.ProformaBillCustomer)
 
 def add_User(**kwargs):
     pw = kwargs.pop("password")

@@ -121,19 +121,11 @@ class Migration(migrations.Migration):
             name='ProformaBill',
             fields=[
                 ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
+                ('issued_to', models.ForeignKey(to='billing.Customer')),
             ],
             options={
             },
             bases=('billing.basebill',),
-        ),
-        migrations.CreateModel(
-            name='ProformaBillCustomer',
-            fields=[
-                ('basecustomer_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseCustomer')),
-            ],
-            options={
-            },
-            bases=('billing.basecustomer',),
         ),
         migrations.CreateModel(
             name='ProformaBillItem',
@@ -145,12 +137,6 @@ class Migration(migrations.Migration):
             options={
             },
             bases=('billing.baseitem',),
-        ),
-        migrations.AddField(
-            model_name='proformabill',
-            name='issued_to',
-            field=models.ForeignKey(to='billing.ProformaBillCustomer'),
-            preserve_default=True,
         ),
         migrations.AddField(
             model_name='bill',

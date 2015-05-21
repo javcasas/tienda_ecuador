@@ -248,3 +248,20 @@ class ProformaBillCreateView(RequiresCompany, CreateView):
         form.instance.company = self.company
         print form.errors
         return super(self.__class__, self).form_valid(form)
+
+
+class ProformaBillUpdateView(RequiresCompany, UpdateView):
+    model = ProformaBill
+    fields = ['number', ]
+    context_object_name = 'proformabill'
+    form_class = ProformaBillForm
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
+
+    def get_form(self, *args, **kwargs):
+        form = super(self.__class__, self).get_form(*args, **kwargs)
+        form.fields['issued_to'].queryset = Customer.objects.filter(company=self.company)
+        return form
