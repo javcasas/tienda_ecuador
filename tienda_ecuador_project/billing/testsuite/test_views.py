@@ -1,3 +1,5 @@
+from unittest import skip
+
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 
@@ -301,7 +303,7 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
         super(LoggedInWithItemTests, self).setUp()
         self.make_object()
 
-from unittest import skip
+
 class ProformaBillTests(LoggedInWithCompanyTests):
     """
     Logged in user that is associated with a company
@@ -320,10 +322,18 @@ class ProformaBillTests(LoggedInWithCompanyTests):
 
     def setUp(self):
         super(self.__class__, self).setUp()
-        self.data = {'issued_to': lambda: add_instance(models.Customer, name="Pepe", company=self.company),
-                'number': '001-002-1234567890',}
-        self.newdata = {'number': '002-004-0987654321',
-                   'issued_to': lambda: add_instance(models.Customer, name="Paco", company=self.company),}
+        self.data = {
+            'issued_to': lambda: add_instance(models.Customer,
+                                              name="Pepe",
+                                              company=self.company),
+            'number': '001-002-1234567890',
+        }
+        self.newdata = {
+            'number': '002-004-0987654321',
+            'issued_to': lambda: add_instance(models.Customer,
+                                              name="Paco",
+                                              company=self.company),
+        }
         self.proforma_bill = add_instance(
             models.ProformaBill,
             **dict(self.prepare_dict(self.data), company=self.company)
@@ -344,15 +354,20 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         Check the proforma bill index view
         """
         r = self.c.get(reverse('proformabill_index', args=(self.company.id,)))
-        self.assertContainsObject(r, self.proforma_bill, ['number', 'issued_to'])
+        self.assertContainsObject(
+            r, self.proforma_bill, ['number', 'issued_to'])
         # Edit link
-        self.assertContains(r, reverse('proformabill_detail', args=(self.company.id, self.proforma_bill.id)))
+        self.assertContains(
+            r, reverse('proformabill_detail',
+                       args=(self.company.id, self.proforma_bill.id)))
 
     def test_proformabill_detail(self):
         """
         Check the proforma bill detail view
         """
-        r = self.c.get(reverse('proformabill_detail', args=(self.company.id, self.proforma_bill.id)))
+        r = self.c.get(
+            reverse('proformabill_detail',
+                    args=(self.company.id, self.proforma_bill.id)))
         self.assertContainsObject(r, self.proforma_bill, self.data.keys())
         for item in self.items:
             self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
@@ -375,7 +390,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         proformabill_data = {
             'number': '6666',
         }
-        customer, created = models.Customer.objects.get_or_create(**dict(customer_data, company=self.company))
+        customer, created = models.Customer.objects.get_or_create(
+            **dict(customer_data, company=self.company))
         with self.new_item(self.cls) as new:
             r = self.c.post(
                 reverse('proformabill_create', args=(self.company.id,)),
@@ -399,16 +415,24 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         new_proformabill_data = {
             'number': '7777',
         }
-        customer, created = models.Customer.objects.get_or_create(dict(customer_data, company=self.company))
+        customer, created = models.Customer.objects.get_or_create(
+            **dict(customer_data, company=self.company))
         proformabill, created = models.ProformaBill.objects.get_or_create(
-            **dict(proformabill_data, issued_to=customer, company=self.company))
+            **dict(proformabill_data,
+                   issued_to=customer,
+                   company=self.company))
         r = self.c.get(
-            reverse('proformabill_update', args=(self.company.id, proformabill.id)))
+            reverse('proformabill_update',
+                    args=(self.company.id, proformabill.id)))
         self.assertContainsObject(r, customer, customer_data.keys())
         self.assertContainsObject(r, proformabill, proformabill_data.keys())
         r = self.c.post(
-            reverse('proformabill_update', args=(self.company.id, proformabill.id)),
+            reverse('proformabill_update',
+                    args=(self.company.id, proformabill.id)),
             make_post(dict(new_proformabill_data, issued_to=customer.id)))
         self.assertRedirects(
-            r, reverse('proformabill_detail', args=(self.company.id, proformabill.id)))
-        self.assertObjectMatchesData(models.ProformaBill.objects.get(id=proformabill.id), new_proformabill_data)
+            r, reverse('proformabill_detail',
+                       args=(self.company.id, proformabill.id)))
+        self.assertObjectMatchesData(
+            models.ProformaBill.objects.get(id=proformabill.id),
+            new_proformabill_data)

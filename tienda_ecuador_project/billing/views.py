@@ -6,8 +6,15 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 
-from models import Item, Bill, BillItem, CompanyUser, Company, Customer, ProformaBill
-from forms import ItemForm, ProformaBillForm, BillItemForm, CustomerForm
+from models import (Item,
+                    Bill,
+                    CompanyUser,
+                    Company,
+                    Customer,
+                    ProformaBill)
+from forms import (ItemForm,
+                   ProformaBillForm,
+                   CustomerForm)
 
 
 @login_required
@@ -55,12 +62,13 @@ class CompanyIndex(RequiresCompany, View):
         Shows an index for a company
         """
         company = self.company
-        context = {}
-        context['item_list'] = Item.objects.filter(company=company)
-        context['bill_list'] = Bill.objects.filter(company=company)
-        context['proformabill_list'] = ProformaBill.objects.filter(company=company)
-        context['customer_list'] = Customer.objects.filter(company=company)
-        context['company'] = self.company
+        context = {
+            'item_list': Item.objects.filter(company=company),
+            'bill_list': Bill.objects.filter(company=company),
+            'proformabill_list': ProformaBill.objects.filter(company=company),
+            'customer_list': Customer.objects.filter(company=company),
+            'company': self.company,
+        }
         return render(request, "billing/company_index.html", context)
 
 
@@ -227,6 +235,7 @@ class ProformaBillDetailView(RequiresCompany, DetailView):
         context['company'] = self.company
         return context
 
+
 class ProformaBillCreateView(RequiresCompany, CreateView):
     model = ProformaBill
     fields = ['number', 'issued_to']
@@ -241,7 +250,8 @@ class ProformaBillCreateView(RequiresCompany, CreateView):
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
-        form.fields['issued_to'].queryset = Customer.objects.filter(company=self.company)
+        form.fields['issued_to'].queryset = Customer.objects.filter(
+            company=self.company)
         return form
 
     def form_valid(self, form):
@@ -263,5 +273,6 @@ class ProformaBillUpdateView(RequiresCompany, UpdateView):
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
-        form.fields['issued_to'].queryset = Customer.objects.filter(company=self.company)
+        form.fields['issued_to'].queryset = Customer.objects.filter(
+            company=self.company)
         return form

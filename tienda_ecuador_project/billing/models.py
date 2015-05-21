@@ -2,10 +2,12 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
+
 class ReadOnlyObject(Exception):
     """
     Exception for when trying to write read-only objects
     """
+
 
 class ReadOnlyMixin(object):
     """
@@ -83,7 +85,8 @@ class Customer(BaseCustomer):
     company = models.ForeignKey(Company)
 
     def get_absolute_url(self):
-        return reverse('customer_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
+        return reverse('customer_detail',
+                       kwargs={'company_id': self.company.id, 'pk': self.pk})
 
 
 class BillCustomer(ReadOnlyMixin, BaseCustomer):
@@ -120,6 +123,7 @@ class Bill(ReadOnlyMixin, BaseBill):
     Represents a bill
     """
     issued_to = models.ForeignKey(BillCustomer)
+
     @classmethod
     def fromProformaBill(cls, proforma):
         customer = BillCustomer.fromCustomer(proforma.issued_to)
@@ -158,7 +162,8 @@ class ProformaBill(BaseBill):
         return ProformaBillItem.objects.filter(proforma_bill=self)
 
     def get_absolute_url(self):
-        return reverse('proformabill_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
+        return reverse('proformabill_detail',
+                       kwargs={'company_id': self.company.id, 'pk': self.pk})
 
     def __unicode__(self):
         try:
@@ -186,7 +191,8 @@ class Item(BaseItem):
     company = models.ForeignKey(Company)
 
     def get_absolute_url(self):
-        return reverse('item_detail', kwargs={'company_id': self.company.id, 'pk': self.pk})
+        return reverse('item_detail',
+                       kwargs={'company_id': self.company.id, 'pk': self.pk})
 
 
 class ProformaBillItem(BaseItem):
