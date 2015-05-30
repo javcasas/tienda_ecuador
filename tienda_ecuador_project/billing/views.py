@@ -5,15 +5,19 @@ from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
+from django.http import JsonResponse
+from django.forms.models import model_to_dict
 
 from models import (Item,
                     Bill,
                     CompanyUser,
                     Company,
                     Customer,
-                    ProformaBill)
+                    ProformaBill,
+                    ProformaBillItem)
 from forms import (ItemForm,
                    ProformaBillForm,
+                   ProformaBillItemForm,
                    CustomerForm)
 
 
@@ -56,6 +60,31 @@ class RequiresCompany(object):
         return get_object_or_404(Company, id=company_id)
 
 
+class JSONResponseMixin(object):
+    """
+    A mixin that can be used to render a JSON response.
+    """
+    def render_to_json_response(self, context, **response_kwargs):
+        """
+        Returns a JSON response, transforming 'context' to make the payload.
+        """
+        return JsonResponse(
+            self.get_data(context),
+            safe=False,
+            **response_kwargs
+        )
+
+    def get_data(self, context):
+        """
+        Returns an object that will be serialized as JSON by json.dumps().
+        """
+        # Note: This is *EXTREMELY* naive; in reality, you'll need
+        # to do much more complex handling to ensure that arbitrary
+        # objects -- such as Django model instances or querysets
+        # -- can be serialized as JSON.
+        return map(model_to_dict, list(self.model.objects.filter(company=self.company)))
+
+
 class CompanyIndex(RequiresCompany, View):
     def get(self, request, company_id):
         """
@@ -87,6 +116,11 @@ class ItemListView(RequiresCompany, ListView):
         return context
 
 
+class ItemListViewJson(JSONResponseMixin, ItemListView):
+    def render_to_response(self, context, **response_kwargs):
+        return self.render_to_json_response(context, **response_kwargs)
+
+
 class ItemDetailView(RequiresCompany, DetailView):
     model = Item
     context_object_name = 'item'
@@ -99,7 +133,7 @@ class ItemDetailView(RequiresCompany, DetailView):
 
 class ItemCreateView(RequiresCompany, CreateView):
     model = Item
-    fields = ['sku', 'name', 'description']
+    fields = ['sku', 'name', 'description', 'vat_percent', 'unit_cost', 'unit_price']
     context_object_name = 'item'
     template_name_suffix = '_create_form'
     form_class = ItemForm
@@ -116,7 +150,7 @@ class ItemCreateView(RequiresCompany, CreateView):
 
 class ItemUpdateView(RequiresCompany, UpdateView):
     model = Item
-    fields = ['sku', 'name', 'description']
+    fields = ['sku', 'name', 'description', 'vat_percent', 'unit_cost', 'unit_price']
     context_object_name = 'item'
     form_class = ItemForm
 
@@ -238,7 +272,7 @@ class ProformaBillDetailView(RequiresCompany, DetailView):
 
 class ProformaBillCreateView(RequiresCompany, CreateView):
     model = ProformaBill
-    fields = ['number', 'issued_to']
+    fields = ['number', 'issued_to', 'date']
     context_object_name = 'proformabill'
     template_name_suffix = '_create_form'
     form_class = ProformaBillForm
@@ -291,3 +325,38 @@ class ProformaBillDeleteView(RequiresCompany, DeleteView):
         context = super(self.__class__, self).get_context_data(**kwargs)
         context['company'] = self.company
         return context
+
+class ProformaBillSelected(object):
+    @property
+    def proformabill(self):
+        proformabill_id = self.kwargs['proformabill_id']
+        self.check_has_access_to_company()
+        return get_object_or_404(ProformaBill, company=self.company, id=proformabill_id)
+
+
+class ProformaBillAddItemView(RequiresCompany, ProformaBillSelected, CreateView):
+    model = ProformaBillItem
+    fields = ['sku', 'name', 'description', ]
+    context_object_name = 'item'
+    template_name_suffix = '_create_form'
+    form_class = ProformaBillItemForm
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        context['proformabill'] = self.proformabill
+        return context
+
+    def get_form(self, *args, **kwargs):
+        form = super(self.__class__, self).get_form(*args, **kwargs)
+        form.fields['copy_from'].queryset = Item.objects.filter(
+            company=self.company)
+        return form
+
+    def form_valid(self, form):
+        form.instance.company = self.company
+        form.instance.proforma_bill = self.proformabill
+        return super(self.__class__, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse("proformabill_detail", args=(self.company.id, self.proformabill.id))

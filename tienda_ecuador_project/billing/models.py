@@ -73,6 +73,7 @@ class BaseCustomer(models.Model):
     Represents a generic customer
     """
     name = models.CharField(max_length=100)
+    sri_ruc = models.CharField(max_length=100)
 
     def __unicode__(self):
         return self.name
@@ -95,7 +96,7 @@ class BillCustomer(ReadOnlyMixin, BaseCustomer):
     """
     @classmethod
     def fromCustomer(cls, c):
-        fields = ['name']
+        fields = ['name', 'sri_ruc']
         data = {}
         for field in fields:
             data[field] = getattr(c, field)
@@ -113,6 +114,7 @@ class BaseBill(models.Model):
     """
     number = models.CharField(max_length=20, blank=True)
     company = models.ForeignKey(Company)
+    date = models.DateTimeField()
 
     def __unicode__(self):
         return "{} - {}".format(self.number, self.issued_to)
@@ -127,7 +129,7 @@ class Bill(ReadOnlyMixin, BaseBill):
     @classmethod
     def fromProformaBill(cls, proforma):
         customer = BillCustomer.fromCustomer(proforma.issued_to)
-        fields = ['number', 'company']
+        fields = ['number', 'company', 'date']
         data = {}
         for field in fields:
             data[field] = getattr(proforma, field)
@@ -182,6 +184,9 @@ class BaseItem(models.Model):
     sku = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
+    vat_percent = models.IntegerField()
+    unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
+    unit_price = models.DecimalField(max_digits=20, decimal_places=8)
 
 
 class Item(BaseItem):
@@ -193,6 +198,9 @@ class Item(BaseItem):
     def get_absolute_url(self):
         return reverse('item_detail',
                        kwargs={'company_id': self.company.id, 'pk': self.pk})
+
+    def __unicode__(self):
+        return "{} - {}".format(self.sku, self.name)
 
 
 class ProformaBillItem(BaseItem):
@@ -212,7 +220,7 @@ class BillItem(ReadOnlyMixin, BaseItem):
 
     @classmethod
     def fromProformaBillItem(self, billitem, bill):
-        fields = ['sku', 'name', 'description', 'qty']
+        fields = ['sku', 'name', 'description', 'qty', 'vat_percent', 'unit_cost', 'unit_price']
         data = {}
         for field in fields:
             data[field] = getattr(billitem, field)

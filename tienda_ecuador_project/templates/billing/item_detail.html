@@ -3,6 +3,9 @@
         SKU: {{ item.sku }} <br />
         Name: {{ item.name }} <br />
         Description: {{ item.description }} <br />
+        Vat: {{ item.vat_percent }}% <br />
+        Unit cost: {{ item.unit_cost }} <br />
+        Unit price: {{ item.unit_price }} <br />
         <a href='{% url "item_update" company.id item.id %}'>Editar</a>
         <a href='{% url "item_index" company.id %}'>Items</a>
         <a href='{% url "company_index" company.id %}'>Back</a>

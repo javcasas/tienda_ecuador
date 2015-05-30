@@ -1,4 +1,6 @@
 from unittest import skip
+from datetime import datetime
+import pytz
 
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
@@ -11,6 +13,14 @@ from helpers import (add_Company,
                      add_instance,
                      make_post)
 
+def get_date():
+    now = datetime.now(tz=pytz.timezone('America/Guayaquil'))
+    return now.replace(microsecond=0)
+    
+
+def fix_keys(keys):
+    bad_keys = ['date']
+    return [k for k in keys if k not in bad_keys]
 
 class NotLoggedInTests(TestCase):
     """
@@ -120,6 +130,7 @@ class GenericObjectCRUDTest(object):
         self.delete_view = "{}_delete".format(self.entity)
         self.ob = self.cls(**dict(self.data, company=self.company))
         self.ob.save()
+        self.index_keys = self.data.keys()
 
     def test_index(self):
         """
@@ -127,7 +138,7 @@ class GenericObjectCRUDTest(object):
         """
         r = self.c.get(
             reverse(self.index_view, args=(self.company.id,)))
-        self.assertContainsObject(r, self.ob, self.data.keys())
+        self.assertContainsObject(r, self.ob, self.index_keys)
 
     def test_view(self):
         """
@@ -294,14 +305,21 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
     cls = models.Item
     data = {'sku': 'P1234',
             'name': 'Item 1',
+            'vat_percent': 12,
+            'unit_cost': 5,
+            'unit_price': 6.5,
             'description': 'Item 1 description'}
     newdata = {'sku': 'P12345',
                'name': 'Item 2',
+               'vat_percent': 0,
+               'unit_cost': 3,
+               'unit_price': 6,
                'description': 'Item 2 description'}
 
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
         self.make_object()
+        self.index_keys = ['sku', 'name']
 
 
 class ProformaBillTests(LoggedInWithCompanyTests):
@@ -330,9 +348,11 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         }
         self.data = {
             'number': '001-002-1234567890',
+            'date': get_date(),
         }
         self.new_data = {
             'number': '002-004-0987654321',
+            'date': get_date(),
         }
         self.customer = add_instance(models.Customer,
                                      **dict(self.customer_data,
@@ -354,6 +374,9 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                     name='Item {}'.format(i),
                     description='Description of item {}'.format(i),
                     qty=3+i,
+                    vat_percent=12,
+                    unit_cost=5,
+                    unit_price=12,
                     proforma_bill=self.proformabill))
 
     def test_proformabill_index(self):
@@ -375,7 +398,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         r = self.c.get(
             reverse('proformabill_detail',
                     args=(self.company.id, self.proformabill.id)))
-        self.assertContainsObject(r, self.proformabill, self.data.keys())
+        self.assertContainsObject(r, self.proformabill, fix_keys(self.data.keys()))
         for item in self.items:
             self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
 
@@ -396,6 +419,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         }
         proformabill_data = {
             'number': '6666',
+            'date': get_date(),
         }
         customer, created = models.Customer.objects.get_or_create(
             **dict(customer_data, company=self.company))
@@ -417,7 +441,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             reverse('proformabill_update',
                     args=(self.company.id, self.proformabill.id)))
         self.assertContainsObject(r, self.customer, self.customer_data.keys())
-        self.assertContainsObject(r, self.proformabill, self.data.keys())
+        self.assertContainsObject(r, self.proformabill, fix_keys(self.data.keys()))
 
     def test_proformabill_update_submit(self):
         """
@@ -460,3 +484,52 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             r, reverse("proformabill_index", args=(self.company.id,)))
         with self.assertRaises(models.ProformaBill.DoesNotExist):
             models.ProformaBill.objects.get(id=self.proformabill.id)
+
+
+class ProformaBillItemTests(LoggedInWithCompanyTests):
+    """
+    Logged in user that is associated with a company
+    """
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.customer_data = {
+            'name': 'Pepe',
+        }
+        self.proformabill_data = {
+            'number': '001-002-1234567890',
+            'date': get_date(),
+        }
+        self.customer = add_instance(models.Customer,
+                                     **dict(self.customer_data,
+                                            company=self.company))
+        self.proformabill = add_instance(
+            models.ProformaBill,
+            **dict(self.proformabill_data, company=self.company, issued_to=self.customer)
+        )
+        self.item_data = dict(
+            sku='SKU222',
+            name='Item 3',
+            vat_percent=12,
+            unit_cost=5.3,
+            unit_price=8,
+            description='Item3 description')
+        self.item = add_instance(
+            models.Item,
+            **dict(self.item_data, company=self.company))
+        self.proformabill_item_data = dict(
+            sku="SKU001",
+            name='Item 1',
+            description='Description of item 1',
+            vat_percent=12,
+            unit_cost=9.1,
+            unit_price=16,
+            qty=3)
+        self.proformabill_item = add_instance(
+            models.ProformaBillItem,
+            **dict(self.proformabill_item_data, proforma_bill=self.proformabill))
+
+    def test_add_item_to_bill_show_form(self):
+        r = self.c.get(
+            reverse('proformabill_add_item',
+                    args=(self.company.id, self.proformabill.id)))
+        self.assertContainsObject(r, self.item, ['sku', 'name',])

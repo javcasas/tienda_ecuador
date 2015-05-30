@@ -4,6 +4,7 @@
         <h1>Proforma</h1>
         Number: {{ proformabill.number }} <br />
         Issued to: {{ proformabill.issued_to }} <br />
+        Date: {{ proformabill.date }} <br />
         <hr />
         {% for item in proformabill.items %}
             SKU: {{ item.sku }} <br />

@@ -30,6 +30,7 @@ add_BillItem = partial(add_instance, models.BillItem)
 add_Customer = partial(add_instance, models.Customer)
 add_BillCustomer = partial(add_instance, models.BillCustomer)
 
+
 def add_User(**kwargs):
     pw = kwargs.pop("password")
     u = add_instance(User, **kwargs)
@@ -49,15 +50,16 @@ def try_delete(item):
         pass
 
 
-class TestHelpersMixin(object): 
+class TestHelpersMixin(object):
     def assertObjectMatchesData(self, ob, data, msg=''):
         """
         Checks that every field in the data
         exists in the object and is the same
         """
         for key, value in data.iteritems():
-            n_msg = msg + ' data["{0}"] != ob.{0}'.format(key)
-            self.assertEquals(getattr(ob, key), value, n_msg)
+            ob_value = getattr(ob, key)
+            n_msg = msg + ' data["{0}"] != ob.{0}, {1} != {2}'.format(key, value, ob_value)
+            self.assertEquals(ob_value, value, n_msg)
 
 
     @contextmanager
@@ -87,11 +89,17 @@ def make_post(data):
     """
     Converts a data dict into a data dict that can be used in a POST
     """
-    def convert_field(f):
+    def convert_id(f):
         try:
             return f.id
         except:
             return f
-    return {k: convert_field(v) for (k, v) in data.iteritems()}
+    def convert_datetime(f):
+        try:
+            return f.strftime("%Y-%m-%d %H:%M:%S")
+        except:
+            return f
+    data = {k: convert_id(v) for (k, v) in data.iteritems()}
+    return {k: convert_datetime(v) for (k, v) in data.iteritems()}
 
 make_put = urllib.urlencode
