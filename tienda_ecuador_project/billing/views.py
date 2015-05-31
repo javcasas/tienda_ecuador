@@ -360,3 +360,41 @@ class ProformaBillAddItemView(RequiresCompany, ProformaBillSelected, CreateView)
 
     def get_success_url(self):
         return reverse("proformabill_detail", args=(self.company.id, self.proformabill.id))
+
+class BillXmlView(object):
+    class InfoTributaria(object):
+        __slots__ = [
+            'ambiente', 'tipo_emision', 'razon_social', 'nombre_comercial',
+            'ruc', 'clave_acceso', 'cod_doc', 'establecimiento',
+            'punto_emision', 'secuencial', 'direccion_matriz',
+        ]
+    class InfoFactura(object):
+        __slots__ = [
+            'fecha_emision', 'direccion_establecimiento',
+            'contribuyente_especial', 'obligado_contabilidad',
+            'tipo_identificacion_comprador', 'razon_social_comprador',
+            'identificacion_comprador', 'total_sin_impuestos',
+            'total_descuento', 'impuestos', 'propina', 'importe_total',
+            'moneda',
+        ]
+        class TotalImpuestos(object):
+            __slots__ = [
+                'codigo', 'codigo_porcentaje', 'descuento_adicional'
+                'base_imponible', 'valor'
+            ]
+    class Detalle(object):
+        __slots__ = [
+            'codigo_principal', 'codigo_auxiliar', 'descripcion',
+            'unidad_medida', 'cantidad', 'precio_unitario', 'descuento',
+            'total_sin_impuesto',
+        ]
+        class Impuesto(object):
+            __slots__ = [
+                'codigo', 'codigo_porcentaje', 'tarifa', 'base_imponible',
+                'valor',
+            ]
+    class Retencion(object):
+        __slots__ = [
+                'codigo', 'codigo_porcentaje', 'tarifa', 'valor'
+        ]
+    
