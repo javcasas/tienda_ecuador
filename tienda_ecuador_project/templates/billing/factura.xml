@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <factura id="comprobante" version="1.1.0">
     <infoTributaria>
-        <ambiente>{{ info_tributaria.ambiente }}</ambiente>
+        <ambiente>{{ info_tributaria.ambiente_c }}</ambiente>
         <tipoEmision>{{ info_tributaria.tipo_emision }}</tipoEmision>
         <razonSocial>{{ info_tributaria.razon_social }}</razonSocial>
         {% if info_tributaria.nombre_comercial %}<nombreComercial>{{ info_tributaria.nombre_comercial }}</nombreComercial>{% endif %}
