@@ -45,12 +45,15 @@ class Company(models.Model):
     """
     Represents a company
     """
-    name = models.CharField(max_length=100, unique=True)
-    sri_ruc = models.CharField(max_length=100, unique=True)
-    sri_razon_social = models.CharField(max_length=100, unique=True)
+    nombre_comercial = models.CharField(max_length=100, unique=True)
+    ruc = models.CharField(max_length=100, unique=True)
+    razon_social = models.CharField(max_length=100, unique=True)
+    direccion_matriz = models.CharField(max_length=100)
+    contribuyente_especial = models.CharField(max_length=20, blank=True)
+    obligado_contabilidad = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return self.name
+        return self.razon_social
 
 
 class CompanyUser(models.Model):
@@ -72,11 +75,14 @@ class BaseCustomer(models.Model):
     """
     Represents a generic customer
     """
-    name = models.CharField(max_length=100)
-    sri_ruc = models.CharField(max_length=100)
+    razon_social = models.CharField(max_length=100)
+    tipo_identificacion = models.CharField(max_length=100)
+    identificacion = models.CharField(max_length=100)
+    email = models.CharField(max_length=100, blank=True)
+    direccion = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
-        return self.name
+        return self.razon_social
 
 
 class Customer(BaseCustomer):
@@ -96,7 +102,7 @@ class BillCustomer(ReadOnlyMixin, BaseCustomer):
     """
     @classmethod
     def fromCustomer(cls, c):
-        fields = ['name', 'sri_ruc']
+        fields = ['razon_social', 'tipo_identificacion', 'identificacion', 'email', 'direccion']
         data = {}
         for field in fields:
             data[field] = getattr(c, field)

@@ -28,87 +28,99 @@ from helpers import (add_instance,
                      TestHelpersMixin)
 
 from itertools import count
+
 current_ruc = count(10)
 get_ruc = lambda: str(current_ruc.next())
+
+
 def get_date():
     return datetime.now(tz=pytz.timezone('America/Guayaquil'))
+
+base_data = {
+    "Company": {
+        "nombre_comercial": "Tienda 1",
+        "ruc": '1234567890001',
+        "razon_social": "Paco Pil",
+        "direccion_matriz": "C del pepino",
+        "contribuyente_especial": "",
+    },
+    "BaseCustomer": {
+        "razon_social": "Pepe",
+        "tipo_identificacion": "ruc",
+        "identificacion": "fberg",
+        "email": "papa@ble.com",
+        "direccion": "dfdf gfwergwer",
+    },
+    "BaseItem": {
+        'sku': 'T123',
+        'name': 'Widget',
+        'description': 'Widget description',
+        'vat_percent': 12,
+        'unit_cost': 11.5,
+        'unit_price': 15.5
+    },
+    "BaseBill": {
+        'number': '3',
+        'date': get_date()
+    },
+}
+
 
 class FieldsTests(TestCase, TestHelpersMixin):
     """
     Tests that check if a given model has all the required fields
     """
     def setUp(self):
-        self.company = add_Company(name="Tienda 1")
+        self.company = add_Company(**base_data['Company'])
+
         self.user = add_User(username="Paco", password='')
+
+        self.customer = add_Customer(**dict(base_data['BaseCustomer'], company=self.company))
+        self.bill_customer = add_BillCustomer(**base_data['BaseCustomer'])
+
+        self.proforma_bill = add_ProformaBill(
+            **dict(base_data['BaseBill'],
+                   company=self.company,
+                   issued_to=self.customer))
+
+        self.bill = add_Bill(
+            **dict(base_data['BaseBill'],
+                   company=self.company,
+                   issued_to=self.bill_customer))
+
         self.tests = [
-            (Company,
-                {'name': 'Tienda 2',
-                 'sri_ruc': get_ruc(),
-                 'sri_razon_social': 'ABC DEF'}),
-            (CompanyUser,
+            (Company, base_data['Company'],
+                {"razon_social": "Pepe Pil",
+                 "ruc": "3333333333",
+                 "nombre_comercial": "453534"}),
+            (CompanyUser, {},
                 {'company': self.company,
                  'user': self.user}),
-            (Customer,
-                {'name': "Pepe",
-                 'sri_ruc': get_ruc(),
-                 'company': self.company}),
-            (BillCustomer,
-                {'name': "Pepe",
-                 'sri_ruc': get_ruc(),
-                }),
-            (ProformaBill,
+            (Customer, base_data['BaseCustomer'],
+                {"company": self.company}),
+            (BillCustomer, base_data['BaseCustomer'],
+                {}),
+            (ProformaBill, base_data['BaseBill'],
                 {'company': self.company,
-                 'number': '3',
-                 'date': get_date(),
-                 'issued_to': add_Customer(name='Pepe',
-                                           sri_ruc=get_ruc(),
-                                           company=self.company)}),
-            (Bill,
+                 'issued_to': self.customer}),
+            (Bill, base_data['BaseBill'],
                 {'company': self.company,
-                 'number': '3',
-                 'date': get_date(),
-                 'issued_to': add_BillCustomer(name='Pepe',
-                                               sri_ruc=get_ruc())}),
-            (Item,
-                {'sku': 'T123',
-                 'name': 'Widget',
-                 'description': 'Widget description',
-                 'vat_percent': 12,
-                 'unit_cost': 11.5,
-                 'unit_price': 15.5,
-                 'company': self.company}),
-            (ProformaBillItem,
-                {'sku': 'T123',
-                 'name': 'Widget',
-                 'description': 'Widget description',
-                 'qty': 14,
-                 'vat_percent': 12,
-                 'unit_cost': 11.5,
-                 'unit_price': 15.5,
-                 'proforma_bill': add_ProformaBill(company=self.company,
-                                                   number='3',
-                                                   date=get_date(),
-                                                   issued_to=add_Customer(name='Pepe',
-                                                                          company=self.company,
-                                                                          sri_ruc=get_ruc()))}),
-            (BillItem,
-                {'sku': 'T123',
-                 'name': 'Widget',
-                 'description': 'Widget description',
-                 'qty': 14,
-                 'vat_percent': 12,
-                 'unit_cost': 11.5,
-                 'unit_price': 15.5,
-                 'bill': add_Bill(company=self.company,
-                                  number='32',
-                                  date=get_date(),
-                                  issued_to=add_BillCustomer(name='Pepe',
-                                                             sri_ruc=get_ruc()))}),
+                 'issued_to': self.bill_customer}),
+            (Item, base_data['BaseItem'],
+                {"company": self.company}),
+            (ProformaBillItem, base_data['BaseItem'],
+                {"proforma_bill": self.proforma_bill,
+                 'qty': 6}),
+            (BillItem, base_data['BaseItem'],
+                {"bill": self.bill,
+                 'qty': 8}),
         ]
 
     def test_all_clases(self):
-        for cls, data in self.tests:
-            self.assertHasAllTheRequiredFields(cls, data)
+        for cls, data, updates in self.tests:
+            mydata = data.copy()
+            mydata.update(updates)
+            self.assertHasAllTheRequiredFields(cls, mydata)
 
     def assertHasAllTheRequiredFields(self, cls, data):
         """
@@ -130,18 +142,15 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
     but not modified
     """
     def setUp(self):
-        self.company = add_Company(name="Tienda 1")
+        self.company = Company.objects.get_or_create(**base_data['Company'])[0]
+        self.bill_customer = BillCustomer.objects.get_or_create(**base_data['BaseCustomer'])[0]
         self.tests = [
-            (BillCustomer,
-                {'name': "Pepe",
-                 'sri_ruc': get_ruc()}),
+            (BillCustomer, base_data['BaseCustomer']),
             (Bill,
                 {'company': self.company,
                  'number': '3',
                  'date': get_date(),
-                 'issued_to': add_BillCustomer(name='Pepe',
-                                               sri_ruc=get_ruc(),
-                                               )}),
+                 'issued_to': self.bill_customer}),
             (BillItem,
                 {'sku': 'T123',
                  'name': 'Widget',
@@ -153,9 +162,8 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
                  'bill': add_Bill(company=self.company,
                                   number='32',
                                   date=get_date(),
-                                  issued_to=add_BillCustomer(name='Pepe',
-                                                             sri_ruc=get_ruc(),
-                                                             ))}),
+                                  issued_to=self.bill_customer),
+                }),
         ]
 
     def test_update_disabled(self):
@@ -188,37 +196,39 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
     Tests that check converting a proforma into a final
     """
     def setUp(self):
-        self.company = add_Company(name="Tienda 1")
+        self.company = add_Company(
+            nombre_comercial="Tienda 1", ruc='1234567890001',
+            razon_social="Paco Pil", direccion_matriz="C del pepino",
+            contribuyente_especial="")
         self.user = add_User(username="Paco", password='')
 
     def test_Customer_to_BillCustomer(self):
-        customer = Customer(name="Pepe",
-                            sri_ruc=get_ruc(),
-                            company=self.company)
+        customer = Customer(
+            razon_social="Pepe", tipo_identificacion="ruc",
+            identificacion="fberg", email="papa@ble.com",
+            direccion="dfdf gfwergwer", company=self.company)
         customer.save()
         billcustomer = BillCustomer.fromCustomer(customer)
-        self.assertEquals(billcustomer.name, 'Pepe')
+        self.assertEquals(billcustomer.razon_social, 'Pepe')
 
     def test_ProformaBill_to_Bill(self):
-        proforma = ProformaBill(issued_to=add_Customer(name='Pepe',
-                                                       sri_ruc=get_ruc(),
-                                                       company=self.company),
-                                company=self.company,
-                                date=get_date(),
-                                number='3')
+        proforma = ProformaBill(
+            issued_to=Customer.objects.get_or_create(**dict(base_data['BaseCustomer'], company=self.company))[0],
+            company=self.company,
+            date=get_date(),
+            number='3')
         proforma.save()
         bill = Bill.fromProformaBill(proforma)
         self.assertEquals(bill.company, self.company)
         self.assertEquals(bill.number, '3')
-        self.assertEquals(bill.issued_to.name, 'Pepe')
+        self.assertEquals(bill.issued_to.razon_social, base_data['BaseCustomer']['razon_social'])
 
     def test_ProformaBillItem_to_BillItem(self):
-        proforma = ProformaBill(issued_to=add_Customer(name='Pepe',
-                                                       sri_ruc=get_ruc(),
-                                                       company=self.company),
-                                company=self.company,
-                                date=get_date(),
-                                number='3')
+        proforma = ProformaBill(
+            issued_to=Customer.objects.get_or_create(**dict(base_data['BaseCustomer'], company=self.company))[0],
+            company=self.company,
+            date=get_date(),
+            number='3')
         proforma.save()
         data = dict(sku='T123',
                     name='Widget',

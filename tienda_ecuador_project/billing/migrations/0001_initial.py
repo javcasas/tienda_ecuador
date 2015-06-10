@@ -28,8 +28,11 @@ class Migration(migrations.Migration):
             name='BaseCustomer',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(max_length=100)),
-                ('sri_ruc', models.CharField(max_length=100)),
+                ('razon_social', models.CharField(max_length=100)),
+                ('tipo_identificacion', models.CharField(max_length=100)),
+                ('identificacion', models.CharField(max_length=100)),
+                ('email', models.CharField(max_length=100, blank=True)),
+                ('direccion', models.CharField(max_length=100, blank=True)),
             ],
             options={
             },
@@ -83,9 +86,12 @@ class Migration(migrations.Migration):
             name='Company',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(unique=True, max_length=100)),
-                ('sri_ruc', models.CharField(unique=True, max_length=100)),
-                ('sri_razon_social', models.CharField(unique=True, max_length=100)),
+                ('nombre_comercial', models.CharField(unique=True, max_length=100)),
+                ('ruc', models.CharField(unique=True, max_length=100)),
+                ('razon_social', models.CharField(unique=True, max_length=100)),
+                ('direccion_matriz', models.CharField(max_length=100)),
+                ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
+                ('obligado_contabilidad', models.BooleanField(default=False)),
             ],
             options={
             },
