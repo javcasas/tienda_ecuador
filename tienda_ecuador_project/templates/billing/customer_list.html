@@ -1,7 +1,8 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% block body_l1 %}
     {% for customer in customer_list %}
-        Nombre: {{ customer.name }} <br />
+        Razón social: {{ customer.razon_social }} <br />
+        Identificación: {{ customer.identificacion }} <br />
         <a href='{% url "customer_update" company.id customer.id %}'>Editar</a>
     {% endfor %}
     <a href='{% url "company_index" company.id %}'>Back</a>

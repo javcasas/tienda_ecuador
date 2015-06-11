@@ -63,11 +63,18 @@ class LoggedInWithCompanyTests(LoggedInTests):
     """
     def setUp(self):
         super(LoggedInWithCompanyTests, self).setUp()
-        self.company = add_Company(name='Tienda 1',
-                                   sri_razon_social='Paco Pil',
-                                   sri_ruc='1234567890')
+        self.company = add_Company(
+            nombre_comercial='Tienda 1',
+            ruc='1234567890',
+            razon_social='Paco Pil',
+            direccion_matriz="C del pepino")
         self.company_user = add_CompanyUser(user=self.user,
                                             company=self.company)
+        self.company2 = add_Company(
+            nombre_comercial='Tienda 2',
+            ruc='1234567892',
+            razon_social='Paca Pil',
+            direccion_matriz="C del pepano")
 
 
 class IndexViewTests(LoggedInWithCompanyTests):
@@ -76,13 +83,12 @@ class IndexViewTests(LoggedInWithCompanyTests):
         A logged-in user can view the billing index,
         and the index shows the available companies
         """
-        company2 = add_Company(name="Tienda 2")
-        add_CompanyUser(user=self.user, company=company2)
+        add_CompanyUser(user=self.user, company=self.company2)
 
         response = self.c.get(reverse('index'))
         self.assertEquals(response.status_code, 200)
 
-        for c in [self.company, company2]:
+        for c in [self.company, self.company2]:
             self.assertIn(c, response.context['companies'])
             self.assertContains(response, c)
 
@@ -96,15 +102,15 @@ class IndexViewTests(LoggedInWithCompanyTests):
 
     def test_view_company_index(self):
         r = self.c.get(reverse('company_index', args=(self.company.id,)))
-        self.assertContains(r, self.company.name)
+        self.assertContains(r, self.company.razon_social)
+        self.assertContains(r, self.company.nombre_comercial)
 
     def test_view_company_index_access_denied(self):
         """
         A logged-in user can't view the index for a company he has no access
         """
-        company2 = add_Company(name="Tienda 2")
         response = self.c.get(
-            reverse('company_index', args=(company2.id,))
+            reverse('company_index', args=(self.company2.id,))
         )
         self.assertEquals(response.status_code, 404)
 
@@ -192,11 +198,10 @@ class GenericObjectCRUDTest(object):
             The company of the object is the one specified in the URL
             The client is redirected to the object view
         """
-        company2 = add_Company(name='Tienda2')
         with self.new_item(self.cls) as new:
             r = self.c.post(
                 reverse(self.create_view, args=(self.company.id,)),
-                make_post(dict(self.data, company_id=company2.id)),
+                make_post(dict(self.data, company_id=self.company2.id)),
             )
         self.assertRedirects(
             r, reverse(self.detail_view, args=(self.company.id, new.id)))
@@ -288,12 +293,21 @@ class LoggedInWithCustomerTests(LoggedInWithCompanyTests,
     """
     entity = 'customer'
     cls = models.Customer
-    data = {'name': 'Pepe'}
-    newdata = {'name': 'Wis'}
+    data = {'razon_social': 'Pepe',
+            "tipo_identificacion": "cedula",
+            "identificacion": "1234567890",
+            "email": "a@b.com",
+            "direccion": "blebla street"}
+    newdata = {'razon_social': 'Wis',
+               "tipo_identificacion": "ruc",
+               "identificacion": "1234567890001",
+               "email": "c@d.com",
+               "direccion": "nana street"}
 
     def setUp(self):
         super(LoggedInWithCustomerTests, self).setUp()
         self.make_object()
+        self.index_keys = ['razon_social', 'identificacion']
 
 
 class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
@@ -341,10 +355,18 @@ class ProformaBillTests(LoggedInWithCompanyTests):
     def setUp(self):
         super(self.__class__, self).setUp()
         self.customer_data = {
-            'name': 'Pepe',
+            'razon_social': 'Pepe',
+            "tipo_identificacion": "cedula",
+            "identificacion": "1234567890",
+            "email": "a@b.com",
+            "direccion": "blebla street",
         }
         self.new_customer_data = {
-            'name': 'Pepe',
+            'razon_social': 'Wis',
+            "tipo_identificacion": "ruc",
+            "identificacion": "1234567890001",
+            "email": "a@d.com",
+            "direccion": "pupu street",
         }
         self.data = {
             'number': '001-002-1234567890',
@@ -414,15 +436,12 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         Check the proforma bill creation view
         """
-        customer_data = {
-            'name': 'Roberto',
-        }
         proformabill_data = {
             'number': '6666',
             'date': get_date(),
         }
         customer, created = models.Customer.objects.get_or_create(
-            **dict(customer_data, company=self.company))
+            **dict(self.customer_data, company=self.company))
         with self.new_item(self.cls) as new:
             r = self.c.post(
                 reverse('proformabill_create', args=(self.company.id,)),
@@ -431,7 +450,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         self.assertRedirects(
             r, reverse('proformabill_detail', args=(self.company.id, new.id)))
         self.assertObjectMatchesData(new, proformabill_data)
-        self.assertObjectMatchesData(new.issued_to, customer_data)
+        self.assertObjectMatchesData(new.issued_to, self.customer_data)
 
     def test_proformabill_update_show_form(self):
         """
@@ -440,7 +459,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         r = self.c.get(
             reverse('proformabill_update',
                     args=(self.company.id, self.proformabill.id)))
-        self.assertContainsObject(r, self.customer, self.customer_data.keys())
+        self.assertContainsObject(r, self.customer, ['razon_social', 'identificacion'])
         self.assertContainsObject(r, self.proformabill, fix_keys(self.data.keys()))
 
     def test_proformabill_update_submit(self):
@@ -467,7 +486,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         r = self.c.get(
             reverse("proformabill_delete", args=(self.company.id, self.proformabill.id)))
         self.assertContains(r, self.proformabill.number)
-        self.assertContains(r, self.proformabill.issued_to.name)
+        self.assertContains(r, self.proformabill.issued_to.razon_social)
 
     def test_proformabill_delete_submit(self):
         """
@@ -493,7 +512,11 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
     def setUp(self):
         super(self.__class__, self).setUp()
         self.customer_data = {
-            'name': 'Pepe',
+            'razon_social': 'Pepe',
+            "tipo_identificacion": "cedula",
+            "identificacion": "1234567890",
+            "email": "a@b.com",
+            "direccion": "blebla street",
         }
         self.proformabill_data = {
             'number': '001-002-1234567890',

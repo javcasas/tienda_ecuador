@@ -46,14 +46,17 @@ class BillItemForm(forms.ModelForm):
 
 
 class CustomerForm(forms.ModelForm):
-    name = forms.CharField(max_length=50, help_text="Please enter the name of the customer.")
-    #company = forms.ModelChoiceField(widget=forms.HiddenInput, queryset=Company.objects.all(), help_text="Please select the company.")
+    razon_social = forms.CharField(max_length=50, help_text="Por favor teclee la razon social.")
+    tipo_identificacion = forms.ChoiceField(choices=[('ruc', 'RUC'), ('cedula', 'Cedula')], help_text="Por favor teclee la razon social.")
+    identificacion = forms.CharField(max_length=50, help_text="Por favor teclee la identificacion.")
+    email = forms.CharField(max_length=50, help_text="Por favor teclee el email.")
+    direccion = forms.CharField(max_length=50, help_text="Por favor teclee la direccion.")
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
         model = Customer
-        fields = ('name',)
+        fields = ('razon_social', 'tipo_identificacion', 'identificacion', 'email', 'direccion')
 
 
 class ProformaBillItemForm(forms.ModelForm):

@@ -81,7 +81,8 @@ class TestHelpersMixin(object):
         res = GetattrProxy()
         yield res
         new_items = (get_set(kind) - items)
-        self.assertEquals(len(new_items), 1)
+        if len(new_items) != 1:
+            self.fail("New item of type {} was not created".format(kind))
         res.ob = new_items.pop()
 
 
