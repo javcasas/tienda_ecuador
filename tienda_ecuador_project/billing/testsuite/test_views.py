@@ -279,10 +279,38 @@ class GenericObjectCRUDTest(object):
             self.assertRedirects(r, "/accounts/login/?next={}".format(url))
         # Test post
         for url in urls:
-            r = Client().post(url, {})
+            r = Client().post(url, self.newdata)
             msg = "Url {} can be POSTed without authentication".format(url)
             self.assertEqual(r.status_code, 302, msg)
             self.assertRedirects(r, "/accounts/login/?next={}".format(url))
+
+    def test_different_user_access_denied(self):
+        """
+        Test that no URL can be reached unless a corresponding CompanyUser exists
+        """
+        username, password = 'wis', 'wis_pw'
+        self.user = add_User(username=username, password=password)
+        c = Client()
+        r = c.post("/accounts/login/",
+                        {'username': username, 'password': password})
+        self.assertRedirects(r, reverse('index'))
+        urls = [
+            reverse(self.index_view, args=(self.company.id,)),
+            reverse(self.detail_view, args=(self.company.id, self.ob.id)),
+            reverse(self.create_view, args=(self.company.id,)),
+            reverse(self.update_view, args=(self.company.id, self.ob.id)),
+            reverse(self.delete_view, args=(self.company.id, self.ob.id)),
+        ]
+        # Test get
+        for url in urls:
+            r = c.get(url)
+            msg = "Url {} can be GETted from a different user".format(url)
+            self.assertEqual(r.status_code, 404, msg)
+        # Test post
+        for url in urls:
+            r = c.post(url, {})
+            msg = "Url {} can be POSTed from a different user".format(url)
+            self.assertIn(r.status_code, [404, 405], msg)  # Some posts fail with method not allowed
 
 
 class LoggedInWithCustomerTests(LoggedInWithCompanyTests,

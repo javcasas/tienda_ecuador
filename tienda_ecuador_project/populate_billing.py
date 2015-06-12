@@ -42,8 +42,10 @@ def my_populate():
     u3.is_superuser = True
     u3.save()
 
-    t1 = add_Company(name="Tienda 1", sri_ruc='1234567890', sri_razon_social='Tienda1')
-    t2 = add_Company(name="Tienda 2", sri_ruc='1234567891', sri_razon_social='Tienda2')
+    t1 = add_Company(nombre_comercial="Tienda 1", ruc='1234567890',
+                     razon_social='Tienda1', direccion_matriz='C del pipino')
+    t2 = add_Company(nombre_comercial="Tienda 2", ruc='1234567891',
+                     razon_social='Tienda2', direccion_matriz='C del nabo')
 
     i11 = add_Item(sku='t1-123', name='Item T11',
                    vat_percent=12, unit_cost=10, unit_price=17,
@@ -61,9 +63,13 @@ def my_populate():
                    vat_percent=0, unit_cost=20, unit_price=27,
                    description='Item 3 en Tienda 2', company=t2)
 
-    c1 = add_Customer(name='Paco', company=t1)
-    c2 = add_Customer(name='Pepe', company=t1)
-    c3 = add_Customer(name='Luis', company=t2)
+    c1 = add_Customer(razon_social='Paco', tipo_identificacion='cedula',
+                      identificacion='123456543', email='paco@paco.net',
+                      company=t1)
+    c2 = add_Customer(razon_social='Pepe', tipo_identificacion='ruc',
+                      identificacion='123454232001', company=t1)
+    c3 = add_Customer(razon_social='Luis', tipo_identificacion='ruc',
+                      identificacion='444444444001', company=t2)
 
     u1 = add_User(username='roberto', password='qwerty', email='')
     ut1 = add_CompanyUser(user=u1, company=t1)

@@ -147,6 +147,11 @@ class ItemCreateView(RequiresCompany, CreateView):
         form.instance.company = self.company
         return super(ItemCreateView, self).form_valid(form)
 
+    def form_invalid(self, form):
+        response = super(self.__class__, self).form_invalid(form)
+        self.company
+        return response
+
 
 class ItemUpdateView(RequiresCompany, UpdateView):
     model = Item
@@ -182,10 +187,11 @@ class CustomerListView(RequiresCompany, ListView):
     model = Customer
     context_object_name = "customer_list"
 
+    def get_queryset(self):
+        return self.model.objects.filter(company=self.company)
+
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
-        context['customer_list'] = self.model.objects.filter(
-            company=self.company)
         context['company'] = self.company
         return context
 
@@ -228,6 +234,9 @@ class CustomerUpdateView(RequiresCompany, UpdateView):
         context['company'] = self.company
         return context
 
+    def get_queryset(self):
+        return self.model.objects.filter(company=self.company)
+
 
 class CustomerDeleteView(RequiresCompany, DeleteView):
     model = Customer
@@ -242,6 +251,9 @@ class CustomerDeleteView(RequiresCompany, DeleteView):
         context = super(self.__class__, self).get_context_data(**kwargs)
         context['company'] = self.company
         return context
+
+    def get_queryset(self):
+        return self.model.objects.filter(company=self.company)
 
 
 #############################################################
@@ -325,6 +337,7 @@ class ProformaBillDeleteView(RequiresCompany, DeleteView):
         context = super(self.__class__, self).get_context_data(**kwargs)
         context['company'] = self.company
         return context
+
 
 class ProformaBillSelected(object):
     @property

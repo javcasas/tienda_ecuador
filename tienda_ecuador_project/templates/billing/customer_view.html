@@ -1,6 +1,10 @@
 {% extends 'billing/l2_customer_selected.html' %}
 {% block body_l2 %}
-        Name: {{ customer.name }} <br />
+        Razón social: {{ customer.razon_social }} <br />
+        Identificación: {{ customer.identificacion }}
+            (<span id='tipo_identificacion' value='{{ customer.tipo_identificacion }}'>{{ customer.tipo_identificacion.capitalize }}</span>) <br />
+        Dirección: {{ customer.direccion }} <br />
+        Email: {{ customer.email }} <br />
         <a href='{#% url "edit_item" company_id item_id %#}'>Editar</a>
         <a href='{% url "company_index" company.id %}'>Back</a>
 {% endblock %}
