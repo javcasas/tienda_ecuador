@@ -11,6 +11,7 @@ from helpers import (add_Company,
                      add_CompanyUser,
                      add_User, TestHelpersMixin,
                      add_instance,
+                     add_Item, add_Customer, add_ProformaBill, add_ProformaBillItem,
                      make_post)
 
 def get_date():
@@ -288,12 +289,18 @@ class GenericObjectCRUDTest(object):
         """
         Test that no URL can be reached unless a corresponding CompanyUser exists
         """
-        username, password = 'wis', 'wis_pw'
-        self.user = add_User(username=username, password=password)
+        username, password = 'wisa', 'wis_pwa'
+        user = add_User(username=username, password=password)
+        company3 = add_Company(
+            nombre_comercial='Tienda 3',
+            ruc='1234567842',
+            razon_social='Pace Pil',
+            direccion_matriz="C del pepeno")
+        cu = add_CompanyUser(user=user, company=company3)
         c = Client()
         r = c.post("/accounts/login/",
                         {'username': username, 'password': password})
-        self.assertRedirects(r, reverse('index'))
+        self.assertEquals(r['location'], "http://testserver" + reverse('index'))
         urls = [
             reverse(self.index_view, args=(self.company.id,)),
             reverse(self.detail_view, args=(self.company.id, self.ob.id)),
@@ -584,3 +591,28 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             reverse('proformabill_add_item',
                     args=(self.company.id, self.proformabill.id)))
         self.assertContainsObject(r, self.item, ['sku', 'name',])
+
+
+class PopulateBillingTest(TestCase):
+    """
+    Weird conditions detected with populate_billing
+    """
+    def test(self):
+        import populate_billing
+        populate_billing.print_instance = lambda a, b: None
+        data = populate_billing.my_populate()
+
+        c = Client()
+        r = c.post("/accounts/login/",
+                        {'username': 'javier', 'password': 'tiaputa'})
+        self.assertEquals(r['location'], "http://testserver" + reverse('index'))
+
+        # It seems I can view customers and items for a different company
+        urls = [
+            reverse("customer_detail", args=(data['t1'].id, data['c3'].id,)),
+            reverse("item_detail", args=(data['t1'].id, data['i22'].id,)),
+            reverse("proformabill_detail", args=(data['t1'].id, data['b3'].id,)),
+        ]
+        for url in urls:
+            r = c.get(url)
+            self.assertEquals(r.status_code, 404, "URL {} can be reached from a different user".format(url))

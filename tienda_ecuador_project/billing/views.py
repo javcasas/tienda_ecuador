@@ -104,9 +104,17 @@ class CompanyIndex(RequiresCompany, View):
 ####################################################################
 #   Item views
 ####################################################################
-
-class ItemListView(RequiresCompany, ListView):
+class ItemView(RequiresCompany):
+    """
+    Base class for an Item View
+    """
     model = Item
+
+    def get_queryset(self):
+        return self.model.objects.filter(company=self.company)
+
+
+class ItemListView(ItemView, ListView):
     context_object_name = "item_list"
 
     def get_context_data(self, **kwargs):
@@ -121,8 +129,7 @@ class ItemListViewJson(JSONResponseMixin, ItemListView):
         return self.render_to_json_response(context, **response_kwargs)
 
 
-class ItemDetailView(RequiresCompany, DetailView):
-    model = Item
+class ItemDetailView(ItemView, DetailView):
     context_object_name = 'item'
 
     def get_context_data(self, **kwargs):
@@ -131,8 +138,7 @@ class ItemDetailView(RequiresCompany, DetailView):
         return context
 
 
-class ItemCreateView(RequiresCompany, CreateView):
-    model = Item
+class ItemCreateView(ItemView, CreateView):
     fields = ['sku', 'name', 'description', 'vat_percent', 'unit_cost', 'unit_price']
     context_object_name = 'item'
     template_name_suffix = '_create_form'
@@ -153,8 +159,7 @@ class ItemCreateView(RequiresCompany, CreateView):
         return response
 
 
-class ItemUpdateView(RequiresCompany, UpdateView):
-    model = Item
+class ItemUpdateView(ItemView, UpdateView):
     fields = ['sku', 'name', 'description', 'vat_percent', 'unit_cost', 'unit_price']
     context_object_name = 'item'
     form_class = ItemForm
@@ -165,8 +170,7 @@ class ItemUpdateView(RequiresCompany, UpdateView):
         return context
 
 
-class ItemDeleteView(RequiresCompany, DeleteView):
-    model = Item
+class ItemDeleteView(ItemView, DeleteView):
     context_object_name = 'item'
 
     @property
@@ -182,13 +186,18 @@ class ItemDeleteView(RequiresCompany, DeleteView):
 ####################################################################
 #   Customer views
 ####################################################################
-
-class CustomerListView(RequiresCompany, ListView):
+class CustomerView(RequiresCompany):
+    """
+    Base class for an Item View
+    """
     model = Customer
-    context_object_name = "customer_list"
 
     def get_queryset(self):
         return self.model.objects.filter(company=self.company)
+
+
+class CustomerListView(CustomerView, ListView):
+    context_object_name = "customer_list"
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
@@ -196,8 +205,7 @@ class CustomerListView(RequiresCompany, ListView):
         return context
 
 
-class CustomerDetailView(RequiresCompany, DetailView):
-    model = Customer
+class CustomerDetailView(CustomerView, DetailView):
     context_object_name = 'customer'
 
     def get_context_data(self, **kwargs):
@@ -206,8 +214,7 @@ class CustomerDetailView(RequiresCompany, DetailView):
         return context
 
 
-class CustomerCreateView(RequiresCompany, CreateView):
-    model = Customer
+class CustomerCreateView(CustomerView, CreateView):
     fields = ['name', ]
     context_object_name = 'customer'
     template_name_suffix = '_create_form'
@@ -223,8 +230,7 @@ class CustomerCreateView(RequiresCompany, CreateView):
         return super(self.__class__, self).form_valid(form)
 
 
-class CustomerUpdateView(RequiresCompany, UpdateView):
-    model = Customer
+class CustomerUpdateView(CustomerView, UpdateView):
     fields = ['name', ]
     context_object_name = 'customer'
     form_class = CustomerForm
@@ -234,12 +240,8 @@ class CustomerUpdateView(RequiresCompany, UpdateView):
         context['company'] = self.company
         return context
 
-    def get_queryset(self):
-        return self.model.objects.filter(company=self.company)
 
-
-class CustomerDeleteView(RequiresCompany, DeleteView):
-    model = Customer
+class CustomerDeleteView(CustomerView, DeleteView):
     context_object_name = 'customer'
 
     @property
@@ -252,28 +254,27 @@ class CustomerDeleteView(RequiresCompany, DeleteView):
         context['company'] = self.company
         return context
 
-    def get_queryset(self):
-        return self.model.objects.filter(company=self.company)
-
 
 #############################################################
 #   Proforma Bill views
 #############################################################
-
-class ProformaBillListView(RequiresCompany, ListView):
+class ProformaBillView(RequiresCompany):
     model = ProformaBill
+
+    def get_queryset(self):
+        return self.model.objects.filter(company=self.company)
+
+
+class ProformaBillListView(ProformaBillView, ListView):
     context_object_name = "proformabill_list"
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
-        context['proformabill_list'] = self.model.objects.filter(
-            company=self.company)
         context['company'] = self.company
         return context
 
 
-class ProformaBillDetailView(RequiresCompany, DetailView):
-    model = ProformaBill
+class ProformaBillDetailView(ProformaBillView, DetailView):
     context_object_name = 'proformabill'
 
     def get_context_data(self, **kwargs):
@@ -282,8 +283,7 @@ class ProformaBillDetailView(RequiresCompany, DetailView):
         return context
 
 
-class ProformaBillCreateView(RequiresCompany, CreateView):
-    model = ProformaBill
+class ProformaBillCreateView(ProformaBillView, CreateView):
     fields = ['number', 'issued_to', 'date']
     context_object_name = 'proformabill'
     template_name_suffix = '_create_form'
@@ -306,8 +306,7 @@ class ProformaBillCreateView(RequiresCompany, CreateView):
         return super(self.__class__, self).form_valid(form)
 
 
-class ProformaBillUpdateView(RequiresCompany, UpdateView):
-    model = ProformaBill
+class ProformaBillUpdateView(ProformaBillView, UpdateView):
     fields = ['number', ]
     context_object_name = 'proformabill'
     form_class = ProformaBillForm
@@ -324,8 +323,7 @@ class ProformaBillUpdateView(RequiresCompany, UpdateView):
         return form
 
 
-class ProformaBillDeleteView(RequiresCompany, DeleteView):
-    model = ProformaBill
+class ProformaBillDeleteView(ProformaBillView, DeleteView):
     context_object_name = 'proformabill'
 
     @property

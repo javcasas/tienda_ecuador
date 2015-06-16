@@ -13,9 +13,11 @@ import pytz
 def get_date():
     return datetime.now(tz=pytz.timezone('America/Guayaquil'))
 
+def print_instance(klass, kwargs):
+    print "Adding", klass.__name__, ", ".join(["{}={}".format(k, v) for (k, v) in kwargs.iteritems()])
 
 def add_instance(klass, **kwargs):
-    print "Adding", klass.__name__, ", ".join(["{}={}".format(k, v) for (k, v) in kwargs.iteritems()])
+    print_instance(klass, kwargs)
     s = klass.objects.update_or_create(**kwargs)[0]
     s.save()
     return s
@@ -96,6 +98,10 @@ def my_populate():
     b2i1 = add_ProformaBillItem(sku='t1-146', name='Item T12',
                                 vat_percent=12, unit_cost=9.0, unit_price=12.0,
                                 description='Item 2 en Tienda 1', proforma_bill=b2, qty=8)
+    b3 = add_ProformaBill(issued_to=c3, number='1453',
+                          date=get_date(),
+                          company=t2)
+    return locals()
     
 
 if __name__ == '__main__':

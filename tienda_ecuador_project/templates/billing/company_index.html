@@ -32,7 +32,7 @@
         <table border='1'>
         {% for customer in customer_list %}
             <tr><td>
-            <a href="{% url 'customer_detail' company.id customer.id %}">{{ customer.name }}</a>
+            <a href="{% url 'customer_detail' company.id customer.id %}">{{ customer.razon_social }} ({{customer.identificacion}})</a>
             </td></tr>
         {% endfor %}
         </table>
