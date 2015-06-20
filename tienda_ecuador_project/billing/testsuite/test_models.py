@@ -11,6 +11,7 @@ from billing.models import (ReadOnlyObject,
                             ProformaBillItem,
                             BillItem,
                             Customer,
+                            Iva, Ice,
                             BillCustomer)
 from django.contrib.auth.models import User
 from helpers import (add_instance,
@@ -55,13 +56,23 @@ base_data = {
         'sku': 'T123',
         'name': 'Widget',
         'description': 'Widget description',
-        'vat_percent': 12,
         'unit_cost': 11.5,
-        'unit_price': 15.5
+        'unit_price': 15.5,
     },
     "BaseBill": {
         'number': '3',
-        'date': get_date()
+        'date': get_date(),
+    },
+    'Iva': {
+        'descripcion': "12%",
+        'codigo': '12',
+        'porcentaje': 12.0,
+    },
+    'Ice': {
+        'descripcion': "Bebidas gaseosas",
+        'grupo': 1,
+        'codigo': '3051',
+        'porcentaje': 50.0,
     },
 }
 
@@ -88,6 +99,9 @@ class FieldsTests(TestCase, TestHelpersMixin):
                    company=self.company,
                    issued_to=self.bill_customer))
 
+        self.iva = add_instance(Iva, **dict(base_data['Iva']))
+        self.ice = add_instance(Ice, **dict(base_data['Ice']))
+
         self.tests = [
             (Company, base_data['Company'],
                 {"razon_social": "Pepe Pil",
@@ -107,12 +121,18 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'company': self.company,
                  'issued_to': self.bill_customer}),
             (Item, base_data['BaseItem'],
-                {"company": self.company}),
+                {"company": self.company,
+                 'iva': self.iva,
+                 'ice': self.ice,}),
             (ProformaBillItem, base_data['BaseItem'],
                 {"proforma_bill": self.proforma_bill,
+                 'iva': self.iva,
+                 'ice': self.ice,
                  'qty': 6}),
             (BillItem, base_data['BaseItem'],
                 {"bill": self.bill,
+                 'iva': self.iva,
+                 'ice': self.ice,
                  'qty': 8}),
         ]
 
@@ -144,6 +164,10 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
     def setUp(self):
         self.company = Company.objects.get_or_create(**base_data['Company'])[0]
         self.bill_customer = BillCustomer.objects.get_or_create(**base_data['BaseCustomer'])[0]
+        self.iva = Iva(**base_data['Iva'])
+        self.iva.save()
+        self.ice = Ice(**base_data['Ice'])
+        self.ice.save()
         self.tests = [
             (BillCustomer, base_data['BaseCustomer']),
             (Bill,
@@ -156,9 +180,10 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
                  'name': 'Widget',
                  'description': 'Widget description',
                  'qty': 14,
-                 'vat_percent': 12,
                  'unit_cost': 11.5,
                  'unit_price': 15.5,
+                 'iva': self.iva,
+                 'ice': self.ice,
                  'bill': add_Bill(company=self.company,
                                   number='32',
                                   date=get_date(),
@@ -230,12 +255,17 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
             date=get_date(),
             number='3')
         proforma.save()
+        iva = Iva(**base_data['Iva'])
+        iva.save()
+        ice = Ice(**base_data['Ice'])
+        ice.save()
         data = dict(sku='T123',
                     name='Widget',
                     description='Widget description',
-                    vat_percent=12,
                     unit_cost=10.5,
                     unit_price=14.5,
+                    iva=iva,
+                    ice=ice,
                     qty=14)
         proforma_item = ProformaBillItem(proforma_bill=proforma, **data)
         proforma_item.save()

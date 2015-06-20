@@ -354,19 +354,23 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
     cls = models.Item
     data = {'sku': 'P1234',
             'name': 'Item 1',
-            'vat_percent': 12,
             'unit_cost': 5,
             'unit_price': 6.5,
             'description': 'Item 1 description'}
     newdata = {'sku': 'P12345',
                'name': 'Item 2',
-               'vat_percent': 0,
                'unit_cost': 3,
                'unit_price': 6,
                'description': 'Item 2 description'}
 
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
+        iva = add_instance(models.Iva,
+                descripcion="12%", codigo='12', porcentaje=12.0)
+        ice = add_instance(models.Ice,
+                descripcion="Bebidas gaseosas", grupo=1, codigo='3051', porcentaje=50.0)
+        self.data['iva'] = self.newdata['iva'] = iva
+        self.data['ice'] = self.newdata['ice'] = ice
         self.make_object()
         self.index_keys = ['sku', 'name']
 
@@ -422,6 +426,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             models.ProformaBill,
             **dict(self.data, company=self.company, issued_to=self.customer)
         )
+        iva = add_instance(models.Iva, descripcion="12%", codigo="2", porcentaje=12.0)
+        ice = add_instance(models.Ice, descripcion="Bebidas gaseosas", grupo=1, codigo=1000, porcentaje=50)
         self.items = []
         for i in range(5):
             self.items.append(
@@ -431,7 +437,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                     name='Item {}'.format(i),
                     description='Description of item {}'.format(i),
                     qty=3+i,
-                    vat_percent=12,
+                    iva=iva,
+                    ice=ice,
                     unit_cost=5,
                     unit_price=12,
                     proforma_bill=self.proformabill))
@@ -564,10 +571,17 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             models.ProformaBill,
             **dict(self.proformabill_data, company=self.company, issued_to=self.customer)
         )
+        self.iva = add_instance(
+            models.Iva,
+            descripcion="12%", porcentaje=12.0, codigo=2)
+        self.ice = add_instance(
+            models.Ice,
+            descripcion="Bebidas gaseosas", grupo=1, codigo=3051, porcentaje=50.0)
         self.item_data = dict(
             sku='SKU222',
             name='Item 3',
-            vat_percent=12,
+            iva=self.iva,
+            ice=self.ice,
             unit_cost=5.3,
             unit_price=8,
             description='Item3 description')
@@ -578,7 +592,8 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             sku="SKU001",
             name='Item 1',
             description='Description of item 1',
-            vat_percent=12,
+            iva=self.iva,
+            ice=self.ice,
             unit_cost=9.1,
             unit_price=16,
             qty=3)

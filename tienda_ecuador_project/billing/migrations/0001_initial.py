@@ -45,7 +45,6 @@ class Migration(migrations.Migration):
                 ('sku', models.CharField(max_length=50)),
                 ('name', models.CharField(max_length=50)),
                 ('description', models.CharField(max_length=500)),
-                ('vat_percent', models.IntegerField()),
                 ('unit_cost', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('unit_price', models.DecimalField(max_digits=20, decimal_places=8)),
             ],
@@ -119,6 +118,19 @@ class Migration(migrations.Migration):
             bases=('billing.basecustomer',),
         ),
         migrations.CreateModel(
+            name='Ice',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('descripcion', models.CharField(max_length=50)),
+                ('grupo', models.IntegerField()),
+                ('codigo', models.CharField(max_length=10)),
+                ('porcentaje', models.DecimalField(max_digits=6, decimal_places=2)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
             name='Item',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
@@ -127,6 +139,18 @@ class Migration(migrations.Migration):
             options={
             },
             bases=('billing.baseitem',),
+        ),
+        migrations.CreateModel(
+            name='Iva',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('descripcion', models.CharField(max_length=50)),
+                ('codigo', models.CharField(max_length=10)),
+                ('porcentaje', models.DecimalField(max_digits=6, decimal_places=2)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='ProformaBill',
@@ -153,6 +177,18 @@ class Migration(migrations.Migration):
             model_name='bill',
             name='issued_to',
             field=models.ForeignKey(to='billing.BillCustomer'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='baseitem',
+            name='ice',
+            field=models.ForeignKey(to='billing.Ice'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='baseitem',
+            name='iva',
+            field=models.ForeignKey(to='billing.Iva'),
             preserve_default=True,
         ),
         migrations.AddField(

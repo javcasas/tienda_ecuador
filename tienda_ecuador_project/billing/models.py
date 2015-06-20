@@ -180,6 +180,27 @@ class ProformaBill(BaseBill):
             return "{} - {}".format(self.number, "<Not set>")
 
 
+##########################
+# Taxes
+##########################
+class Iva(models.Model):
+    """
+    Representa el IVA
+    """
+    descripcion = models.CharField(max_length=50)
+    codigo = models.CharField(max_length=10)
+    porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
+
+class Ice(models.Model):
+    """
+    Representa el ICE
+    """
+    descripcion = models.CharField(max_length=50)
+    grupo = models.IntegerField()
+    codigo = models.CharField(max_length=10)
+    porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
+
+
 ###########################
 # Items
 ##########################
@@ -190,7 +211,8 @@ class BaseItem(models.Model):
     sku = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
-    vat_percent = models.IntegerField()
+    iva = models.ForeignKey(Iva)
+    ice = models.ForeignKey(Ice)
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
     unit_price = models.DecimalField(max_digits=20, decimal_places=8)
 
@@ -226,7 +248,7 @@ class BillItem(ReadOnlyMixin, BaseItem):
 
     @classmethod
     def fromProformaBillItem(self, billitem, bill):
-        fields = ['sku', 'name', 'description', 'qty', 'vat_percent', 'unit_cost', 'unit_price']
+        fields = ['sku', 'name', 'description', 'qty', 'iva', 'ice', 'unit_cost', 'unit_price']
         data = {}
         for field in fields:
             data[field] = getattr(billitem, field)

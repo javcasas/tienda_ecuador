@@ -1,13 +1,14 @@
 from datetime import datetime
 from django import forms
-from billing.models import Item, Customer, ProformaBill, ProformaBillItem, Company, Bill, BillItem
+from billing.models import Item, Customer, ProformaBill, ProformaBillItem, Company, Bill, BillItem, Iva, Ice
 
 
 class ItemForm(forms.ModelForm):
     sku = forms.CharField(max_length=50, help_text="Please enter the SKU.")
     name = forms.CharField(max_length=50, help_text="Please enter the name of the item.")
     description = forms.CharField(max_length=500, help_text="Please enter the description.")
-    vat_percent = forms.IntegerField(help_text="Please enter the VAT.")
+    iva = forms.ModelChoiceField(queryset=Iva.objects, help_text="Please select the IVA.")
+    ice = forms.ModelChoiceField(queryset=Ice.objects, help_text="Please select the ICE.")
     unit_cost = forms.DecimalField(decimal_places=4, help_text="Please enter the unit cost.")
     unit_price = forms.DecimalField(decimal_places=4, help_text="Please enter the unit price.")
     #company = forms.ModelChoiceField(queryset=Company.objects.all(), help_text="Please select the company.")
@@ -16,7 +17,7 @@ class ItemForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = Item
-        fields = ('sku', 'name', 'description', 'vat_percent', 'unit_cost', 'unit_price')
+        fields = ('sku', 'name', 'description', 'iva', 'ice', 'unit_cost', 'unit_price')
 
 
 class ProformaBillForm(forms.ModelForm):
