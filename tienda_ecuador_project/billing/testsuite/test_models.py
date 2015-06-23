@@ -1,7 +1,6 @@
 from django.test import TestCase
 from datetime import datetime
 import pytz
-from unittest import skip
 from billing.models import (ReadOnlyObject,
                             Company,
                             CompanyUser,
@@ -12,20 +11,15 @@ from billing.models import (ReadOnlyObject,
                             BillItem,
                             Customer,
                             Iva, Ice,
+                            BillItemIva, BillItemIce,
                             BillCustomer)
-from django.contrib.auth.models import User
 from helpers import (add_instance,
                      add_User,
                      add_Company,
-                     add_CompanyUser,
                      add_ProformaBill,
                      add_Bill,
-                     add_Item,
-                     add_ProformaBillItem,
-                     add_BillItem,
                      add_Customer,
                      add_BillCustomer,
-                     try_delete,
                      TestHelpersMixin)
 
 from itertools import count
@@ -86,7 +80,8 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.user = add_User(username="Paco", password='')
 
-        self.customer = add_Customer(**dict(base_data['BaseCustomer'], company=self.company))
+        self.customer = add_Customer(
+            **dict(base_data['BaseCustomer'], company=self.company))
         self.bill_customer = add_BillCustomer(**base_data['BaseCustomer'])
 
         self.proforma_bill = add_ProformaBill(
@@ -101,6 +96,9 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
         self.ice = add_instance(Ice, **dict(base_data['Ice']))
+
+        self.bill_iva = add_instance(BillItemIva, **dict(base_data['Iva']))
+        self.bill_ice = add_instance(BillItemIce, **dict(base_data['Ice']))
 
         self.tests = [
             (Company, base_data['Company'],
@@ -123,7 +121,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
             (Item, base_data['BaseItem'],
                 {"company": self.company,
                  'iva': self.iva,
-                 'ice': self.ice,}),
+                 'ice': self.ice}),
             (ProformaBillItem, base_data['BaseItem'],
                 {"proforma_bill": self.proforma_bill,
                  'iva': self.iva,
@@ -131,8 +129,8 @@ class FieldsTests(TestCase, TestHelpersMixin):
                  'qty': 6}),
             (BillItem, base_data['BaseItem'],
                 {"bill": self.bill,
-                 'iva': self.iva,
-                 'ice': self.ice,
+                 'iva': self.bill_iva,
+                 'ice': self.bill_ice,
                  'qty': 8}),
         ]
 
@@ -163,11 +161,12 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
     """
     def setUp(self):
         self.company = Company.objects.get_or_create(**base_data['Company'])[0]
-        self.bill_customer = BillCustomer.objects.get_or_create(**base_data['BaseCustomer'])[0]
-        self.iva = Iva(**base_data['Iva'])
-        self.iva.save()
-        self.ice = Ice(**base_data['Ice'])
-        self.ice.save()
+        self.bill_customer = BillCustomer.objects.get_or_create(
+            **base_data['BaseCustomer'])[0]
+        self.iva = add_instance(Iva, **base_data['Iva'])
+        self.ice = add_instance(Ice, **base_data['Ice'])
+        self.bill_iva = add_instance(BillItemIva, **base_data['Iva'])
+        self.bill_ice = add_instance(BillItemIce, **base_data['Ice'])
         self.tests = [
             (BillCustomer, base_data['BaseCustomer']),
             (Bill,
@@ -182,13 +181,13 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
                  'qty': 14,
                  'unit_cost': 11.5,
                  'unit_price': 15.5,
-                 'iva': self.iva,
-                 'ice': self.ice,
+                 'iva': self.bill_iva,
+                 'ice': self.bill_ice,
                  'bill': add_Bill(company=self.company,
                                   number='32',
                                   date=get_date(),
                                   issued_to=self.bill_customer),
-                }),
+                 }),
         ]
 
     def test_update_disabled(self):
@@ -238,7 +237,8 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
 
     def test_ProformaBill_to_Bill(self):
         proforma = ProformaBill(
-            issued_to=Customer.objects.get_or_create(**dict(base_data['BaseCustomer'], company=self.company))[0],
+            issued_to=Customer.objects.get_or_create(
+                **dict(base_data['BaseCustomer'], company=self.company))[0],
             company=self.company,
             date=get_date(),
             number='3')
@@ -246,19 +246,19 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
         bill = Bill.fromProformaBill(proforma)
         self.assertEquals(bill.company, self.company)
         self.assertEquals(bill.number, '3')
-        self.assertEquals(bill.issued_to.razon_social, base_data['BaseCustomer']['razon_social'])
+        self.assertEquals(bill.issued_to.razon_social,
+                          base_data['BaseCustomer']['razon_social'])
 
     def test_ProformaBillItem_to_BillItem(self):
         proforma = ProformaBill(
-            issued_to=Customer.objects.get_or_create(**dict(base_data['BaseCustomer'], company=self.company))[0],
+            issued_to=Customer.objects.get_or_create(
+                **dict(base_data['BaseCustomer'], company=self.company))[0],
             company=self.company,
             date=get_date(),
             number='3')
         proforma.save()
-        iva = Iva(**base_data['Iva'])
-        iva.save()
-        ice = Ice(**base_data['Ice'])
-        ice.save()
+        iva = add_instance(Iva, **base_data['Iva'])
+        ice = add_instance(Ice, **base_data['Ice'])
         data = dict(sku='T123',
                     name='Widget',
                     description='Widget description',
@@ -270,4 +270,8 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
         proforma_item = ProformaBillItem(proforma_bill=proforma, **data)
         proforma_item.save()
         bill = Bill.fromProformaBill(proforma)
-        self.assertObjectMatchesData(bill.items[0], dict(data, bill=bill))
+        self.assertObjectMatchesData(
+            bill.items[0],
+            dict(data, bill=bill,
+                 iva=BillItemIva.fromIva(iva),
+                 ice=BillItemIce.fromIce(ice)))

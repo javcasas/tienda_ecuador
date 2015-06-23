@@ -1,4 +1,3 @@
-from unittest import skip
 from datetime import datetime
 import pytz
 
@@ -11,17 +10,18 @@ from helpers import (add_Company,
                      add_CompanyUser,
                      add_User, TestHelpersMixin,
                      add_instance,
-                     add_Item, add_Customer, add_ProformaBill, add_ProformaBillItem,
                      make_post)
+
 
 def get_date():
     now = datetime.now(tz=pytz.timezone('America/Guayaquil'))
     return now.replace(microsecond=0)
-    
+
 
 def fix_keys(keys):
     bad_keys = ['date']
     return [k for k in keys if k not in bad_keys]
+
 
 class NotLoggedInTests(TestCase):
     """
@@ -287,7 +287,8 @@ class GenericObjectCRUDTest(object):
 
     def test_different_user_access_denied(self):
         """
-        Test that no URL can be reached unless a corresponding CompanyUser exists
+        Test that no URL can be reached
+        unless a corresponding CompanyUser exists
         """
         username, password = 'wisa', 'wis_pwa'
         user = add_User(username=username, password=password)
@@ -296,11 +297,12 @@ class GenericObjectCRUDTest(object):
             ruc='1234567842',
             razon_social='Pace Pil',
             direccion_matriz="C del pepeno")
-        cu = add_CompanyUser(user=user, company=company3)
+        add_CompanyUser(user=user, company=company3)
         c = Client()
         r = c.post("/accounts/login/",
-                        {'username': username, 'password': password})
-        self.assertEquals(r['location'], "http://testserver" + reverse('index'))
+                   {'username': username, 'password': password})
+        self.assertEquals(r['location'],
+                          "http://testserver" + reverse('index'))
         urls = [
             reverse(self.index_view, args=(self.company.id,)),
             reverse(self.detail_view, args=(self.company.id, self.ob.id)),
@@ -317,7 +319,8 @@ class GenericObjectCRUDTest(object):
         for url in urls:
             r = c.post(url, {})
             msg = "Url {} can be POSTed from a different user".format(url)
-            self.assertIn(r.status_code, [404, 405], msg)  # Some posts fail with method not allowed
+            # Some posts fail with method not allowed
+            self.assertIn(r.status_code, [404, 405], msg)
 
 
 class LoggedInWithCustomerTests(LoggedInWithCompanyTests,
@@ -366,9 +369,10 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
         iva = add_instance(models.Iva,
-                descripcion="12%", codigo='12', porcentaje=12.0)
+                           descripcion="12%", codigo='12', porcentaje=12.0)
         ice = add_instance(models.Ice,
-                descripcion="Bebidas gaseosas", grupo=1, codigo='3051', porcentaje=50.0)
+                           descripcion="Bebidas gaseosas", grupo=1,
+                           codigo='3051', porcentaje=50.0)
         self.data['iva'] = self.newdata['iva'] = iva
         self.data['ice'] = self.newdata['ice'] = ice
         self.make_object()
@@ -426,8 +430,11 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             models.ProformaBill,
             **dict(self.data, company=self.company, issued_to=self.customer)
         )
-        iva = add_instance(models.Iva, descripcion="12%", codigo="2", porcentaje=12.0)
-        ice = add_instance(models.Ice, descripcion="Bebidas gaseosas", grupo=1, codigo=1000, porcentaje=50)
+        iva = add_instance(models.Iva,
+                           descripcion="12%", codigo="2", porcentaje=12.0)
+        ice = add_instance(models.Ice,
+                           descripcion="Bebidas gaseosas", grupo=1,
+                           codigo=1000, porcentaje=50)
         self.items = []
         for i in range(5):
             self.items.append(
@@ -462,7 +469,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         r = self.c.get(
             reverse('proformabill_detail',
                     args=(self.company.id, self.proformabill.id)))
-        self.assertContainsObject(r, self.proformabill, fix_keys(self.data.keys()))
+        self.assertContainsObject(r, self.proformabill,
+                                  fix_keys(self.data.keys()))
         for item in self.items:
             self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
 
@@ -501,8 +509,10 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         r = self.c.get(
             reverse('proformabill_update',
                     args=(self.company.id, self.proformabill.id)))
-        self.assertContainsObject(r, self.customer, ['razon_social', 'identificacion'])
-        self.assertContainsObject(r, self.proformabill, fix_keys(self.data.keys()))
+        self.assertContainsObject(r, self.customer,
+                                  ['razon_social', 'identificacion'])
+        self.assertContainsObject(r, self.proformabill,
+                                  fix_keys(self.data.keys()))
 
     def test_proformabill_update_submit(self):
         """
@@ -526,7 +536,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             The delete form is shown
         """
         r = self.c.get(
-            reverse("proformabill_delete", args=(self.company.id, self.proformabill.id)))
+            reverse("proformabill_delete",
+                    args=(self.company.id, self.proformabill.id)))
         self.assertContains(r, self.proformabill.number)
         self.assertContains(r, self.proformabill.issued_to.razon_social)
 
@@ -538,7 +549,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             The client is redirected to the object index
         """
         r = self.c.post(
-            reverse("proformabill_delete", args=(self.company.id, self.proformabill.id)),
+            reverse("proformabill_delete",
+                    args=(self.company.id, self.proformabill.id)),
             {}
         )
         self.assertRedirects(
@@ -569,14 +581,16 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
                                             company=self.company))
         self.proformabill = add_instance(
             models.ProformaBill,
-            **dict(self.proformabill_data, company=self.company, issued_to=self.customer)
+            **dict(self.proformabill_data,
+                   company=self.company, issued_to=self.customer)
         )
         self.iva = add_instance(
             models.Iva,
             descripcion="12%", porcentaje=12.0, codigo=2)
         self.ice = add_instance(
             models.Ice,
-            descripcion="Bebidas gaseosas", grupo=1, codigo=3051, porcentaje=50.0)
+            descripcion="Bebidas gaseosas", grupo=1,
+            codigo=3051, porcentaje=50.0)
         self.item_data = dict(
             sku='SKU222',
             name='Item 3',
@@ -599,13 +613,14 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             qty=3)
         self.proformabill_item = add_instance(
             models.ProformaBillItem,
-            **dict(self.proformabill_item_data, proforma_bill=self.proformabill))
+            **dict(self.proformabill_item_data,
+                   proforma_bill=self.proformabill))
 
     def test_add_item_to_bill_show_form(self):
         r = self.c.get(
             reverse('proformabill_add_item',
                     args=(self.company.id, self.proformabill.id)))
-        self.assertContainsObject(r, self.item, ['sku', 'name',])
+        self.assertContainsObject(r, self.item, ['sku', 'name'])
 
 
 class PopulateBillingTest(TestCase):
@@ -619,15 +634,19 @@ class PopulateBillingTest(TestCase):
 
         c = Client()
         r = c.post("/accounts/login/",
-                        {'username': 'javier', 'password': 'tiaputa'})
-        self.assertEquals(r['location'], "http://testserver" + reverse('index'))
+                   {'username': 'javier', 'password': 'tiaputa'})
+        self.assertEquals(r['location'],
+                          "http://testserver" + reverse('index'))
 
         # It seems I can view customers and items for a different company
         urls = [
             reverse("customer_detail", args=(data['t1'].id, data['c3'].id,)),
             reverse("item_detail", args=(data['t1'].id, data['i22'].id,)),
-            reverse("proformabill_detail", args=(data['t1'].id, data['b3'].id,)),
+            reverse("proformabill_detail",
+                    args=(data['t1'].id, data['b3'].id,)),
         ]
         for url in urls:
             r = c.get(url)
-            self.assertEquals(r.status_code, 404, "URL {} can be reached from a different user".format(url))
+            self.assertEquals(
+                r.status_code, 404,
+                "URL {} can be reached from a different user".format(url))
