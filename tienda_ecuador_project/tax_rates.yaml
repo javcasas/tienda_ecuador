@@ -1,0 +1,270 @@
+# IVA
+- model: billing.iva
+  fields:
+    codigo: '2'
+    descripcion: 12%
+    porcentaje: '12'
+  pk: 1
+
+- model: billing.iva
+  fields:
+    codigo: '0'
+    descripcion: 0%
+    porcentaje: '0'
+  pk: 2
+
+- model: billing.iva
+  fields:
+    codigo: '6'
+    descripcion: No Objeto de Impuesto
+    porcentaje: '0'
+  pk: 3
+
+- model: billing.iva
+  fields:
+    codigo: '7'
+    descripcion: Exento de IVA
+    porcentaje: '0'
+  pk: 4
+
+# ICE
+- model: billing.ice
+  fields:
+    codigo: 3023
+    grupo: 1
+    descripcion: Productos del tabaco y sucedáneos del tabaco (abarcan los productos preparados totalmente o en parte utilizando como materia prima hojas de tabaco y destinados a ser fumados, chupados, inhalados, mascados o utilizados como rapé).
+    porcentaje: 0
+  pk: 1
+
+- model: billing.ice
+  fields:
+    codigo: 3051
+    grupo: 1
+    descripcion: Bebidas gaseosas.
+    porcentaje: 0
+  pk: 2
+
+- model: billing.ice
+  fields:
+    codigo: 3610
+    grupo: 1
+    descripcion: Perfumes y aguas de tocador
+    porcentaje: 0
+  pk: 3
+
+- model: billing.ice
+  fields:
+    codigo: 3620
+    grupo: 1
+    descripcion: Videojuegos
+    porcentaje: 0
+  pk: 4
+
+- model: billing.ice
+  fields:
+    codigo: 3630
+    grupo: 1
+    descripcion: Armas de fuego, armas deportivas y municiones excepto aquellas adquiridas por la fuerza pública
+    porcentaje: 0
+  pk: 5
+
+- model: billing.ice
+  fields:
+    codigo: 3640
+    grupo: 1
+    descripcion: Focos incandescentes excepto aquellos utilizados como insumos automotrices
+    porcentaje: 0
+  pk: 6
+
+- model: billing.ice
+  fields:
+    codigo: 3670
+    grupo: 1
+    descripcion: Cocinas, calefones y otros de uso doméstico a gas SRI
+    porcentaje: 0
+  pk: 7
+
+- model: billing.ice
+  fields:
+    codigo: 3770
+    grupo: 1
+    descripcion: Cocinas, calefones y otros de uso doméstico a gas SENAE
+    porcentaje: 0
+  pk: 8
+
+- model: billing.ice
+  fields:
+    codigo: 3073
+    grupo: 2
+    descripcion: Vehículos motorizados cuyo precio de venta al público sea de hasta USD 20.000
+    porcentaje: 0
+  pk: 9
+
+- model: billing.ice
+  fields:
+    codigo: 3072
+    grupo: 2
+    descripcion: Camionetas, furgonetas, camiones, y vehículos de rescate cuyo precio de venta al público sea de hasta USD 30.000
+    porcentaje: 0
+  pk: 10
+
+- model: billing.ice
+  fields:
+    codigo: 3074
+    grupo: 2
+    descripcion: Vehículos motorizados, excepto camionetas, furgonetas, camiones y vehículos de rescate, cuyo precio de venta al público sea superior a USD 20.000 y de hasta USD 30.000
+    porcentaje: 0
+  pk: 11
+
+- model: billing.ice
+  fields:
+    codigo: 3075
+    grupo: 2
+    descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 30.000 y de hasta USD 40.000
+    porcentaje: 0
+  pk: 12
+
+- model: billing.ice
+  fields:
+    codigo: 3077
+    grupo: 2
+    descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 40.000 y de hasta USD 50.000
+    porcentaje: 0
+  pk: 13
+
+- model: billing.ice
+  fields:
+    codigo: 3078
+    grupo: 2
+    descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 50.000 y de hasta USD 60.000
+    porcentaje: 0
+  pk: 14
+
+- model: billing.ice
+  fields:
+    codigo: 3079
+    grupo: 2
+    descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 60.000 y de hasta  USD 70.000
+    porcentaje: 0
+  pk: 15
+
+- model: billing.ice
+  fields:
+    codigo: 3080
+    grupo: 2
+    descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 70.000
+    porcentaje: 0
+  pk: 16
+
+- model: billing.ice
+  fields:
+    codigo: 3171
+    grupo: 2
+    descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea de hasta USD 35.000
+    porcentaje: 0
+  pk: 17
+
+- model: billing.ice
+  fields:
+    codigo: 3172
+    grupo: 2
+    descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 35.000 y de hasta USD 40.000
+    porcentaje: 0
+  pk: 18
+
+- model: billing.ice
+  fields:
+    codigo: 3173
+    grupo: 2
+    descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 40.000 y de hasta USD 50.000
+    porcentaje: 0
+  pk: 19
+
+- model: billing.ice
+  fields:
+    codigo: 3174
+    grupo: 2
+    descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 50.000 y de hasta USD 60.000
+    porcentaje: 0
+  pk: 20
+
+- model: billing.ice
+  fields:
+    codigo: 3175
+    grupo: 2
+    descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 60.000 y de hasta USD 70.000
+    porcentaje: 0
+  pk: 21
+
+- model: billing.ice
+  fields:
+    codigo: 3176
+    grupo: 2
+    descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 70.000
+    porcentaje: 0
+  pk: 22
+
+- model: billing.ice
+  fields:
+    codigo: 3081
+    grupo: 2
+    descripcion: 3. Aviones, avionetas y helicópteros excepto aquellas destinadas al transporte comercial de pasajeros, carga y servicios; motos acuáticas, tricares, cuadrones, yates y barcos de recreo
+    porcentaje: 0
+  pk: 23
+
+- model: billing.ice
+  fields:
+    codigo: 3092
+    grupo: 3
+    descripcion: Servicios de television pagada
+    porcentaje: 0
+  pk: 24
+
+- model: billing.ice
+  fields:
+    codigo: 3650
+    grupo: 3
+    descripcion: Servicios de casinos, salas de juego (bingo - mecanicos) y otros juegos de azar
+    porcentaje: 0
+  pk: 25
+
+- model: billing.ice
+  fields:
+    codigo: 3660
+    grupo: 4
+    descripcion: Las cuotas, membresías, afiliaciones, acciones y similares que cobren a sus miembros y usuarios los Clubes Sociales, para prestar sus servicios, cuyo monto en su conjunto supere los US $ 1.500 anuales
+    porcentaje: 0
+  pk: 26
+
+- model: billing.ice
+  fields:
+    codigo: 3011
+    grupo: 5
+    descripcion: Cigarrillos rubio
+    porcentaje: 0
+  pk: 27
+
+- model: billing.ice
+  fields:
+    codigo: 3021
+    grupo: 5
+    descripcion: Cigarrillos negros
+    porcentaje: 0
+  pk: 28
+
+- model: billing.ice
+  fields:
+    codigo: 3031
+    grupo: 5
+    descripcion: Bebidas alcohólicas, distintas a la cerveza
+    porcentaje: 0
+  pk: 29
+
+- model: billing.ice
+  fields:
+    codigo: 3041
+    grupo: 5
+    descripcion: Cerveza
+    porcentaje: 0
+  pk: 30
+
