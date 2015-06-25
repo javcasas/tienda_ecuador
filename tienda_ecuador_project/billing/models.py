@@ -262,6 +262,9 @@ class ItemInBill(BaseItem):
     Base class for items that are part of a bill
     """
     qty = models.DecimalField(max_digits=20, decimal_places=8)
+    @property
+    def subtotal(self):
+        return self.qty * self.unit_price
 
 
 class ProformaBillItem(ItemInBill):

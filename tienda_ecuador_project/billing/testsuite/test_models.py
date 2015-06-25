@@ -12,6 +12,7 @@ from billing.models import (ReadOnlyObject,
                             Customer,
                             Iva, Ice,
                             BillItemIva, BillItemIce,
+                            ItemInBill,
                             BillCustomer)
 from helpers import (add_instance,
                      add_User,
@@ -275,3 +276,12 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
             dict(data, bill=bill,
                  iva=BillItemIva.fromIva(iva),
                  ice=BillItemIce.fromIce(ice)))
+
+
+class ItemInBillTests(TestCase, TestHelpersMixin):
+    """
+    Tests for the ItemInBill class
+    """
+    def test_subtotal(self):
+        ob = ItemInBill(sku="1234", name="asdf", description="asdf", unit_cost=10, unit_price=14, qty=6)
+        self.assertEquals(ob.subtotal, 6 * 14)
