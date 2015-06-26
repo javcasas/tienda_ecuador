@@ -278,10 +278,23 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
                  ice=BillItemIce.fromIce(ice)))
 
 
-class ItemInBillTests(TestCase, TestHelpersMixin):
+class ItemTests(TestCase, TestHelpersMixin):
     """
-    Tests for the ItemInBill class
+    Tests for the Item classes
     """
     def test_subtotal(self):
-        ob = ItemInBill(sku="1234", name="asdf", description="asdf", unit_cost=10, unit_price=14, qty=6)
+        ob = ItemInBill(sku="1234", name="asdf", description="asdf",
+                        unit_cost=10, unit_price=14, qty=6)
         self.assertEquals(ob.subtotal, 6 * 14)
+
+    def test_bill_item_iva_ice(self):
+        iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
+        ice = Ice(descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
+        ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
+                              unit_cost=10, unit_price=10, qty=6,
+                              iva=iva, ice=ice)
+        valor_ice = ob.subtotal * 0.5
+        self.assertEquals(ob.valor_ice, valor_ice)
+        valor_iva = (ob.subtotal + valor_ice) * 0.12
+        self.assertEquals(ob.valor_iva, valor_iva)
+        self.assertEquals(ob.total_impuestos, valor_iva + valor_ice)
