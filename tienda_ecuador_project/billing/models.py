@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from decimal import Decimal
 
 
 class ReadOnlyObject(Exception):
@@ -269,15 +270,15 @@ class ItemInBill(BaseItem):
 
     @property
     def valor_ice(self):
-        return self.subtotal * (self.ice.porcentaje / 100.0)
+        return self.subtotal * (self.ice.porcentaje / Decimal("100.0"))
 
     @property
     def valor_iva(self):
-        return (self.subtotal + self.valor_ice) * (self.iva.porcentaje / 100.0)
+        return (self.subtotal + self.valor_ice) * (self.iva.porcentaje / Decimal("100.0"))
 
     @property
     def total_impuestos(self):
-        return self.valor_ice + self.valor_iva
+        return  self.valor_ice + self.valor_iva
 
 
 class ProformaBillItem(ItemInBill):

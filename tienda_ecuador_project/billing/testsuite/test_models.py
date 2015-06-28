@@ -24,6 +24,7 @@ from helpers import (add_instance,
                      TestHelpersMixin)
 
 from itertools import count
+from decimal import Decimal
 
 current_ruc = count(10)
 get_ruc = lambda: str(current_ruc.next())
@@ -293,8 +294,8 @@ class ItemTests(TestCase, TestHelpersMixin):
         ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
                               unit_cost=10, unit_price=10, qty=6,
                               iva=iva, ice=ice)
-        valor_ice = ob.subtotal * 0.5
+        valor_ice = ob.subtotal * Decimal("0.5")
         self.assertEquals(ob.valor_ice, valor_ice)
-        valor_iva = (ob.subtotal + valor_ice) * 0.12
+        valor_iva = (ob.subtotal + valor_ice) * Decimal("0.12")
         self.assertEquals(ob.valor_iva, valor_iva)
         self.assertEquals(ob.total_impuestos, valor_iva + valor_ice)
