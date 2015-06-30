@@ -68,12 +68,12 @@ def my_populate():
                    description='Item 3 en Tienda 2', company=t2)
 
     c1 = add_Customer(razon_social='Paco', tipo_identificacion='cedula',
-                      identificacion='123456543', email='paco@paco.net',
+                      identificacion="1756760292", email='paco@paco.net',
                       company=t1)
     c2 = add_Customer(razon_social='Pepe', tipo_identificacion='ruc',
-                      identificacion='123454232001', company=t1)
+                      identificacion="1756760292001", company=t1)
     c3 = add_Customer(razon_social='Luis', tipo_identificacion='ruc',
-                      identificacion='444444444001', company=t2)
+                      identificacion="1756760219001", company=t2)
 
     u1 = add_User(username='roberto', password='qwerty', email='')
     ut1 = add_CompanyUser(user=u1, company=t1)

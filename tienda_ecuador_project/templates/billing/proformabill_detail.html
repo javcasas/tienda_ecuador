@@ -2,24 +2,50 @@
 {% block title_l1 %}Ver Proforma {{ proformabill }}- {% endblock %}
 {% block body_l1 %}
         <h1>Proforma</h1>
-        Number: {{ proformabill.number }} <br />
-        Issued to: {{ proformabill.issued_to }} <br />
-        Date: {{ proformabill.date }} <br />
-        <hr />
+        Numero: {{ proformabill.number }} <br />
+        Cliente: ({{ proformabill.issued_to.tipo_identificacion }})
+                 {{ proformabill.issued_to.identificacion }} <br />
+                 {{ proformabill.issued_to.razon_social }} <br />
+        Fecha: {{ proformabill.date }} <br />
+        <br/>
+        <table border=1>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Precio unitario</th>
+                <th>Subtotal</th>
+                <th>Impuestos</th>
+            </tr>
         {% for item in proformabill.items %}
-            SKU: {{ item.sku }} <br />
-            Name: {{ item.name }} <br />
-            Description: {{ item.description }} <br />
-            Qty: {{ item.qty }} <br />
-            <a href="{#% url 'edit_item_in_bill' company_id bill_id item.id %#}">Edit</a>
-            <form action="{#% url 'delete_item_from_bill' company_id bill_id item.id %#}" method='post'>
-                {% csrf_token %}
-                <button type='submit'>Delete</button>
-            </form>
-            <hr />
+            <tr>
+                <td>{{ item.sku }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.unit_price }}</td>
+                <td>{{ item.subtotal }}</td>
+                <td>{{ item.total_impuestos }}</td>
+                <td>
+                    <a href="{#% url 'edit_item_in_bill' company_id bill_id item.id %#}">Edit</a>
+                    <form action="{#% url 'delete_item_from_bill' company_id bill_id item.id %#}" method='post'>
+                        {% csrf_token %}
+                        <button type='submit'>Delete</button>
+                    </form>
+                </td>
+            <tr/>
         {% endfor %}
-        <a href="{#% url 'proformabill_update' company.id proformabill.id %#}">Edit</a>
-        <a href="{#% url 'proformabill_add_item' company.id proformabill.id %#}">Add Item</a>
+        </table>
+        Subtotal IVA 12%: {{ proformabill.subtotal }} <br/>
+        Subtotal IVA 0%: {{ proformabill.subtotal }} <br/>
+
+        IVA 12%: {{ proformabill.iva }} <br/>
+        Total a pagar: {{ proformabill.total }} <br/>
+
+        IVA bienes: {{ proformabill.iva_bienes }} <br/>
+        IVA servicios: {{ proformabill.iva_servicios }} <br/>
+        
+        <a href="{% url "proformabill_update" company.id proformabill.id %}">Edit</a>
+        <a href="{% url "proformabill_add_item" company.id proformabill.id %}">Add Item</a>
         <a href='{% url "proformabill_index" company.id %}'>Back</a>
         <a href='{% url "company_index" company.id %}'>Back</a>
 {% endblock %}

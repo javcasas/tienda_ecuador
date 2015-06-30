@@ -25,6 +25,7 @@ from helpers import (add_instance,
 
 from itertools import count
 from decimal import Decimal
+from django.core.exceptions import ValidationError
 
 current_ruc = count(10)
 get_ruc = lambda: str(current_ruc.next())
@@ -44,7 +45,7 @@ base_data = {
     "BaseCustomer": {
         "razon_social": "Pepe",
         "tipo_identificacion": "ruc",
-        "identificacion": "fberg",
+        "identificacion": "1713831152001",
         "email": "papa@ble.com",
         "direccion": "dfdf gfwergwer",
     },
@@ -231,7 +232,7 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
     def test_Customer_to_BillCustomer(self):
         customer = Customer(
             razon_social="Pepe", tipo_identificacion="ruc",
-            identificacion="fberg", email="papa@ble.com",
+            identificacion="1713831152001", email="papa@ble.com",
             direccion="dfdf gfwergwer", company=self.company)
         customer.save()
         billcustomer = BillCustomer.fromCustomer(customer)
@@ -299,3 +300,102 @@ class ItemTests(TestCase, TestHelpersMixin):
         valor_iva = (ob.subtotal + valor_ice) * Decimal("0.12")
         self.assertEquals(ob.valor_iva, valor_iva)
         self.assertEquals(ob.total_impuestos, valor_iva + valor_ice)
+
+
+class IdentificacionTests(TestCase):
+    def setUp(self):
+        self.company = add_Company(
+            nombre_comercial="Tienda 1", ruc='1234567890001',
+            razon_social="Paco Pil", direccion_matriz="C del pepino",
+            contribuyente_especial="")
+
+    def valid(self, tipo_identificacion, identificacion):
+        c = Customer(razon_social="Paco Pil",
+                     tipo_identificacion=tipo_identificacion,
+                     identificacion=identificacion,
+                     company=self.company)
+        c.save()
+
+    def invalid(self, tipo_identificacion, identificacion):
+        with self.assertRaises(ValidationError):
+            self.valid(tipo_identificacion=tipo_identificacion,
+                       identificacion=identificacion)
+
+    def test_valid_ruc(self):
+        self.valid(tipo_identificacion="ruc",
+                   identificacion="1756760292001")
+
+    def test_invalid_ruc_does_not_end_001(self):
+        self.invalid(tipo_identificacion="ruc",
+                     identificacion="1756760292002")
+
+    def test_invalid_ruc_not_13_digits(self):
+        self.invalid(tipo_identificacion="ruc",
+                     identificacion="175676029201")
+
+    def test_invalid_ruc_bad_verifier(self):
+        self.invalid(tipo_identificacion="ruc",
+                     identificacion="1756760293001")
+                                     
+
+    def test_unknown_identification_type(self):
+        self.invalid(tipo_identificacion="patata",
+                     identificacion="173831152001")
+
+    def test_valid_cedula(self):
+        self.valid(tipo_identificacion="cedula",
+                   identificacion="1756760292")
+
+    def test_invalid_cedula_invalid_length(self):
+        self.invalid(tipo_identificacion="cedula",
+                     identificacion="1738331533")
+
+    def test_invalid_cedula_bad_verifier(self):
+        self.invalid(tipo_identificacion="cedula",
+                     identificacion="173831153")
+
+
+class ProformaBillTest(TestCase, TestHelpersMixin):
+    """
+    Test that checks that a final model can be created,
+    but not modified
+    """
+    def setUp(self):
+        self.company = Company.objects.get_or_create(**base_data['Company'])[0]
+        self.customer = Customer.objects.get_or_create(
+            company=self.company, **base_data['BaseCustomer'])[0]
+        self.iva = add_instance(Iva, **base_data['Iva'])
+        self.ice = add_instance(Ice, **base_data['Ice'])
+        self.bill_iva = add_instance(BillItemIva, **base_data['Iva'])
+        self.bill_ice = add_instance(BillItemIce, **base_data['Ice'])
+        self.proforma = add_instance(ProformaBill,
+                                     company=self.company,
+                                     number='3',
+                                     date=get_date(),
+                                     issued_to=self.customer)
+        for i in range(1, 5):
+            add_instance(ProformaBillItem,
+                         proforma_bill=self.proforma,
+                         sku='T123{}'.format(i),
+                         name='Widget{}'.format(i),
+                         description='Widget description',
+                         qty=i,
+                         unit_cost=5,
+                         unit_price=10,
+                         iva=self.bill_iva,
+                         ice=self.bill_ice)
+
+    def test_subtotal(self):
+        self.assertEquals(self.proforma.subtotal, (1 + 2 + 3 + 4) * 10)
+
+    def test_iva(self):
+        unidades = 1 + 2 + 3 + 4
+        precio_unitario = 10
+        factor_ice = 1.5
+        factor_iva = 0.12
+        total = (unidades * precio_unitario) * factor_ice * factor_iva
+        self.assertEquals(
+            self.proforma.iva, 
+            {
+                Decimal(12): Decimal(total)
+            })

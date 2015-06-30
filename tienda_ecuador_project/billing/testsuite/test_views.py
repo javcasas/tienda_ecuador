@@ -333,12 +333,12 @@ class LoggedInWithCustomerTests(LoggedInWithCompanyTests,
     cls = models.Customer
     data = {'razon_social': 'Pepe',
             "tipo_identificacion": "cedula",
-            "identificacion": "1234567890",
+            "identificacion": "1713831152",
             "email": "a@b.com",
             "direccion": "blebla street"}
     newdata = {'razon_social': 'Wis',
                "tipo_identificacion": "ruc",
-               "identificacion": "1234567890001",
+               "identificacion": "1713831152001",
                "email": "c@d.com",
                "direccion": "nana street"}
 
@@ -400,14 +400,14 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         self.customer_data = {
             'razon_social': 'Pepe',
             "tipo_identificacion": "cedula",
-            "identificacion": "1234567890",
+            "identificacion": "1713831152",
             "email": "a@b.com",
             "direccion": "blebla street",
         }
         self.new_customer_data = {
             'razon_social': 'Wis',
             "tipo_identificacion": "ruc",
-            "identificacion": "1234567890001",
+            "identificacion": "1713831152001",
             "email": "a@d.com",
             "direccion": "pupu street",
         }
@@ -568,7 +568,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         self.customer_data = {
             'razon_social': 'Pepe',
             "tipo_identificacion": "cedula",
-            "identificacion": "1234567890",
+            "identificacion": "1713831152",
             "email": "a@b.com",
             "direccion": "blebla street",
         }
