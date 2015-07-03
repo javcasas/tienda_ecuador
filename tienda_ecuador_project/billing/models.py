@@ -85,12 +85,7 @@ class BaseCustomer(models.Model):
     direccion = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
-        tipo = {
-            "ruc": "RUC",
-            "cedula": "Cédula",
-            "pasaporte": "Pasaporte",
-        }[self.tipo_identificacion]
-        return "({}){} - {}".format(tipo, self.identificacion, self.razon_social)
+        return "({}){} - {}".format(self.tipo_identificacion, self.identificacion, self.razon_social)
 
     def clean(self):
         def tests_cedula(val):
