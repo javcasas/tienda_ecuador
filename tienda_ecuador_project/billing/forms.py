@@ -61,36 +61,19 @@ class CustomerForm(forms.ModelForm):
 
 
 class ProformaBillItemForm(forms.ModelForm):
-    sku = forms.CharField(max_length=50, help_text="Please enter the SKU.")
-    name = forms.CharField(max_length=50, help_text="Please enter the name of the item.")
-    description = forms.CharField(max_length=500, help_text="Please enter the description.")
+    sku = forms.CharField(max_length=50, help_text="Please enter the SKU.", widget=forms.HiddenInput())
+    name = forms.CharField(max_length=50, help_text="Please enter the name of the item.", widget=forms.HiddenInput())
+    description = forms.CharField(max_length=500, help_text="Please enter the description.", widget=forms.HiddenInput())
     qty = forms.IntegerField(help_text='Please enter the quantity')
+    unit_cost = forms.DecimalField(widget=forms.HiddenInput())
+    unit_price = forms.DecimalField(widget=forms.HiddenInput())
+    iva = forms.ModelChoiceField(queryset=Iva.objects, widget=forms.HiddenInput())
+    ice = forms.ModelChoiceField(queryset=Ice.objects, widget=forms.HiddenInput())
+    proforma_bill = forms.ModelChoiceField(queryset=ProformaBill.objects, widget=forms.HiddenInput())
     copy_from = forms.ModelChoiceField(queryset=None, required=False, help_text="Please select the item to copy from.")
-
-    def clean(self):
-        cleaned_data = super(ProformaBillItemForm, self).clean()
-        data = self.data.copy()
-        if 'copy_from' in cleaned_data and cleaned_data['copy_from']:
-            copy_from = cleaned_data['copy_from']
-            cleaned_data['sku'] = copy_from.sku
-            cleaned_data['name'] = copy_from.name
-            cleaned_data['description'] = copy_from.description
-            data['sku'] = copy_from.sku
-            data['name'] = copy_from.name
-            data['description'] = copy_from.description
-        data['copy_from'] = None
-        self.data = data
-        return cleaned_data
-
-    def is_valid(self):
-        res = super(self.__class__, self).is_valid()
-        print self.cleaned_data
-        print self.data
-        print res
-        return res
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
         model = ProformaBillItem
-        fields = ('sku', 'name', 'description', 'qty')
+        fields = ('sku', 'name', 'description', 'qty', 'unit_cost', 'unit_price', 'iva', 'ice')

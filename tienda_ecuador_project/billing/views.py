@@ -362,11 +362,29 @@ class ProformaBillAddItemView(RequiresCompany, ProformaBillSelected, CreateView)
         form = super(self.__class__, self).get_form(*args, **kwargs)
         form.fields['copy_from'].queryset = Item.objects.filter(
             company=self.company)
+        if form.data.get('copy_from'):
+            form.data = form.data.copy()
+            form.data['proforma_bill'] = self.proformabill.id
+            copy_from = Item.objects.get(pk=form.data['copy_from'])
+            for field in form.Meta.fields:
+                if field in ['qty']:
+                    continue
+                fieldval = getattr(copy_from, field)
+                try:
+                    form.data[field] = fieldval.id
+                except AttributeError:
+                    form.data[field] = fieldval
         return form
 
     def form_valid(self, form):
-        form.instance.company = self.company
         form.instance.proforma_bill = self.proformabill
+        to_search = form.cleaned_data.copy()
+        to_search.pop("copy_from")
+        to_search.pop('qty')
+        current_item = ProformaBillItem.objects.filter(**to_search)
+        if current_item:
+            form.instance.id = current_item[0].id
+            form.instance.qty = current_item[0].qty + form.instance.qty
         return super(self.__class__, self).form_valid(form)
 
     def get_success_url(self):

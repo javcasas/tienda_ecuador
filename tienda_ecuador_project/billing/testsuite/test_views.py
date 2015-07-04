@@ -622,6 +622,15 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
                     args=(self.company.id, self.proformabill.id)))
         self.assertContainsObject(r, self.item, ['sku', 'name'])
 
+    def test_add_item_to_bill_submit(self):
+        with self.new_item(models.ProformaBillItem) as new:
+            r = self.c.post(
+                reverse('proformabill_add_item',
+                        args=(self.company.id, self.proformabill.id)),
+                {'copy_from': self.item.id,
+                 'qty': 1})
+        self.assertEquals(new.qty, 1)
+
 
 class PopulateBillingTest(TestCase):
     """
