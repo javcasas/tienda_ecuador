@@ -631,6 +631,21 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
                  'qty': 1})
         self.assertEquals(new.qty, 1)
 
+    def test_add_item_to_bill_repeated_submit(self):
+        with self.new_item(models.ProformaBillItem) as new:
+            r = self.c.post(
+                reverse('proformabill_add_item',
+                        args=(self.company.id, self.proformabill.id)),
+                {'copy_from': self.item.id,
+                 'qty': 1})
+        self.assertEquals(new.qty, 1)
+        r = self.c.post(
+            reverse('proformabill_add_item',
+                    args=(self.company.id, self.proformabill.id)),
+            {'copy_from': self.item.id,
+             'qty': 1})
+        self.assertEquals(models.ProformaBillItem.objects.get(pk=new.pk).qty, 2)
+
 
 class PopulateBillingTest(TestCase):
     """
