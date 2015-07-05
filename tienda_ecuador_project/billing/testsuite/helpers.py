@@ -58,9 +58,10 @@ class TestHelpersMixin(object):
         """
         for key, value in data.iteritems():
             ob_value = getattr(ob, key)
-            n_msg = msg + ' data["{0}"] != ob.{0}, {1} != {2}'.format(key, value, ob_value)
+            n_msg = msg + ' data["{0}"] != ob.{0}, {1} != {2}'.format(key,
+                                                                      value,
+                                                                      ob_value)
             self.assertEquals(ob_value, value, n_msg)
-
 
     @contextmanager
     def new_item(self, kind):
@@ -95,12 +96,21 @@ def make_post(data):
             return f.id
         except:
             return f
+
     def convert_datetime(f):
         try:
             return f.strftime("%Y-%m-%d %H:%M:%S")
         except:
             return f
+
+    def convert_id_to_bare(k):
+        if k.endswith("_id"):
+            return k[0:-3]
+        else:
+            return k
     data = {k: convert_id(v) for (k, v) in data.iteritems()}
-    return {k: convert_datetime(v) for (k, v) in data.iteritems()}
+    data = {k: convert_datetime(v) for (k, v) in data.iteritems()}
+    data = {convert_id_to_bare(k): v for (k, v) in data.iteritems()}
+    return data
 
 make_put = urllib.urlencode

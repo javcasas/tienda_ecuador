@@ -17,6 +17,7 @@ from models import (Item,
                     ProformaBillItem)
 from forms import (ItemForm,
                    ProformaBillForm,
+                   ProformaBillAddItemForm,
                    ProformaBillItemForm,
                    CustomerForm)
 
@@ -345,12 +346,15 @@ class ProformaBillSelected(object):
         return get_object_or_404(ProformaBill, company=self.company, id=proformabill_id)
 
 
+#############################################################
+#   Proforma Bill Item views
+#############################################################
 class ProformaBillAddItemView(RequiresCompany, ProformaBillSelected, CreateView):
     model = ProformaBillItem
     fields = ['sku', 'name', 'description', ]
     context_object_name = 'item'
     template_name_suffix = '_create_form'
-    form_class = ProformaBillItemForm
+    form_class = ProformaBillAddItemForm
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
@@ -385,6 +389,26 @@ class ProformaBillAddItemView(RequiresCompany, ProformaBillSelected, CreateView)
         if current_item:
             form.instance.id = current_item[0].id
             form.instance.qty = current_item[0].qty + form.instance.qty
+        return super(self.__class__, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse("proformabill_detail", args=(self.company.id, self.proformabill.id))
+
+
+class ProformaBillItemUpdateView(RequiresCompany, ProformaBillSelected, UpdateView):
+    model = ProformaBillItem
+    context_object_name = 'item'
+    template_name_suffix = '_form'
+    form_class = ProformaBillItemForm
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        context['proformabill'] = self.proformabill
+        return context
+
+    def form_valid(self, form):
+        form.instance.proforma_bill = self.proformabill
         return super(self.__class__, self).form_valid(form)
 
     def get_success_url(self):

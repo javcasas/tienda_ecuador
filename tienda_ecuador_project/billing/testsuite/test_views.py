@@ -473,6 +473,12 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                                   fix_keys(self.data.keys()))
         for item in self.items:
             self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
+        self.assertContains(
+            r,
+            reverse(
+                'edit_item_in_bill',
+                args=(self.company.id, self.proformabill.id, self.items[0].id))
+        )
 
     def test_proformabill_create_show_form(self):
         """
@@ -624,7 +630,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
 
     def test_add_item_to_bill_submit(self):
         with self.new_item(models.ProformaBillItem) as new:
-            r = self.c.post(
+            self.c.post(
                 reverse('proformabill_add_item',
                         args=(self.company.id, self.proformabill.id)),
                 {'copy_from': self.item.id,
@@ -633,18 +639,41 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
 
     def test_add_item_to_bill_repeated_submit(self):
         with self.new_item(models.ProformaBillItem) as new:
-            r = self.c.post(
+            self.c.post(
                 reverse('proformabill_add_item',
                         args=(self.company.id, self.proformabill.id)),
                 {'copy_from': self.item.id,
                  'qty': 1})
         self.assertEquals(new.qty, 1)
-        r = self.c.post(
+        self.c.post(
             reverse('proformabill_add_item',
                     args=(self.company.id, self.proformabill.id)),
             {'copy_from': self.item.id,
              'qty': 1})
-        self.assertEquals(models.ProformaBillItem.objects.get(pk=new.pk).qty, 2)
+        self.assertEquals(models.ProformaBillItem.objects.get(pk=new.pk).qty,
+                          2)
+
+    def test_edit_item_in_bill_form(self):
+        r = self.c.get(
+            reverse('proformabillitem_update',
+                    args=(self.company.id, self.proformabill.id,
+                          self.proformabill_item.id)))
+        self.assertContainsObject(
+            r,
+            models.ProformaBillItem.objects.get(pk=self.proformabill_item.id),
+            ['sku', 'name', 'description', 'qty'])
+
+    def test_edit_item_in_bill_submit(self):
+        new_qty = 9
+        pk = self.proformabill_item.id
+        new_data = models.ProformaBillItem.objects.filter(pk=pk).values()[0]
+        new_data.update(qty=new_qty)
+        self.c.post(
+            reverse('proformabillitem_update',
+                    args=(self.company.id, self.proformabill.id, pk)),
+            make_post(new_data))
+        self.assertEquals(models.ProformaBillItem.objects.get(pk=pk).qty,
+                          new_qty)
 
 
 class PopulateBillingTest(TestCase):

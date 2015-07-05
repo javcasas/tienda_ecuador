@@ -60,7 +60,7 @@ class CustomerForm(forms.ModelForm):
         fields = ('razon_social', 'tipo_identificacion', 'identificacion', 'email', 'direccion')
 
 
-class ProformaBillItemForm(forms.ModelForm):
+class ProformaBillAddItemForm(forms.ModelForm):
     sku = forms.CharField(max_length=50, help_text="Please enter the SKU.", widget=forms.HiddenInput())
     name = forms.CharField(max_length=50, help_text="Please enter the name of the item.", widget=forms.HiddenInput())
     description = forms.CharField(max_length=500, help_text="Please enter the description.", widget=forms.HiddenInput())
@@ -71,6 +71,24 @@ class ProformaBillItemForm(forms.ModelForm):
     ice = forms.ModelChoiceField(queryset=Ice.objects, widget=forms.HiddenInput())
     proforma_bill = forms.ModelChoiceField(queryset=ProformaBill.objects, widget=forms.HiddenInput())
     copy_from = forms.ModelChoiceField(queryset=None, required=False, help_text="Please select the item to copy from.")
+
+    # An inline class to provide additional information on the form.
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        model = ProformaBillItem
+        fields = ('sku', 'name', 'description', 'qty', 'unit_cost', 'unit_price', 'iva', 'ice')
+
+
+class ProformaBillItemForm(forms.ModelForm):
+    sku = forms.CharField(max_length=50, help_text="Please enter the SKU.")
+    name = forms.CharField(max_length=50, help_text="Please enter the name of the item.")
+    description = forms.CharField(max_length=500, help_text="Please enter the description.")
+    qty = forms.IntegerField(help_text='Please enter the quantity')
+    unit_cost = forms.DecimalField()
+    unit_price = forms.DecimalField()
+    iva = forms.ModelChoiceField(queryset=Iva.objects)
+    ice = forms.ModelChoiceField(queryset=Ice.objects)
+    proforma_bill = forms.ModelChoiceField(queryset=ProformaBill.objects, widget=forms.HiddenInput())
 
     # An inline class to provide additional information on the form.
     class Meta:
