@@ -443,7 +443,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                     sku="SKU00{}".format(i),
                     name='Item {}'.format(i),
                     description='Description of item {}'.format(i),
-                    qty=3+i,
+                    qty=3 + i,
                     iva=iva,
                     ice=ice,
                     unit_cost=5,
@@ -476,9 +476,13 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         self.assertContains(
             r,
             reverse(
-                'edit_item_in_bill',
-                args=(self.company.id, self.proformabill.id, self.items[0].id))
-        )
+                'proformabillitem_update',
+                args=(self.company.id, self.proformabill.id, self.items[0].id)))
+        self.assertContains(
+            r,
+            reverse(
+                'proformabillitem_delete',
+                args=(self.company.id, self.proformabill.id, self.items[0].id)))
 
     def test_proformabill_create_show_form(self):
         """
@@ -674,6 +678,15 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             make_post(new_data))
         self.assertEquals(models.ProformaBillItem.objects.get(pk=pk).qty,
                           new_qty)
+
+    def test_delete_item_from_bill_submit(self):
+        pk = self.proformabill_item.id
+        self.c.post(
+            reverse('proformabillitem_delete',
+                    args=(self.company.id, self.proformabill.id, pk)),
+            {})
+        with self.assertRaises(models.ProformaBillItem.DoesNotExist):
+            models.ProformaBillItem.objects.get(pk=pk)
 
 
 class PopulateBillingTest(TestCase):

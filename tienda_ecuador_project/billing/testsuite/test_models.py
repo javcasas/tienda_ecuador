@@ -336,7 +336,6 @@ class IdentificacionTests(TestCase):
     def test_invalid_ruc_bad_verifier(self):
         self.invalid(tipo_identificacion="ruc",
                      identificacion="1756760293001")
-                                     
 
     def test_unknown_identification_type(self):
         self.invalid(tipo_identificacion="patata",
@@ -395,7 +394,7 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         factor_iva = 0.12
         total = (unidades * precio_unitario) * factor_ice * factor_iva
         self.assertEquals(
-            self.proforma.iva, 
+            self.proforma.iva,
             {
                 Decimal(12): Decimal(total)
             })

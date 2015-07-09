@@ -14,7 +14,7 @@ tabla_18 = [
     TarifaIva("Exento de IVA", 0, 7),
 ]
 
-dict_tabla_18 = {v.nombre:v for v in tabla_18}
+dict_tabla_18 = {v.nombre: v for v in tabla_18}
 
 TarifaIce = namedtuple("TarifaIce", "grupo nombre porcentaje codigo")
 # Tarifa ICE
@@ -102,7 +102,7 @@ tabla_19 = [
     TarifaIce(5, "Bebidas alcohólicas, distintas a la cerveza", unknown, 3031),
     TarifaIce(5, "Cerveza", unknown, 3041),
 ]
-dict_tabla_19 = {v.nombre:v for v in tabla_19}
+dict_tabla_19 = {v.nombre: v for v in tabla_19}
 
 tabla_20 = [
     # Impuesto a retener

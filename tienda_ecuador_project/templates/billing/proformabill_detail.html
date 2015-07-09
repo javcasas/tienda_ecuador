@@ -26,8 +26,8 @@
                 <td>{{ item.subtotal }}</td>
                 <td>{{ item.total_impuestos }}</td>
                 <td>
-                    <a href="{#% url 'edit_item_in_bill' company_id bill_id item.id %#}">Edit</a>
-                    <form action="{#% url 'delete_item_from_bill' company_id bill_id item.id %#}" method='post'>
+                    <a href="{% url 'proformabillitem_update' company.id proformabill.id item.id %}">Edit</a>
+                    <form action="{% url 'proformabillitem_delete' company.id proformabill.id item.id %}" method='post'>
                         {% csrf_token %}
                         <button type='submit'>Delete</button>
                     </form>

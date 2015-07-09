@@ -413,3 +413,17 @@ class ProformaBillItemUpdateView(RequiresCompany, ProformaBillSelected, UpdateVi
 
     def get_success_url(self):
         return reverse("proformabill_detail", args=(self.company.id, self.proformabill.id))
+
+
+class ProformaBillItemDeleteView(RequiresCompany, ProformaBillSelected, DeleteView):
+    context_object_name = 'item'
+    model = ProformaBillItem
+
+    @property
+    def success_url(self):
+        return reverse("proformabill_detail", args=(self.company.id, self.proformabill.id))
+
+    def get_context_data(self, **kwargs):
+        context = super(self.__class__, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context

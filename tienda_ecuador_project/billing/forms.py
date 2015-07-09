@@ -11,7 +11,6 @@ class ItemForm(forms.ModelForm):
     ice = forms.ModelChoiceField(queryset=Ice.objects, help_text="Please select the ICE.")
     unit_cost = forms.DecimalField(decimal_places=4, help_text="Please enter the unit cost.")
     unit_price = forms.DecimalField(decimal_places=4, help_text="Please enter the unit price.")
-    #company = forms.ModelChoiceField(queryset=Company.objects.all(), help_text="Please select the company.")
 
     # An inline class to provide additional information on the form.
     class Meta:
