@@ -1,7 +1,15 @@
 {% extends 'billing/l1_company_selected.html' %}
-{% block title_l1 %}{% block title_l2 %}{% endblock %}{{ customer.name }} - {% endblock %}
+{% block title_l1 %}{% block title_l2 %}{% endblock %}{{ customer.razon_social }} - {% endblock %}
+
+{% block breadcrumbs_l1 %}
+    &gt; <a href='{% url 'customer_index' company.id %}'>Clientes</a>
+    &gt; <a href='{% url 'customer_detail' company.id customer.id %}'>{{ customer.razon_social }}</a>
+    {% block breadcrumbs_l2 %}
+    {% endblock %}
+{% endblock %}
+
 {% block body_l1 %}
-    <h1>{{ customer.name }}</h1>
+    <h1>{{ customer.razon_social }}</h1>
     {% block body_l2 %}
     {% endblock %}
 {% endblock %}

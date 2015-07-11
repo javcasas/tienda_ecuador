@@ -1,5 +1,12 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% block title_l1 %}Proformas - {% endblock %}
+
+{% block breadcrumbs_l1 %}
+    &gt; <a href='{% url 'proformabill_index' company.id %}'>Proformas</a>
+    {% block breadcrumbs_l2 %}
+    {% endblock %}
+{% endblock %}
+
 {% block body_l1 %}
         <h1>Proformas</h1>
         <table border='1'>

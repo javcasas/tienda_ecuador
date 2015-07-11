@@ -1,4 +1,9 @@
 {% extends 'billing/l1_company_selected.html' %}
+
+{% block breadcrumbs_l1 %}
+    &gt; <a href='{% url 'item_index' company.id %}'>Items</a>
+{% endblock %}
+
 {% block body_l1 %}
     {% for item in item_list %}
         SKU: {{ item.sku }} <br />

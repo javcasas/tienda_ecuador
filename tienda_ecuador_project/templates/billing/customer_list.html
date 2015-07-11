@@ -1,4 +1,9 @@
 {% extends 'billing/l1_company_selected.html' %}
+
+{% block breadcrumbs_l1 %}
+    &gt; <a href='{% url 'customer_index' company.id %}'>Clientes</a>
+{% endblock %}
+
 {% block body_l1 %}
     {% for customer in customer_list %}
         Razón social: {{ customer.razon_social }} <br />

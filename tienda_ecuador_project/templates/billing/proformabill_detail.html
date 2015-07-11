@@ -2,12 +2,34 @@
 {% block title_l1 %}Ver Proforma {{ proformabill }}- {% endblock %}
 {% block body_l1 %}
         <h1>Proforma</h1>
-        Numero: {{ proformabill.number }} <br />
-        Cliente: ({{ proformabill.issued_to.tipo_identificacion }})
-                 {{ proformabill.issued_to.identificacion }} <br />
-                 {{ proformabill.issued_to.razon_social }} <br />
-        Fecha: {{ proformabill.date }} <br />
-        <br/>
+        <style>
+            table {
+                width: 100%;
+            }
+            td  {
+                text-align: right;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+        </style>
+
+        <table border='1'>
+            <tr>
+                <th>Numero</th><td>{{ proformabill.number }}</td>
+                <td rowspan='4'>
+                    <a href="{% url "proformabill_update" company.id proformabill.id %}">Editar datos</a>
+                </td>
+            </tr>
+            <tr>
+                <th>Cliente</th><td>({{ proformabill.issued_to.tipo_identificacion }}) {{ proformabill.issued_to.identificacion }} </td>
+            </tr>
+            <tr>
+                 <th></th><td>{{ proformabill.issued_to.razon_social }}</td>
+            </tr>
+            <tr>
+                <th>Fecha</th><td>{{ proformabill.date }}</td>
+            </tr>
+        </table>
         <table border=1>
             <tr>
                 <th>Código</th>
@@ -22,11 +44,13 @@
                 <td>{{ item.sku }}</td>
                 <td>{{ item.name }}</td>
                 <td>{{ item.qty }}</td>
-                <td>{{ item.unit_price }}</td>
-                <td>{{ item.subtotal }}</td>
-                <td>{{ item.total_impuestos }}</td>
+                <td>{{ item.unit_price|floatformat:4 }}</td>
+                <td>{{ item.subtotal|floatformat:2 }}</td>
+                <td>{{ item.total_impuestos|floatformat:2 }}</td>
                 <td>
                     <a href="{% url 'proformabillitem_update' company.id proformabill.id item.id %}">Edit</a>
+                </td>
+                <td>
                     <form action="{% url 'proformabillitem_delete' company.id proformabill.id item.id %}" method='post'>
                         {% csrf_token %}
                         <button type='submit'>Delete</button>
@@ -35,17 +59,20 @@
             <tr/>
         {% endfor %}
         </table>
-        Subtotal IVA 12%: {{ proformabill.subtotal }} <br/>
-        Subtotal IVA 0%: {{ proformabill.subtotal }} <br/>
-
-        IVA 12%: {{ proformabill.iva }} <br/>
-        Total a pagar: {{ proformabill.total }} <br/>
-
-        IVA bienes: {{ proformabill.iva_bienes }} <br/>
-        IVA servicios: {{ proformabill.iva_servicios }} <br/>
-        
-        <a href="{% url "proformabill_update" company.id proformabill.id %}">Edit</a>
         <a href="{% url "proformabill_add_item" company.id proformabill.id %}">Add Item</a>
-        <a href='{% url "proformabill_index" company.id %}'>Back</a>
-        <a href='{% url "company_index" company.id %}'>Back</a>
+        <table border='1'>
+            <tr>
+                <th>Subtotal IVA 12%</th><td>{{ proformabill.subtotal.12|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <th>Subtotal IVA 0%</th><td>{{ proformabill.subtotal.0|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <th>IVA 12%</th><td>{{ proformabill.iva.12|stringformat:".2f" }}</td>
+            </tr>
+            <tr>
+                <th>Total a pagar</th><td>{{ proformabill.total|stringformat:".2f" }}</td>
+            </tr>
+        </table>
+
 {% endblock %}

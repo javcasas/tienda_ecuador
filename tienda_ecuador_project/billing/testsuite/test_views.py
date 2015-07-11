@@ -473,16 +473,20 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                                   fix_keys(self.data.keys()))
         for item in self.items:
             self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
-        self.assertContains(
-            r,
-            reverse(
-                'proformabillitem_update',
-                args=(self.company.id, self.proformabill.id, self.items[0].id)))
-        self.assertContains(
-            r,
-            reverse(
-                'proformabillitem_delete',
-                args=(self.company.id, self.proformabill.id, self.items[0].id)))
+            self.assertContains(
+                r,
+                reverse(
+                    'proformabillitem_update',
+                    args=(self.company.id, self.proformabill.id, item.id)))
+            self.assertContains(
+                r,
+                reverse(
+                    'proformabillitem_delete',
+                    args=(self.company.id, self.proformabill.id, item.id)))
+        subtotal = sum([i.subtotal + i.valor_ice for i in self.items])
+        self.assertContains(r, subtotal)          # Total sin IVA
+        self.assertContains(r, subtotal * 12 / 100)   # IVA
+        self.assertContains(r, subtotal * 112 / 100)   # Total con IVA
 
     def test_proformabill_create_show_form(self):
         """

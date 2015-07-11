@@ -385,7 +385,8 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                          ice=self.bill_ice)
 
     def test_subtotal(self):
-        self.assertEquals(self.proforma.subtotal, (1 + 2 + 3 + 4) * 10)
+        self.assertEquals(self.proforma.subtotal, {12: (1 + 2 + 3 + 4) * 10,
+                                                   0: 0})
 
     def test_iva(self):
         unidades = 1 + 2 + 3 + 4

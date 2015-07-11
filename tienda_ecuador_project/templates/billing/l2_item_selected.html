@@ -1,5 +1,13 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% block title_l1 %}{% block title_l2 %}{% endblock %}{{ item.sku }} - {% endblock %}
+
+{% block breadcrumbs_l1 %}
+    &gt; <a href='{% url 'item_index' company.id %}'>Items</a>
+    &gt; <a href='{% url 'item_detail' company.id item.id %}'>{{ item.sku }}</a>
+    {% block breadcrumbs_l2 %}
+    {% endblock %}
+{% endblock %}
+
 {% block body_l1 %}
     <h1>{{ item.sku }} - {{ item.name }}</h1>
     {% block body_l2 %}

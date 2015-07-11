@@ -1,5 +1,13 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% block title_l1 %}{% block title_l2 %}{% endblock %}{{ proformabill }} - {% endblock %}
+
+{% block breadcrumbs_l1 %}
+    &gt; <a href='{% url 'proformabill_index' company.id %}'>Proformas</a>
+    &gt; <a href='{% url 'proformabill_detail' company.id proformabill.id %}'>{{ proformabill.number }} - {{ proformabill.issued_to.razon_social }}</a>
+    {% block breadcrumbs_l2 %}
+    {% endblock %}
+{% endblock %}
+
 {% block body_l1 %}
     <h1>{{ proformabill }}</h1>
     {% block body_l2 %}

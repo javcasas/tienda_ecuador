@@ -218,7 +218,11 @@ class ProformaBill(BaseBill):
 
     @property
     def subtotal(self):
-        return sum([i.subtotal for i in self.items])
+        res = {0: 0,
+               12: 0}
+        for i in self.items:
+            res[i.iva.porcentaje] = res.get(i.iva.porcentaje, 0) + i.subtotal + i.valor_ice
+        return res
 
     @property
     def iva(self):
@@ -227,6 +231,14 @@ class ProformaBill(BaseBill):
             iva = item.iva.porcentaje
             res[iva] = res.get(iva, 0) + item.valor_iva
         return res
+
+    @property
+    def total(self):
+        iva = self.iva
+        total_impuestos = sum([iva[k] for k in iva])
+        subtotal = self.subtotal
+        total_subtotales = sum([subtotal[k] for k in self.subtotal])
+        return total_subtotales + total_impuestos
 
     def get_absolute_url(self):
         return reverse('proformabill_detail',
