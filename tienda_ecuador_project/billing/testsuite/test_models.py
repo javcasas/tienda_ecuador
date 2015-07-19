@@ -42,6 +42,7 @@ base_data = {
         "razon_social": "Paco Pil",
         "direccion_matriz": "C del pepino",
         "contribuyente_especial": "",
+        "ambiente_sri": "pruebas",
     },
     "BaseCustomer": {
         "razon_social": "Pepe",

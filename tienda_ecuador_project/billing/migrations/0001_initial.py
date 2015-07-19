@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+import billing.validators
 from django.conf import settings
 import billing.models
 
@@ -80,6 +81,7 @@ class Migration(migrations.Migration):
                 ('direccion_matriz', models.CharField(max_length=100)),
                 ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
                 ('obligado_contabilidad', models.BooleanField(default=False)),
+                ('ambiente_sri', models.CharField(max_length=20, validators=[billing.validators.OneOf(b'pruebas', b'produccion')])),
             ],
             options={
             },

@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 from utils import Property, ConvertedProperty
+from validators import OneOf
 
 
 class ReadOnlyObject(Exception):
@@ -57,6 +58,9 @@ class Company(models.Model):
     direccion_matriz = models.CharField(max_length=100)
     contribuyente_especial = models.CharField(max_length=20, blank=True)
     obligado_contabilidad = models.BooleanField(default=False)
+    ambiente_sri = models.CharField(
+        max_length=20,
+        validators=[OneOf("pruebas", "produccion")])
 
     def __unicode__(self):
         return self.razon_social
