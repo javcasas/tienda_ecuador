@@ -1,9 +1,12 @@
 # * encoding: utf8 *
+from decimal import Decimal
+
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from decimal import Decimal
 from django.core.exceptions import ValidationError
+
+from utils import Property, ConvertedProperty
 
 
 class ReadOnlyObject(Exception):
@@ -199,45 +202,6 @@ class Bill(ReadOnlyMixin, BaseBill):
     @property
     def items(self):
         return BillItem.objects.filter(bill=self)
-
-
-class Property(object):
-    def __init__(self, validator=None):
-        def always_valid(x):
-            return True
-        self.validator = validator or always_valid
-
-    def __get__(self, a, b):
-        return self.val
-
-    def __set__(self, a, newval):
-        if not self.validator(newval):
-            raise ValueError("Invalid value :{}".format(newval))
-        self.val = newval
-
-    @property
-    def code(self):
-        return self.conversion[self.val]
-
-
-class ConvertedProperty(object):
-    def __init__(self, **conversion):
-        self.conversion = conversion
-
-    def __get__(self, a, b):
-        class b(type(self.val)):
-            code = self.code
-            options = self.conversion.keys()
-        return b(self.val)
-
-    def __set__(self, a, newval):
-        if newval not in self.conversion.keys():
-            raise ValueError("Invalid value :{}".format(newval))
-        self.val = newval
-
-    @property
-    def code(self):
-        return self.conversion[self.val]
 
 
 class ClaveAcceso(object):
