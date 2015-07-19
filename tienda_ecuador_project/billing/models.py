@@ -85,7 +85,9 @@ class BaseCustomer(models.Model):
     direccion = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
-        return "({}){} - {}".format(self.tipo_identificacion, self.identificacion, self.razon_social)
+        return "({}){} - {}".format(self.tipo_identificacion,
+                                    self.identificacion,
+                                    self.razon_social)
 
     def clean(self):
         def tests_cedula(val):
@@ -199,6 +201,92 @@ class Bill(ReadOnlyMixin, BaseBill):
         return BillItem.objects.filter(bill=self)
 
 
+class Property(object):
+    def __init__(self, validator=None):
+        def always_valid(x):
+            return True
+        self.validator = validator or always_valid
+
+    def __get__(self, a, b):
+        return self.val
+
+    def __set__(self, a, newval):
+        if not self.validator(newval):
+            raise ValueError("Invalid value :{}".format(newval))
+        self.val = newval
+
+    @property
+    def code(self):
+        return self.conversion[self.val]
+
+
+class ConvertedProperty(object):
+    def __init__(self, **conversion):
+        self.conversion = conversion
+
+    def __get__(self, a, b):
+        class b(type(self.val)):
+            code = self.code
+            options = self.conversion.keys()
+        return b(self.val)
+
+    def __set__(self, a, newval):
+        if newval not in self.conversion.keys():
+            raise ValueError("Invalid value :{}".format(newval))
+        self.val = newval
+
+    @property
+    def code(self):
+        return self.conversion[self.val]
+
+
+class ClaveAcceso(object):
+    def fecha_emision_validator(v):
+        from datetime import date
+        try:
+            y, m, d = v
+            date(y, m, d)
+            return True
+        except Exception:
+            return False
+
+    fecha_emision = Property(fecha_emision_validator)
+    ruc = Property()
+    serie = Property()
+    numero = Property()
+    codigo = Property()
+
+    tipo_comprobante = ConvertedProperty(factura='01')
+    ambiente = ConvertedProperty(pruebas='1', produccion='2')
+    tipo_emision = ConvertedProperty(normal='1', offline='2')
+
+    def __unicode__(self):
+        codigo = (u"{2:02d}{1:02d}{0:04d}".format(*self.fecha_emision) +
+                  self.tipo_comprobante.code +
+                  "{:013d}".format(self.ruc) +
+                  self.ambiente.code +
+                  "{:06d}".format(self.serie) +
+                  "{:09d}".format(self.numero) +
+                  "{:08d}".format(self.codigo) +
+                  self.tipo_emision.code)
+
+        def comprobante(c):
+            rev_c = c[::-1]
+            multipliers = "234567" * 10
+            pairs = zip(rev_c, multipliers)
+            products = map(lambda (a, b): int(a) * int(b), pairs)
+            total = sum(products)
+            modulus = total % 11
+            if modulus == 0:
+                return "0"
+            elif modulus == 1:
+                return "1"
+            else:
+                return str(11 - modulus)
+        res = codigo + comprobante(codigo)
+        return res
+
+
 class ProformaBill(BaseBill):
     """
     Represents a proforma bill
@@ -221,7 +309,8 @@ class ProformaBill(BaseBill):
         res = {0: 0,
                12: 0}
         for i in self.items:
-            res[i.iva.porcentaje] = res.get(i.iva.porcentaje, 0) + i.subtotal + i.valor_ice
+            res[i.iva.porcentaje] = (res.get(i.iva.porcentaje, 0) +
+                                     i.subtotal + i.valor_ice)
         return res
 
     @property

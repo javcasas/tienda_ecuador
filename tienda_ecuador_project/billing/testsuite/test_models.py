@@ -13,7 +13,8 @@ from billing.models import (ReadOnlyObject,
                             Iva, Ice,
                             BillItemIva, BillItemIce,
                             ItemInBill,
-                            BillCustomer)
+                            BillCustomer,
+                            ClaveAcceso)
 from helpers import (add_instance,
                      add_User,
                      add_Company,
@@ -385,8 +386,9 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                          ice=self.bill_ice)
 
     def test_subtotal(self):
-        self.assertEquals(self.proforma.subtotal, {12: (1 + 2 + 3 + 4) * 10,
-                                                   0: 0})
+        self.assertEquals(self.proforma.subtotal,
+                          {12: (1 + 2 + 3 + 4) * (10 + 5),
+                           0: 0})
 
     def test_iva(self):
         unidades = 1 + 2 + 3 + 4
@@ -399,3 +401,17 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
             {
                 Decimal(12): Decimal(total)
             })
+
+    def test_clave_acceso_encode(self):
+        c = ClaveAcceso()
+        c.fecha_emision = (2015, 7, 3)
+        c.tipo_comprobante = "factura"
+        c.ruc = 1790746119001
+        c.ambiente = "produccion"
+        c.serie = 23013
+        c.numero = 174
+        c.codigo = 17907461
+        c.tipo_emision = "normal"
+        expected = ("03072015" "01" "1790746119001" "2"
+                    "023013" "000000174" "17907461" "1" "1")
+        self.assertEquals(unicode(c), expected)
