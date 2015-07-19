@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
                 ('direccion_matriz', models.CharField(max_length=100)),
                 ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
                 ('obligado_contabilidad', models.BooleanField(default=False)),
-                ('ambiente_sri', models.CharField(max_length=20, validators=[billing.validators.OneOf(b'pruebas', b'produccion')])),
+                ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, validators=[billing.validators.OneOf(b'pruebas', b'produccion')])),
             ],
             options={
             },

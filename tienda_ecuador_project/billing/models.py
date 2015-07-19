@@ -60,7 +60,8 @@ class Company(models.Model):
     obligado_contabilidad = models.BooleanField(default=False)
     ambiente_sri = models.CharField(
         max_length=20,
-        validators=[OneOf("pruebas", "produccion")])
+        validators=[OneOf("pruebas", "produccion")],
+        default="pruebas")
 
     def __unicode__(self):
         return self.razon_social
