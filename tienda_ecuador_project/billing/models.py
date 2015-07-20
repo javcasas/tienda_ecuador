@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 from utils import Property, ConvertedProperty
-from validators import OneOf
+from validators import OneOf, IsCedula, IsRuc
 
 
 class ReadOnlyObject(Exception):
@@ -87,7 +87,7 @@ class BaseCustomer(models.Model):
     Represents a generic customer
     """
     razon_social = models.CharField(max_length=100)
-    tipo_identificacion = models.CharField(max_length=100)
+    tipo_identificacion = models.CharField(max_length=100, validators=[OneOf('cedula', 'ruc', 'pasaporte')])
     identificacion = models.CharField(max_length=100)
     email = models.CharField(max_length=100, blank=True)
     direccion = models.CharField(max_length=100, blank=True)
@@ -98,41 +98,10 @@ class BaseCustomer(models.Model):
                                     self.razon_social)
 
     def clean(self):
-        def tests_cedula(val):
-            codigo_provincia = int(val[0:2])
-            if codigo_provincia < 1 or codigo_provincia > 24:
-                raise ValidationError("Codigo de provincia invalido")
-            tipo_cedula = int(val[2])
-            if tipo_cedula < 1 or tipo_cedula > 6:
-                raise ValidationError("Tercer digito invalido")
-            if len(val) != 10:
-                raise ValidationError("Invalid value length")
-            verificador = int(val[-1])
-            checksum_multiplier = "21212121212"
-
-            def digit_sum(digit, multiplier):
-                digit = int(digit)
-                multiplier = int(multiplier)
-                res = digit * multiplier
-                div, mod = divmod(res, 10)
-                return div + mod
-
-            checksum = sum([digit_sum(*params) for params
-                            in zip(val[0:9], checksum_multiplier[0:9])])
-            _, checksum = divmod(checksum, 10)
-            checksum = 10 - checksum
-            _, checksum = divmod(checksum, 10)
-            if checksum != verificador:
-                raise ValidationError("Invalid RUC invalid checksum")
-
         if self.tipo_identificacion == "ruc":
-            if not len(self.identificacion) == 13:
-                raise ValidationError("RUC no tiene 13 digitos")
-            if not self.identificacion.endswith("001"):
-                raise ValidationError("RUC no termina en 001")
-            tests_cedula(self.identificacion[0:10])
+            IsRuc(self.identificacion)
         elif self.tipo_identificacion == 'cedula':
-            tests_cedula(self.identificacion)
+            IsCedula(self.identificacion)
         else:
             raise ValidationError("Identificacion desconocida")
 
