@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('razon_social', models.CharField(max_length=100)),
-                ('tipo_identificacion', models.CharField(max_length=100)),
+                ('tipo_identificacion', models.CharField(max_length=100, validators=[billing.validators.OneOf(b'cedula', b'ruc', b'pasaporte')])),
                 ('identificacion', models.CharField(max_length=100)),
                 ('email', models.CharField(max_length=100, blank=True)),
                 ('direccion', models.CharField(max_length=100, blank=True)),
@@ -82,6 +82,8 @@ class Migration(migrations.Migration):
                 ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
                 ('obligado_contabilidad', models.BooleanField(default=False)),
                 ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, validators=[billing.validators.OneOf(b'pruebas', b'produccion')])),
+                ('siguiente_comprobante_pruebas', models.IntegerField(default=1)),
+                ('siguiente_comprobante_produccion', models.IntegerField(default=1)),
             ],
             options={
             },

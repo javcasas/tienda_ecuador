@@ -50,12 +50,13 @@ class LoggedInTests(TestCase, TestHelpersMixin):
                         {'username': username, 'password': password})
         self.assertRedirects(r, reverse('index'))
 
-    def assertContainsObject(self, response, item, fields):
+    def assertContainsObject(self, response, item, fields, msg=None):
         """
         Checks all the fields in a general object
         """
         for field in fields:
-            self.assertContains(response, getattr(item, field))
+            value = getattr(item, field)
+            self.assertContains(response, str(value), html=False)
 
 
 class LoggedInWithCompanyTests(LoggedInTests):
@@ -483,7 +484,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                 reverse(
                     'proformabillitem_delete',
                     args=(self.company.id, self.proformabill.id, item.id)))
-        subtotal = sum([i.subtotal + i.valor_ice for i in self.items])
+        subtotal = sum([i.total_sin_impuestos + i.valor_ice for i in self.items])
         self.assertContains(r, subtotal)          # Total sin IVA
         self.assertContains(r, subtotal * 12 / 100)   # IVA
         self.assertContains(r, subtotal * 112 / 100)   # Total con IVA
@@ -691,6 +692,91 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             {})
         with self.assertRaises(models.ProformaBillItem.DoesNotExist):
             models.ProformaBillItem.objects.get(pk=pk)
+
+
+class EmitirFacturaTests(LoggedInWithCompanyTests):
+    """
+    Emision de factura
+    """
+    def setUp(self):
+        super(self.__class__, self).setUp()
+        self.customer_data = {
+            'razon_social': 'Pepe',
+            "tipo_identificacion": "cedula",
+            "identificacion": "1713831152",
+            "email": "a@b.com",
+            "direccion": "blebla street",
+        }
+        self.proformabill_data = {
+            'number': '001-002-1234567890',
+            'date': get_date(),
+        }
+        self.customer = add_instance(models.Customer,
+                                     **dict(self.customer_data,
+                                            company=self.company))
+        self.proformabill = add_instance(
+            models.ProformaBill,
+            **dict(self.proformabill_data,
+                   company=self.company, issued_to=self.customer)
+        )
+        self.iva = add_instance(
+            models.Iva,
+            descripcion="12%", porcentaje=12.0, codigo=2)
+        self.ice = add_instance(
+            models.Ice,
+            descripcion="Bebidas gaseosas", grupo=1,
+            codigo=3051, porcentaje=50.0)
+        self.item_data = dict(
+            sku='SKU222',
+            name='Item 3',
+            iva=self.iva,
+            ice=self.ice,
+            unit_cost=5.3,
+            unit_price=8,
+            description='Item3 description')
+        self.item = add_instance(
+            models.Item,
+            **dict(self.item_data, company=self.company))
+        self.proformabill_item_data = dict(
+            sku="SKU001",
+            name='Item 1',
+            description='Description of item 1',
+            iva=self.iva,
+            ice=self.ice,
+            unit_cost=9.1,
+            unit_price=16,
+            qty=3)
+        self.proformabill_item = add_instance(
+            models.ProformaBillItem,
+            **dict(self.proformabill_item_data,
+                   proforma_bill=self.proformabill))
+
+    def test_emitir_factura(self):
+        """
+        Prueba la emision de facturas
+        """
+        # Confirmar la emision de la factura
+        r = self.c.get(
+                reverse('proformabill_emit_to_bill',
+                        args=(self.company.id, self.proformabill.id)))
+        self.assertContains(  # same link as POST
+            r,
+            reverse('proformabill_emit_to_bill',
+                    args=(self.company.id, self.proformabill.id)))
+
+        # Generar XML
+        r = self.c.get(
+                reverse('proformabill_emit_gen_xml',
+                        args=(self.company.id, self.proformabill.id)))
+        #   Generar claves para el XML
+        #   Guardar XML en proforma
+        # Enviar XML al SRI
+        #   Esperar respuesta
+        #   Si respuesta positiva
+        #       Convertir proforma en final
+        #       Emitir correo electronico al cliente
+        #   Si no
+        #       Mostrar errores
 
 
 class PopulateBillingTest(TestCase):

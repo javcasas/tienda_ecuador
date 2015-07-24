@@ -43,6 +43,8 @@ base_data = {
         "direccion_matriz": "C del pepino",
         "contribuyente_especial": "",
         "ambiente_sri": "pruebas",
+        'siguiente_comprobante_pruebas': 1,
+        'siguiente_comprobante_produccion': 1,
     },
     "BaseCustomer": {
         "razon_social": "Pepe",
@@ -286,10 +288,10 @@ class ItemTests(TestCase, TestHelpersMixin):
     """
     Tests for the Item classes
     """
-    def test_subtotal(self):
+    def test_total_sin_impuestos(self):
         ob = ItemInBill(sku="1234", name="asdf", description="asdf",
                         unit_cost=10, unit_price=14, qty=6)
-        self.assertEquals(ob.subtotal, 6 * 14)
+        self.assertEquals(ob.total_sin_impuestos, 6 * 14)
 
     def test_bill_item_iva_ice(self):
         iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
@@ -297,9 +299,9 @@ class ItemTests(TestCase, TestHelpersMixin):
         ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
                               unit_cost=10, unit_price=10, qty=6,
                               iva=iva, ice=ice)
-        valor_ice = ob.subtotal * Decimal("0.5")
+        valor_ice = ob.total_sin_impuestos * Decimal("0.5")
         self.assertEquals(ob.valor_ice, valor_ice)
-        valor_iva = (ob.subtotal + valor_ice) * Decimal("0.12")
+        valor_iva = (ob.total_sin_impuestos + valor_ice) * Decimal("0.12")
         self.assertEquals(ob.valor_iva, valor_iva)
         self.assertEquals(ob.total_impuestos, valor_iva + valor_ice)
 

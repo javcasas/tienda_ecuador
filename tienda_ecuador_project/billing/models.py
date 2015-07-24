@@ -62,6 +62,8 @@ class Company(models.Model):
         max_length=20,
         validators=[OneOf("pruebas", "produccion")],
         default="pruebas")
+    siguiente_comprobante_pruebas = models.IntegerField(default=1)
+    siguiente_comprobante_produccion = models.IntegerField(default=1)
 
     def __unicode__(self):
         return self.razon_social
@@ -87,7 +89,9 @@ class BaseCustomer(models.Model):
     Represents a generic customer
     """
     razon_social = models.CharField(max_length=100)
-    tipo_identificacion = models.CharField(max_length=100, validators=[OneOf('cedula', 'ruc', 'pasaporte')])
+    tipo_identificacion = models.CharField(
+        max_length=100,
+        validators=[OneOf('cedula', 'ruc', 'pasaporte')])
     identificacion = models.CharField(max_length=100)
     email = models.CharField(max_length=100, blank=True)
     direccion = models.CharField(max_length=100, blank=True)
@@ -248,7 +252,7 @@ class ProformaBill(BaseBill):
                12: 0}
         for i in self.items:
             res[i.iva.porcentaje] = (res.get(i.iva.porcentaje, 0) +
-                                     i.subtotal + i.valor_ice)
+                                     i.total_sin_impuestos + i.valor_ice)
         return res
 
     @property
@@ -289,6 +293,9 @@ class Iva(models.Model):
     codigo = models.CharField(max_length=10)
     porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
 
+    def __unicode__(self):
+        return "{:.0f}% - {}".format(self.porcentaje, self.descripcion)
+
 
 class BillItemIva(ReadOnlyMixin, Iva):
     """
@@ -310,6 +317,12 @@ class Ice(models.Model):
     grupo = models.IntegerField()
     codigo = models.CharField(max_length=10)
     porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
+
+    def __nonzero__(self):
+        return self.descripcion != "No ICE"
+
+    def __unicode__(self):
+        return "{:.0f}% - {}".format(self.porcentaje, self.descripcion)
 
 
 class BillItemIce(ReadOnlyMixin, Ice):
@@ -361,17 +374,26 @@ class ItemInBill(BaseItem):
     qty = models.DecimalField(max_digits=20, decimal_places=8)
 
     @property
-    def subtotal(self):
+    def total_sin_impuestos(self):
         return self.qty * self.unit_price
 
     @property
     def valor_ice(self):
-        return self.subtotal * (self.ice.porcentaje / Decimal("100.0"))
+        return (self.total_sin_impuestos *
+                (self.ice.porcentaje / Decimal("100.0")))
 
     @property
     def valor_iva(self):
-        return ((self.subtotal + self.valor_ice) *
+        return (self.base_imponible_iva *
                 (self.iva.porcentaje / Decimal("100.0")))
+
+    @property
+    def base_imponible_iva(self):
+        return self.total_sin_impuestos + self.valor_ice
+
+    @property
+    def base_imponible_ice(self):
+        return self.total_sin_impuestos
 
     @property
     def total_impuestos(self):

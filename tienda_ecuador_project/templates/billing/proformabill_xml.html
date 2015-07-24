@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<factura id="comprobante" version="1.1.0">
+    <infoTributaria>
+        <ambiente>{{ company.ambiente_sri }}</ambiente>
+        <tipoEmision>{{ info_tributaria.tipo_emision }}</tipoEmision>
+        <razonSocial>{{ company.razon_social }}</razonSocial>
+        {% if company.nombre_comercial %}<nombreComercial>{{ company.nombre_comercial }}</nombreComercial>{% endif %}
+        <ruc>{{ company.ruc }}</ruc>
+        <claveAcceso>{{ info_tributaria.clave_acceso }}</claveAcceso>
+        <codDoc>{{ info_tributaria.cod_doc }}</codDoc>
+        <estab>{{ info_tributaria.establecimiento }}</estab>
+        <ptoEmi>{{ info_tributaria.punto_emision }}</ptoEmi>
+        <secuencial>{{ info_tributaria.secuencial }}</secuencial>
+        <dirMatriz>{{ company.direccion_matriz }}</dirMatriz>
+    </infoTributaria>
+    <infoFactura>
+        <fechaEmision>{{ proformabill.date|date:"d/m/Y" }}</fechaEmision>
+        {% if info_factura.direccion_establecimiento %}<dirEstablecimiento>{{ info_factura.direccion_establecimiento }}</dirEstablecimiento>{% endif %}
+        {% if company.contribuyente_especial %}<contribuyenteEspecial>{{ company.contribuyente_especial }}</contribuyenteEspecial>{% endif %}
+        <obligadoContabilidad>{% if company.obligado_contabilidad %}SI{% else %}NO{% endif %}</obligadoContabilidad>
+        <tipoIdentificacionComprador>{{ info_factura.tipo_identificacion_comprador }}</tipoIdentificacionComprador>
+        <razonSocialComprador>{{ proformabill.issued_to.razon_social }}</razonSocialComprador>
+        <identificacionComprador>{{ proformabill.issued_to.identificacion }}</identificacionComprador>
+        <totalSinImpuestos>{{ proformabill.total_sin_impuestos|stringformat:'.2f' }}</totalSinImpuestos>
+        <totalDescuento>{{ info_factura.total_descuento|stringformat:'.2f' }}</totalDescuento>
+        <totalConImpuestos>
+            {% for impuesto in info_factura.impuestos %}
+            <totalImpuesto>
+                <codigo>{{ impuesto.codigo }}</codigo>
+                <codigoPorcentaje>{{ impuesto.porcentaje }}</codigoPorcentaje>
+				<descuentoAdicional>{{ impuesto.descuento_adicional }}</descuentoAdicional>
+                <baseImponible>{{ impuesto.base_imponible|stringformat:'.2f' }}</baseImponible>
+                <valor>{{ impuesto.valor|stringformat:'.2f' }}</valor>
+            </totalImpuesto>
+            {% endfor %}
+        </totalConImpuestos>
+        <propina>{{ info_factura.propina|stringformat:'.2f' }}</propina>
+        <importeTotal>{{ info_factura.importe_total|stringformat:'.2f' }}</importeTotal>
+        <moneda>{{ info_factura.moneda }}</moneda>
+    </infoFactura>
+    <detalles>
+        {% for item in proformabill.items %}
+        <detalle>
+            {% if detalle.codigo_principal %}<codigoPrincipal>{{ detalle.codigo_principal }}</codigoPrincipal>{% endif %}
+            {% if detalle.codigo_auxiliar %}<codigoAuxiliar>{{ detalle.codigo_auxiliar }}</codigoAuxiliar>{% endif %}
+            <descripcion>{{ item.description }}</descripcion>
+            {% if detalle.unidad_medida %}<unidadMedida>{{ detalle.unidad_medida }}</unidadMedida>{% endif %}
+            <cantidad>{{ item.qty|stringformat:'.6f' }}</cantidad>
+            <precioUnitario>{{ item.unit_price|stringformat:'.6f' }}</precioUnitario>
+            <descuento>{{ 0|stringformat:'.2f' }}</descuento>
+            <precioTotalSinImpuesto>{{ item.subtotal|stringformat:'.2f' }}</precioTotalSinImpuesto>
+            <impuestos>
+                <impuesto>
+                    <codigo>2</codigo>
+                    <codigoPorcentaje>{{ item.iva.codigo }}</codigoPorcentaje>
+                    <tarifa>{{ item.iva.porcentaje|stringformat:'.2f' }}</tarifa>
+                    <baseImponible>{{ item.base_imponible_iva|stringformat:'.2f' }}</baseImponible>
+                    <valor>{{ item.valor_iva|stringformat:'.2f' }}</valor>
+                </impuesto>
+                {% if item.ice %}
+                <impuesto>
+                    <codigo>3</codigo>
+                    <codigoPorcentaje>{{ item.ice.codigo }}</codigoPorcentaje>
+                    <tarifa>{{ item.ice.porcentaje|stringformat:'.2f' }}</tarifa>
+                    <baseImponible>{{ item.base_imponible_ice|stringformat:'.2f' }}</baseImponible>
+                    <valor>{{ item.valor_ice|stringformat:'.2f' }}</valor>
+                </impuesto>
+                {% endif %}
+            </impuestos>
+        </detalle>
+        {% endfor %}
+    </detalles>
+	<retenciones>
+        {% for retencion in retenciones %}
+        <retencion>
+            <codigo>{{ retencion.codigo }}</codigo>
+            <codigoPorcentaje>{{ retencion.codigo_porcentaje }}</codigoPorcentaje>
+            <tarifa>{{ retencion.tarifa|stringformat:'.2f' }}</tarifa>
+            <valor>{{ retencion.valor|stringformat:'.2f' }}</valor>
+        </retencion>
+        {% endfor %}
+    </retenciones>
+    {% if info_adicional %}
+    <infoAdicional>
+        {% for k,v in info_adicional %}
+        <campoAdicional nombre="{{ k }}">{{ v }}</campoAdicional>
+        {% endfor %}
+    </infoAdicional>
+    {% endif %}
+</factura>
