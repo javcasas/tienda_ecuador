@@ -235,13 +235,6 @@ class ProformaBill(BaseBill):
     """
     issued_to = models.ForeignKey(Customer)
 
-    def toBill(self):
-        new = Bill(company=self.company,
-                   number=self.number,
-                   issued_to=self.issued_to.toBillCustomer())
-        new.save()
-        return new
-
     @property
     def items(self):
         return ProformaBillItem.objects.filter(proforma_bill=self)

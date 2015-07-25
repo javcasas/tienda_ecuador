@@ -17,10 +17,6 @@ class Property(object):
             raise ValueError("Invalid value :{}".format(newval))
         self.val = newval
 
-    @property
-    def code(self):
-        return self.conversion[self.val]
-
 
 class ConvertedProperty(object):
     """
@@ -36,7 +32,7 @@ class ConvertedProperty(object):
         called "code"
         """
         class b(type(self.val)):
-            code = self.code
+            code = self.conversion[self.val]
             options = self.conversion.keys()
         return b(self.val)
 
@@ -44,7 +40,3 @@ class ConvertedProperty(object):
         if newval not in self.conversion.keys():
             raise ValueError("Invalid value :{}".format(newval))
         self.val = newval
-
-    @property
-    def code(self):
-        return self.conversion[self.val]

@@ -388,14 +388,6 @@ class ProformaBillTests(LoggedInWithCompanyTests):
     entity = 'proforma'
     cls = models.ProformaBill
 
-    def prepare_dict(self, d):
-        def try_call(f):
-            if callable(f):
-                return f()
-            else:
-                return f
-        return {k: try_call(f) for k, f in d.iteritems()}
-
     def setUp(self):
         super(self.__class__, self).setUp()
         self.customer_data = {

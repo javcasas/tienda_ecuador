@@ -222,6 +222,19 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
                 cls.objects.get(id=ob.id)
 
 
+class CompanyUserTests(TestCase, TestHelpersMixin):
+    def setUp(self):
+        self.company = add_Company(**base_data['Company'])
+        self.user = add_User(username="Paco", password='')
+        self.company_user = add_instance(CompanyUser,
+                                         company=self.company,
+                                         user=self.user)
+
+    def test_unicode(self):
+        self.assertEquals(str(self.company_user),
+                          self.company_user.user.username)
+
+
 class ProformaToFinalTests(TestCase, TestHelpersMixin):
     """
     Tests that check converting a proforma into a final
@@ -299,11 +312,25 @@ class ItemTests(TestCase, TestHelpersMixin):
         ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
                               unit_cost=10, unit_price=10, qty=6,
                               iva=iva, ice=ice)
-        valor_ice = ob.total_sin_impuestos * Decimal("0.5")
+
+        # ICE
+        self.assertEquals(ob.base_imponible_ice, ob.total_sin_impuestos)
+        valor_ice = ob.base_imponible_ice * Decimal("0.5")
         self.assertEquals(ob.valor_ice, valor_ice)
-        valor_iva = (ob.total_sin_impuestos + valor_ice) * Decimal("0.12")
+
+        # IVA
+        self.assertEquals(ob.base_imponible_iva,
+                          ob.total_sin_impuestos + valor_ice)
+        valor_iva = ob.base_imponible_iva * Decimal("0.12")
         self.assertEquals(ob.valor_iva, valor_iva)
         self.assertEquals(ob.total_impuestos, valor_iva + valor_ice)
+
+    def test_unicode(self):
+        iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
+        ice = Ice(descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
+        ob = Item(sku="1234", name="asdf", description="asdf",
+                  unit_cost=10, unit_price=10, iva=iva, ice=ice)
+        self.assertEquals(str(ob), "1234 - asdf")
 
 
 class IdentificacionTests(TestCase):
@@ -418,3 +445,34 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         expected = ("03072015" "01" "1790746119001" "2"
                     "023013" "000000174" "17907461" "1" "1")
         self.assertEquals(unicode(c), expected)
+
+        c.codigo = 17907462
+        expected = ("03072015" "01" "1790746119001" "2"
+                    "023013" "000000174" "17907462" "1" "7")
+        self.assertEquals(unicode(c), expected)
+
+        c.codigo = 17907468
+        expected = ("03072015" "01" "1790746119001" "2"
+                    "023013" "000000174" "17907468" "1" "0")
+        self.assertEquals(unicode(c), expected)
+
+    def test_clave_acceso_invalid_fecha_emision(self):
+        c = ClaveAcceso()
+        with self.assertRaises(ValueError):
+            c.fecha_emision = (2015, 17, 3)
+
+
+class IceTests(TestCase, TestHelpersMixin):
+    def setUp(self):
+        self.ice = add_instance(Ice,
+                                descripcion="Gaseosas",
+                                grupo=3,
+                                codigo="asdf",
+                                porcentaje=50)
+
+    def test_nonzero(self):
+        self.assertTrue(self.ice)
+        self.assertFalse(
+            add_instance(Ice,
+                         descripcion="No ICE", grupo=0,
+                         codigo="", porcentaje=0))

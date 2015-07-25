@@ -5,6 +5,9 @@ from django.utils.deconstruct import deconstructible
 
 @deconstructible
 class OneOf(object):
+    """
+    Ensures the value is one of the valid ones
+    """
     def __init__(self, *values):
         self.values = values
 
@@ -15,6 +18,9 @@ class OneOf(object):
 
 
 def IsCedula(val):
+    """
+    Ensures the value is a valid cedula
+    """
     codigo_provincia = int(val[0:2])
     if codigo_provincia < 1 or codigo_provincia > 24:
         raise ValidationError("Codigo de provincia invalido")
@@ -43,6 +49,9 @@ def IsCedula(val):
 
 
 def IsRuc(val):
+    """
+    Ensures the value is a valid RUC
+    """
     if not len(val) == 13:
         raise ValidationError("RUC no tiene 13 digitos")
     if not val.endswith("001"):
