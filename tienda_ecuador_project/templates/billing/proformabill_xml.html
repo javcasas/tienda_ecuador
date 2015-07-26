@@ -35,7 +35,7 @@
             {% endfor %}
         </totalConImpuestos>
         <propina>{{ info_factura.propina|stringformat:'.2f' }}</propina>
-        <importeTotal>{{ info_factura.importe_total|stringformat:'.2f' }}</importeTotal>
+        <importeTotal>{{ proformabill.total_con_impuestos|stringformat:'.2f' }}</importeTotal>
         <moneda>{{ info_factura.moneda }}</moneda>
     </infoFactura>
     <detalles>

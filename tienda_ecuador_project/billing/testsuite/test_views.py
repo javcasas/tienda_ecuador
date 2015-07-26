@@ -786,7 +786,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             "./infoFactura/totalDescuento": "0.00",
             #"./infoFactura/totalConImpuestos": "FIXME",
             "./infoFactura/propina": "0.00",
-            #"./infoFactura/importeTotal": "FIXME",
+            "./infoFactura/importeTotal": "{:.2f}".format(self.proformabill.total_con_impuestos),
             "./infoFactura/moneda": "DOLAR",
             "./detalles/detalle[0]/descripcion": self.proformabill.items[0].description,
             "./detalles/detalle[0]/cantidad": "{:.6f}".format(self.proformabill.items[0].qty),
