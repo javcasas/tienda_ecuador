@@ -12,6 +12,8 @@ from helpers import (add_Company,
                      add_instance,
                      make_post)
 
+from xml.etree import ElementTree as ET
+
 
 def get_date():
     now = datetime.now(tz=pytz.timezone('America/Guayaquil'))
@@ -757,11 +759,56 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                     args=(self.company.id, self.proformabill.id)))
 
         # Generar XML
+        #   Generar claves para el XML
+        #   Guardar XML en proforma
         r = self.c.get(
                 reverse('proformabill_emit_gen_xml',
                         args=(self.company.id, self.proformabill.id)))
-        #   Generar claves para el XML
-        #   Guardar XML en proforma
+        tree = ET.fromstring(r.content)
+        to_test = {
+            "./infoTributaria/ambiente": 'pruebas',
+            "./infoTributaria/tipoEmision": '1',
+            "./infoTributaria/razonSocial": self.company.razon_social,
+            "./infoTributaria/nombreComercial": self.company.nombre_comercial,
+            "./infoTributaria/ruc": self.company.ruc,
+            #"./infoTributaria/claveAcceso": "FIXME",
+            "./infoTributaria/codDoc": "01",
+            #"./infoTributaria/estab": "FIXME",
+            #"./infoTributaria/ptoEmi": "FIXME",
+            #"./infoTributaria/secuencial": "FIXME",
+            "./infoTributaria/dirMatriz": self.company.direccion_matriz,
+            "./infoFactura/fechaEmision": self.proformabill.date.strftime("%d/%m/%Y"),
+            "./infoFactura/obligadoContabilidad": "SI" if self.company.obligado_contabilidad else "NO",
+            "./infoFactura/tipoIdentificacionComprador": "05",
+            "./infoFactura/razonSocialComprador": self.proformabill.issued_to.razon_social,
+            "./infoFactura/identificacionComprador": self.proformabill.issued_to.identificacion,
+            "./infoFactura/totalSinImpuestos": "{:.2f}".format(self.proformabill.total_sin_impuestos),
+            "./infoFactura/totalDescuento": "0.00",
+            #"./infoFactura/totalConImpuestos": "FIXME",
+            "./infoFactura/propina": "0.00",
+            #"./infoFactura/importeTotal": "FIXME",
+            "./infoFactura/moneda": "DOLAR",
+            "./detalles/detalle[0]/descripcion": self.proformabill.items[0].description,
+            "./detalles/detalle[0]/cantidad": "{:.6f}".format(self.proformabill.items[0].qty),
+            "./detalles/detalle[0]/precioUnitario": "{:.6f}".format(self.proformabill.items[0].unit_price),
+            "./detalles/detalle[0]/descuento": "0.00",
+            #"./detalles/detalle[0]/precioTotalSinImpuestos": "FIXME",
+            "./detalles/detalle[0]/impuestos/impuesto[1]/codigo": "2",
+            "./detalles/detalle[0]/impuestos/impuesto[1]/codigoPorcentaje": self.proformabill.items[0].iva.codigo,
+            "./detalles/detalle[0]/impuestos/impuesto[1]/tarifa": "{:.2f}".format(self.proformabill.items[0].iva.porcentaje),
+            "./detalles/detalle[0]/impuestos/impuesto[1]/baseImponible": "{:.2f}".format(self.proformabill.items[0].base_imponible_iva),
+            "./detalles/detalle[0]/impuestos/impuesto[1]/valor": "{:.2f}".format(self.proformabill.items[0].valor_iva),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/codigo": "3",
+            "./detalles/detalle[0]/impuestos/impuesto[0]/codigoPorcentaje": self.proformabill.items[0].ice.codigo,
+            "./detalles/detalle[0]/impuestos/impuesto[0]/tarifa": "{:.2f}".format(self.proformabill.items[0].ice.porcentaje),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/baseImponible": "{:.2f}".format(self.proformabill.items[0].base_imponible_ice),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/valor": "{:.2f}".format(self.proformabill.items[0].valor_ice),
+        }
+        for k, v in to_test.iteritems():
+            node = tree.find(k)
+            self.assertNotEquals(node, None, "Node {} does not exist".format(k))
+            self.assertEquals(node.text, v, "Bad value for node {}: '{}' (should be '{}')".format(k, node.text, v))
+
         # Enviar XML al SRI
         #   Esperar respuesta
         #   Si respuesta positiva

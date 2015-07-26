@@ -257,6 +257,10 @@ class ProformaBill(BaseBill):
         return res
 
     @property
+    def total_sin_impuestos(self):
+        return sum([i.total_sin_impuestos for i in self.items])
+
+    @property
     def total(self):
         iva = self.iva
         total_impuestos = sum([iva[k] for k in iva])

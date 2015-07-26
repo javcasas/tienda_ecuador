@@ -420,6 +420,10 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                           {12: (1 + 2 + 3 + 4) * (10 + 5),
                            0: 0})
 
+    def test_total_sin_impuestos(self):
+        self.assertEquals(self.proforma.total_sin_impuestos,
+                          (1 + 2 + 3 + 4) * 10)
+
     def test_iva(self):
         unidades = 1 + 2 + 3 + 4
         precio_unitario = 10
