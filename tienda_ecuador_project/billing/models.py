@@ -265,6 +265,34 @@ class ProformaBill(BaseBill):
         return sum([(i.total_sin_impuestos + i.valor_ice + i.valor_iva) for i in self.items])
 
     @property
+    def impuestos(self):
+        # key: (codigo, codigo_porcentaje, porcentaje)
+        # value: (base_imponible, valor)
+        from operator import add
+        accum = {}
+        for item in self.items:
+            k = ("2", item.iva.codigo, item.iva.porcentaje)
+            accum[k] = map(sum,
+                           zip(accum.get(k, (0, 0)),
+                               (item.base_imponible_iva, item.valor_iva)))
+            if item.ice:
+                k = ("3", item.ice.codigo, item.ice.porcentaje)
+                accum[k] = map(sum,
+                               zip(accum.get(k, (0, 0)),
+                                   (item.base_imponible_ice, item.valor_ice)))
+
+        return [
+            {
+                "codigo": codigo,
+                "codigo_porcentaje": codigo_porcentaje,
+                "porcentaje": porcentaje,
+                "base_imponible": base_imponible,
+                "valor": valor,
+            } for ((codigo, codigo_porcentaje, porcentaje), (base_imponible, valor))
+              in sorted(accum.iteritems())
+        ]
+
+    @property
     def total(self):
         iva = self.iva
         total_impuestos = sum([iva[k] for k in iva])

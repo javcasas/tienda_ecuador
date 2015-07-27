@@ -428,6 +428,26 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         self.assertEquals(self.proforma.total_con_impuestos,
                           (1 + 2 + 3 + 4) * (10 + 5) * Decimal("1.12"))
 
+    def test_impuestos(self):
+        from decimal import Decimal
+        expected = [
+            {
+                "codigo": "2",
+                "codigo_porcentaje": base_data['Iva']['codigo'],
+                "porcentaje": base_data['Iva']['porcentaje'],
+                "base_imponible": Decimal((1 + 2 + 3 + 4) * (10 + 5)),
+                'valor': (1 + 2 + 3 + 4) * (10 + 5) * Decimal("0.12"),
+            },
+            {
+                "codigo": "3",
+                "codigo_porcentaje": base_data['Ice']['codigo'],
+                "porcentaje": base_data['Ice']['porcentaje'],
+                "base_imponible": Decimal((1 + 2 + 3 + 4) * 10),
+                'valor': (1 + 2 + 3 + 4) * 10 * Decimal("0.5"),
+            },
+        ]
+        self.assertEquals(self.proforma.impuestos, expected)
+
     def test_iva(self):
         unidades = 1 + 2 + 3 + 4
         precio_unitario = 10

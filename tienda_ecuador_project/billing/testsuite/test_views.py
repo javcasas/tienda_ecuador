@@ -478,7 +478,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                 reverse(
                     'proformabillitem_delete',
                     args=(self.company.id, self.proformabill.id, item.id)))
-        subtotal = sum([i.total_sin_impuestos + i.valor_ice for i in self.items])
+        subtotal = sum([i.total_sin_impuestos + i.valor_ice
+                        for i in self.items])
         self.assertContains(r, subtotal)          # Total sin IVA
         self.assertContains(r, subtotal * 12 / 100)   # IVA
         self.assertContains(r, subtotal * 112 / 100)   # Total con IVA
@@ -751,8 +752,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         """
         # Confirmar la emision de la factura
         r = self.c.get(
-                reverse('proformabill_emit_to_bill',
-                        args=(self.company.id, self.proformabill.id)))
+            reverse('proformabill_emit_to_bill',
+                    args=(self.company.id, self.proformabill.id)))
         self.assertContains(  # same link as POST
             r,
             reverse('proformabill_emit_to_bill',
@@ -762,47 +763,95 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         #   Generar claves para el XML
         #   Guardar XML en proforma
         r = self.c.get(
-                reverse('proformabill_emit_gen_xml',
-                        args=(self.company.id, self.proformabill.id)))
+            reverse('proformabill_emit_gen_xml',
+                    args=(self.company.id, self.proformabill.id)))
         tree = ET.fromstring(r.content)
+
+        d2 = lambda v: "{:.2f}".format(v)
+        d6 = lambda v: "{:.6f}".format(v)
+
         to_test = {
+            # Info Tributaria
             "./infoTributaria/ambiente": 'pruebas',
             "./infoTributaria/tipoEmision": '1',
             "./infoTributaria/razonSocial": self.company.razon_social,
             "./infoTributaria/nombreComercial": self.company.nombre_comercial,
             "./infoTributaria/ruc": self.company.ruc,
-            #"./infoTributaria/claveAcceso": "FIXME",
+            # "./infoTributaria/claveAcceso": "FIXME",
             "./infoTributaria/codDoc": "01",
-            #"./infoTributaria/estab": "FIXME",
-            #"./infoTributaria/ptoEmi": "FIXME",
-            #"./infoTributaria/secuencial": "FIXME",
+            # "./infoTributaria/estab": "FIXME",
+            # "./infoTributaria/ptoEmi": "FIXME",
+            # "./infoTributaria/secuencial": "FIXME",
             "./infoTributaria/dirMatriz": self.company.direccion_matriz,
-            "./infoFactura/fechaEmision": self.proformabill.date.strftime("%d/%m/%Y"),
-            "./infoFactura/obligadoContabilidad": "SI" if self.company.obligado_contabilidad else "NO",
-            "./infoFactura/tipoIdentificacionComprador": "05",
-            "./infoFactura/razonSocialComprador": self.proformabill.issued_to.razon_social,
-            "./infoFactura/identificacionComprador": self.proformabill.issued_to.identificacion,
-            "./infoFactura/totalSinImpuestos": "{:.2f}".format(self.proformabill.total_sin_impuestos),
-            "./infoFactura/totalDescuento": "0.00",
-            #"./infoFactura/totalConImpuestos": "FIXME",
+
+            # Info Factura
+            "./infoFactura/fechaEmision":
+                self.proformabill.date.strftime("%d/%m/%Y"),
+            "./infoFactura/obligadoContabilidad":
+                "SI" if self.company.obligado_contabilidad else "NO",
+            "./infoFactura/tipoIdentificacionComprador":
+                "05",
+            "./infoFactura/razonSocialComprador":
+                self.proformabill.issued_to.razon_social,
+            "./infoFactura/identificacionComprador":
+                self.proformabill.issued_to.identificacion,
+            "./infoFactura/totalSinImpuestos":
+                d2(self.proformabill.total_sin_impuestos),
+            "./infoFactura/totalDescuento":
+                "0.00",
+
+            # Impuestos
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/codigo": "2",
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/codigoPorcentaje":
+                self.proformabill.items[0].iva.codigo,
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/descuentoAdicional": '0.00',
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/baseImponible":
+                d2(self.proformabill.items[0].base_imponible_iva),
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/valor":
+                d2(self.proformabill.items[0].valor_iva),
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/codigo": "3",
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/codigoPorcentaje":
+                self.proformabill.items[0].ice.codigo,
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/descuentoAdicional": '0.00',
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/baseImponible":
+                d2(self.proformabill.items[0].base_imponible_ice),
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/valor":
+                d2(self.proformabill.items[0].valor_ice),
+
             "./infoFactura/propina": "0.00",
-            "./infoFactura/importeTotal": "{:.2f}".format(self.proformabill.total_con_impuestos),
+            "./infoFactura/importeTotal": d2(self.proformabill.total_con_impuestos),
             "./infoFactura/moneda": "DOLAR",
-            "./detalles/detalle[0]/descripcion": self.proformabill.items[0].description,
-            "./detalles/detalle[0]/cantidad": "{:.6f}".format(self.proformabill.items[0].qty),
-            "./detalles/detalle[0]/precioUnitario": "{:.6f}".format(self.proformabill.items[0].unit_price),
+
+            # Detalle
+            "./detalles/detalle[0]/descripcion":
+                self.proformabill.items[0].description,
+            "./detalles/detalle[0]/cantidad":
+                d6(self.proformabill.items[0].qty),
+            "./detalles/detalle[0]/precioUnitario":
+                d6(self.proformabill.items[0].unit_price),
             "./detalles/detalle[0]/descuento": "0.00",
-            #"./detalles/detalle[0]/precioTotalSinImpuestos": "FIXME",
+            "./detalles/detalle[0]/precioTotalSinImpuesto":
+                d2(self.proformabill.items[0].total_sin_impuestos),
+            # IVA item 1
             "./detalles/detalle[0]/impuestos/impuesto[1]/codigo": "2",
-            "./detalles/detalle[0]/impuestos/impuesto[1]/codigoPorcentaje": self.proformabill.items[0].iva.codigo,
-            "./detalles/detalle[0]/impuestos/impuesto[1]/tarifa": "{:.2f}".format(self.proformabill.items[0].iva.porcentaje),
-            "./detalles/detalle[0]/impuestos/impuesto[1]/baseImponible": "{:.2f}".format(self.proformabill.items[0].base_imponible_iva),
-            "./detalles/detalle[0]/impuestos/impuesto[1]/valor": "{:.2f}".format(self.proformabill.items[0].valor_iva),
+            "./detalles/detalle[0]/impuestos/impuesto[1]/codigoPorcentaje":
+                self.proformabill.items[0].iva.codigo,
+            "./detalles/detalle[0]/impuestos/impuesto[1]/tarifa":
+                d2(self.proformabill.items[0].iva.porcentaje),
+            "./detalles/detalle[0]/impuestos/impuesto[1]/baseImponible":
+                d2(self.proformabill.items[0].base_imponible_iva),
+            "./detalles/detalle[0]/impuestos/impuesto[1]/valor":
+                d2(self.proformabill.items[0].valor_iva),
+            # ICE item 1
             "./detalles/detalle[0]/impuestos/impuesto[0]/codigo": "3",
-            "./detalles/detalle[0]/impuestos/impuesto[0]/codigoPorcentaje": self.proformabill.items[0].ice.codigo,
-            "./detalles/detalle[0]/impuestos/impuesto[0]/tarifa": "{:.2f}".format(self.proformabill.items[0].ice.porcentaje),
-            "./detalles/detalle[0]/impuestos/impuesto[0]/baseImponible": "{:.2f}".format(self.proformabill.items[0].base_imponible_ice),
-            "./detalles/detalle[0]/impuestos/impuesto[0]/valor": "{:.2f}".format(self.proformabill.items[0].valor_ice),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/codigoPorcentaje":
+                self.proformabill.items[0].ice.codigo,
+            "./detalles/detalle[0]/impuestos/impuesto[0]/tarifa":
+                d2(self.proformabill.items[0].ice.porcentaje),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/baseImponible":
+                d2(self.proformabill.items[0].base_imponible_ice),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/valor":
+                d2(self.proformabill.items[0].valor_ice),
         }
         for k, v in to_test.iteritems():
             node = tree.find(k)

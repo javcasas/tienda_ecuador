@@ -24,11 +24,11 @@
         <totalSinImpuestos>{{ proformabill.total_sin_impuestos|stringformat:'.2f' }}</totalSinImpuestos>
         <totalDescuento>{{ info_factura.total_descuento|stringformat:'.2f' }}</totalDescuento>
         <totalConImpuestos>
-            {% for impuesto in info_factura.impuestos %}
+            {% for impuesto in proformabill.impuestos %}
             <totalImpuesto>
                 <codigo>{{ impuesto.codigo }}</codigo>
-                <codigoPorcentaje>{{ impuesto.porcentaje }}</codigoPorcentaje>
-				<descuentoAdicional>{{ impuesto.descuento_adicional }}</descuentoAdicional>
+                <codigoPorcentaje>{{ impuesto.codigo_porcentaje }}</codigoPorcentaje>
+                <descuentoAdicional>0.00</descuentoAdicional>
                 <baseImponible>{{ impuesto.base_imponible|stringformat:'.2f' }}</baseImponible>
                 <valor>{{ impuesto.valor|stringformat:'.2f' }}</valor>
             </totalImpuesto>
@@ -48,7 +48,7 @@
             <cantidad>{{ item.qty|stringformat:'.6f' }}</cantidad>
             <precioUnitario>{{ item.unit_price|stringformat:'.6f' }}</precioUnitario>
             <descuento>{{ 0|stringformat:'.2f' }}</descuento>
-            <precioTotalSinImpuesto>{{ item.subtotal|stringformat:'.2f' }}</precioTotalSinImpuesto>
+            <precioTotalSinImpuesto>{{ item.total_sin_impuestos|stringformat:'.2f' }}</precioTotalSinImpuesto>
             <impuestos>
                 <impuesto>
                     <codigo>2</codigo>
@@ -70,7 +70,7 @@
         </detalle>
         {% endfor %}
     </detalles>
-	<retenciones>
+    <retenciones>
         {% for retencion in retenciones %}
         <retencion>
             <codigo>{{ retencion.codigo }}</codigo>
