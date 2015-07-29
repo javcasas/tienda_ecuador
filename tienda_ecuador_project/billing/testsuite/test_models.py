@@ -1,6 +1,11 @@
-from django.test import TestCase
 from datetime import datetime
+from itertools import count
+from decimal import Decimal
 import pytz
+
+from django.test import TestCase
+from django.core.exceptions import ValidationError
+
 from billing.models import (ReadOnlyObject,
                             Company,
                             CompanyUser,
@@ -15,6 +20,7 @@ from billing.models import (ReadOnlyObject,
                             ItemInBill,
                             BillCustomer,
                             ClaveAcceso)
+
 from helpers import (add_instance,
                      add_User,
                      add_Company,
@@ -24,9 +30,6 @@ from helpers import (add_instance,
                      add_BillCustomer,
                      TestHelpersMixin)
 
-from itertools import count
-from decimal import Decimal
-from django.core.exceptions import ValidationError
 
 current_ruc = count(10)
 get_ruc = lambda: str(current_ruc.next())
@@ -302,30 +305,41 @@ class ItemTests(TestCase, TestHelpersMixin):
     Tests for the Item classes
     """
     def test_total_sin_impuestos(self):
-        ob = ItemInBill(sku="1234", name="asdf", description="asdf",
-                        unit_cost=10, unit_price=14, qty=6)
-        self.assertEquals(ob.total_sin_impuestos, 6 * 14)
+        """
+        Prueba el atributo "total_sin_impuestos"
+        que devuelve el total correspondiente a un item
+        sin contar los impuestos
+        """
+        item = ItemInBill(sku="1234", name="asdf", description="asdf",
+                          unit_cost=10, unit_price=14, qty=6)
+        self.assertEquals(item.total_sin_impuestos, 6 * 14)
 
     def test_bill_item_iva_ice(self):
+        """
+        Prueba los calculos de iva e ice
+        """
         iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
         ice = Ice(descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
-        ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
-                              unit_cost=10, unit_price=10, qty=6,
-                              iva=iva, ice=ice)
+        proforma = ProformaBillItem(sku="1234", name="asdf", description="asdf",
+                                    unit_cost=10, unit_price=10, qty=6,
+                                    iva=iva, ice=ice)
 
         # ICE
-        self.assertEquals(ob.base_imponible_ice, ob.total_sin_impuestos)
-        valor_ice = ob.base_imponible_ice * Decimal("0.5")
-        self.assertEquals(ob.valor_ice, valor_ice)
+        self.assertEquals(proforma.base_imponible_ice, proforma.total_sin_impuestos)
+        valor_ice = proforma.base_imponible_ice * Decimal("0.5")
+        self.assertEquals(proforma.valor_ice, valor_ice)
 
         # IVA
-        self.assertEquals(ob.base_imponible_iva,
-                          ob.total_sin_impuestos + valor_ice)
-        valor_iva = ob.base_imponible_iva * Decimal("0.12")
-        self.assertEquals(ob.valor_iva, valor_iva)
-        self.assertEquals(ob.total_impuestos, valor_iva + valor_ice)
+        self.assertEquals(proforma.base_imponible_iva,
+                          proforma.total_sin_impuestos + valor_ice)
+        valor_iva = proforma.base_imponible_iva * Decimal("0.12")
+        self.assertEquals(proforma.valor_iva, valor_iva)
+        self.assertEquals(proforma.total_impuestos, valor_iva + valor_ice)
 
     def test_unicode(self):
+        """
+        Prueba str() y unicode()
+        """
         iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
         ice = Ice(descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
         ob = Item(sku="1234", name="asdf", description="asdf",
@@ -341,46 +355,75 @@ class IdentificacionTests(TestCase):
             contribuyente_especial="")
 
     def valid(self, tipo_identificacion, identificacion):
-        c = Customer(razon_social="Paco Pil",
-                     tipo_identificacion=tipo_identificacion,
-                     identificacion=identificacion,
-                     company=self.company)
-        c.save()
+        """
+        tests a valid identification
+        """
+        Customer(razon_social="Paco Pil",
+                 tipo_identificacion=tipo_identificacion,
+                 identificacion=identificacion,
+                 company=self.company).save()
 
     def invalid(self, tipo_identificacion, identificacion):
+        """
+        tests an invalid identification
+        """
         with self.assertRaises(ValidationError):
             self.valid(tipo_identificacion=tipo_identificacion,
                        identificacion=identificacion)
 
     def test_valid_ruc(self):
+        """
+        A valid RUC
+        """
         self.valid(tipo_identificacion="ruc",
                    identificacion="1756760292001")
 
     def test_invalid_ruc_does_not_end_001(self):
+        """
+        An invalid RUC that does not end in 001
+        """
         self.invalid(tipo_identificacion="ruc",
                      identificacion="1756760292002")
 
     def test_invalid_ruc_not_13_digits(self):
+        """
+        An invalid RUC that is not 13 digits
+        """
         self.invalid(tipo_identificacion="ruc",
                      identificacion="175676029201")
 
     def test_invalid_ruc_bad_verifier(self):
+        """
+        An invalid RUC that has a bad verifier digit
+        """
         self.invalid(tipo_identificacion="ruc",
                      identificacion="1756760293001")
 
     def test_unknown_identification_type(self):
+        """
+        An unknown identificacion
+        """
         self.invalid(tipo_identificacion="patata",
                      identificacion="173831152001")
 
     def test_valid_cedula(self):
+        """
+        A valid cedula
+        """
         self.valid(tipo_identificacion="cedula",
                    identificacion="1756760292")
 
     def test_invalid_cedula_invalid_length(self):
+        """
+        An invalid cedula with the wrong number of digits
+        """
         self.invalid(tipo_identificacion="cedula",
                      identificacion="1738331533")
 
     def test_invalid_cedula_bad_verifier(self):
+        """
+        An invalid cedula with a bad verifier digit
+        """
         self.invalid(tipo_identificacion="cedula",
                      identificacion="173831153")
 
@@ -429,7 +472,6 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                           (1 + 2 + 3 + 4) * (10 + 5) * Decimal("1.12"))
 
     def test_impuestos(self):
-        from decimal import Decimal
         expected = [
             {
                 "codigo": "2",
