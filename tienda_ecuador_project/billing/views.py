@@ -14,7 +14,8 @@ from models import (Item,
                     Company,
                     Customer,
                     ProformaBill,
-                    ProformaBillItem)
+                    ProformaBillItem,
+                    ClaveAcceso)
 from forms import (ItemForm,
                    ProformaBillForm,
                    ProformaBillAddItemForm,
@@ -362,6 +363,10 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
         context['company'] = self.company
 
         info_tributaria = {}
+        info_tributaria['ambiente'] = {
+            'pruebas': '1',
+            'produccion': '2'
+        }[self.company.ambiente_sri]
         info_tributaria['tipo_emision'] = '1'   # 1: normal
                                                 # 2: indisponibilidad sistema
         info_tributaria['cod_doc'] = '01'   # 01: factura
@@ -369,6 +374,23 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
                                             # 05: nota de debito
                                             # 06: guia de remision
                                             # 07: comprobante de retencion
+        info_tributaria['secuencial'] = {
+            'pruebas': self.company.siguiente_comprobante_pruebas,
+            'produccion': self.company.siguiente_comprobante_produccion,
+        }[self.company.ambiente_sri]
+
+        proformabill = context['proformabill']
+        c = ClaveAcceso()
+        c.fecha_emision = proformabill.date.year, proformabill.date.month, proformabill.date.day
+        c.tipo_comprobante = "factura"
+        c.ruc = str(self.company.ruc)
+        c.ambiente = self.company.ambiente_sri
+        c.serie = 23013
+        c.numero = 1
+        c.codigo = 17907461
+        c.tipo_emision = "normal"
+        info_tributaria['clave_acceso'] = unicode(c)
+
         context['info_tributaria'] = info_tributaria
 
         info_factura = {}

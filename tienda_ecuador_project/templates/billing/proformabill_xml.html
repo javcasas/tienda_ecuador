@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <factura id="comprobante" version="1.1.0">
     <infoTributaria>
-        <ambiente>{{ company.ambiente_sri }}</ambiente>
+        <ambiente>{{ info_tributaria.ambiente }}</ambiente>
         <tipoEmision>{{ info_tributaria.tipo_emision }}</tipoEmision>
         <razonSocial>{{ company.razon_social }}</razonSocial>
         {% if company.nombre_comercial %}<nombreComercial>{{ company.nombre_comercial }}</nombreComercial>{% endif %}
@@ -10,7 +10,7 @@
         <codDoc>{{ info_tributaria.cod_doc }}</codDoc>
         <estab>{{ info_tributaria.establecimiento }}</estab>
         <ptoEmi>{{ info_tributaria.punto_emision }}</ptoEmi>
-        <secuencial>{{ info_tributaria.secuencial }}</secuencial>
+        <secuencial>{{ info_tributaria.secuencial|stringformat:'09d' }}</secuencial>
         <dirMatriz>{{ company.direccion_matriz }}</dirMatriz>
     </infoTributaria>
     <infoFactura>

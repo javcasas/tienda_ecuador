@@ -205,7 +205,7 @@ class ClaveAcceso(object):
     def __unicode__(self):
         codigo = (u"{2:02d}{1:02d}{0:04d}".format(*self.fecha_emision) +
                   self.tipo_comprobante.code +
-                  "{:013d}".format(self.ruc) +
+                  self.ruc +
                   self.ambiente.code +
                   "{:06d}".format(self.serie) +
                   "{:09d}".format(self.numero) +

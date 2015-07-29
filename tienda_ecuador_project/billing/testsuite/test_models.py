@@ -506,7 +506,7 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         c = ClaveAcceso()
         c.fecha_emision = (2015, 7, 3)
         c.tipo_comprobante = "factura"
-        c.ruc = 1790746119001
+        c.ruc = "1790746119001"
         c.ambiente = "produccion"
         c.serie = 23013
         c.numero = 174

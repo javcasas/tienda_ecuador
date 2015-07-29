@@ -772,16 +772,25 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
         to_test = {
             # Info Tributaria
-            "./infoTributaria/ambiente": 'pruebas',
-            "./infoTributaria/tipoEmision": '1',
+            "./infoTributaria/ambiente": '1',  # pruebas
+            "./infoTributaria/tipoEmision": '1', # online
             "./infoTributaria/razonSocial": self.company.razon_social,
             "./infoTributaria/nombreComercial": self.company.nombre_comercial,
             "./infoTributaria/ruc": self.company.ruc,
-            # "./infoTributaria/claveAcceso": "FIXME",
-            "./infoTributaria/codDoc": "01",
+            "./infoTributaria/claveAcceso": "".join([
+                self.proformabill.date.strftime("%d%m%Y"),
+                '01',
+                self.company.ruc,
+                '1',
+                "023013",
+                "{:09}".format(self.company.siguiente_comprobante_pruebas),
+                "17907461",
+                "1",
+                "8"]),
+            "./infoTributaria/codDoc": "01",  # factura
             # "./infoTributaria/estab": "FIXME",
             # "./infoTributaria/ptoEmi": "FIXME",
-            # "./infoTributaria/secuencial": "FIXME",
+            "./infoTributaria/secuencial": "{:09}".format(self.company.siguiente_comprobante_pruebas),
             "./infoTributaria/dirMatriz": self.company.direccion_matriz,
 
             # Info Factura
@@ -856,7 +865,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         for k, v in to_test.iteritems():
             node = tree.find(k)
             self.assertNotEquals(node, None, "Node {} does not exist".format(k))
-            self.assertEquals(node.text, v, "Bad value for node {}: '{}' (should be '{}')".format(k, node.text, v))
+            self.assertEquals(node.text, v, "Bad value for node {}: \n'{}' (should be \n'{}')".format(k, node.text, v))
 
         # Enviar XML al SRI
         #   Esperar respuesta
