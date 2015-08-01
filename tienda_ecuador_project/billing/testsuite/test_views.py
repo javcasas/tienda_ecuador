@@ -704,7 +704,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         }
         self.proformabill_data = {
             'number': '001-002-1234567890',
-            'date': get_date(),
+            'date': datetime(2015, 7, 29, 14, 11, 0, tzinfo=pytz.timezone('America/Guayaquil')),
         }
         self.customer = add_instance(models.Customer,
                                      **dict(self.customer_data,
@@ -750,6 +750,10 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         """
         Prueba la emision de facturas
         """
+        import base64
+        self.company.cert = base64.b64encode(open("billing/testsuite/keystore.PKCS12").read())
+        self.company.key = "123456"
+        self.company.save()
         # Confirmar la emision de la factura
         r = self.c.get(
             reverse('proformabill_emit_to_bill',
@@ -761,6 +765,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
         # Generar XML
         #   Generar claves para el XML
+        #   Firmar XML
         #   Guardar XML en proforma
         r = self.c.get(
             reverse('proformabill_emit_gen_xml',

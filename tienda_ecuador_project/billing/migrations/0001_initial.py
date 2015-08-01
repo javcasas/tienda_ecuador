@@ -84,6 +84,8 @@ class Migration(migrations.Migration):
                 ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, validators=[billing.validators.OneOf(b'pruebas', b'produccion')])),
                 ('siguiente_comprobante_pruebas', models.IntegerField(default=1)),
                 ('siguiente_comprobante_produccion', models.IntegerField(default=1)),
+                ('cert', models.CharField(max_length=20000, blank=True)),
+                ('key', models.CharField(max_length=100, blank=True)),
             ],
             options={
             },

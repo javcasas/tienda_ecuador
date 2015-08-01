@@ -64,6 +64,8 @@ class Company(models.Model):
         default="pruebas")
     siguiente_comprobante_pruebas = models.IntegerField(default=1)
     siguiente_comprobante_produccion = models.IntegerField(default=1)
+    cert = models.CharField(max_length=20000, blank=True)
+    key = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
         return self.razon_social

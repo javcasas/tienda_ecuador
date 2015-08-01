@@ -1,3 +1,5 @@
+import pytz
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
@@ -383,6 +385,7 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
         proformabill = context['proformabill']
 
         c = ClaveAcceso()
+        proformabill.date = proformabill.date.astimezone(pytz.timezone('America/Guayaquil'))
         c.fecha_emision = (proformabill.date.year,
                            proformabill.date.month,
                            proformabill.date.day)
@@ -410,8 +413,43 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
         info_factura['propina'] = 0             # No hay propinas
         info_factura['moneda'] = 'DOLAR'
         context['info_factura'] = info_factura
-
         return context
+
+    def render_to_response(self, context, **kwargs):
+        res = super(self.__class__, self).render_to_response(context, **kwargs)
+        res.render()
+        xml_content = res.content
+        # sign xml_content
+        import tempfile
+        import os
+        d = tempfile.mkdtemp()
+        try:
+            cert_path = os.path.join(d, "cert")
+            xml_path = os.path.join(d, "xml")
+            with open(cert_path, "w") as f:
+                import base64
+                f.write(base64.b64decode(self.company.cert))
+            with open(xml_path, "w") as f:
+                f.write(xml_content)
+            os.system('cd {signer_dir} && '
+                      'java -classpath "core/*:deps/*:./sources/MITyCLibXADES/test/:." XAdESBESSignature'
+                      ' {xml_path} {keystore_path} {keystore_pw} {res_dir} xml_signed'.format(
+                            signer_dir='billing/signer/',
+                            xml_path=xml_path,
+                            keystore_path=cert_path,
+                            keystore_pw=self.company.key,
+                            res_dir=d))
+            xml_content = open(os.path.join(d, "xml_signed")).read()
+        except IOError:
+            # Failure to sign
+            raise
+        finally:
+            for f in os.listdir(d):
+                os.unlink(os.path.join(d, f))
+            os.rmdir(d)
+
+        res.content = xml_content
+        return res
 
 
 class ProformaBillSelected(object):

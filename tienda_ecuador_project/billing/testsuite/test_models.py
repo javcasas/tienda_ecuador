@@ -48,6 +48,8 @@ base_data = {
         "ambiente_sri": "pruebas",
         'siguiente_comprobante_pruebas': 1,
         'siguiente_comprobante_produccion': 1,
+        'cert': '',
+        'key': '',
     },
     "BaseCustomer": {
         "razon_social": "Pepe",
