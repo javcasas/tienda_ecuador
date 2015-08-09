@@ -1,4 +1,5 @@
 from datetime import datetime
+import base64
 import pytz
 
 from django.test import TestCase, Client
@@ -704,7 +705,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         }
         self.proformabill_data = {
             'number': '001-002-1234567890',
-            'date': datetime(2015, 7, 29, 14, 11, 0, tzinfo=pytz.timezone('America/Guayaquil')),
+            'date': datetime(2015, 7, 29, 14, 11, 0,
+                             tzinfo=pytz.timezone('America/Guayaquil')),
         }
         self.customer = add_instance(models.Customer,
                                      **dict(self.customer_data,
@@ -750,8 +752,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         """
         Prueba la emision de facturas
         """
-        import base64
-        self.company.cert = base64.b64encode(open("billing/testsuite/keystore.PKCS12").read())
+        self.company.cert = base64.b64encode(
+            open("billing/testsuite/keystore.PKCS12").read())
         self.company.key = "123456"
         self.company.save()
         # Confirmar la emision de la factura
@@ -774,11 +776,12 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
         d2 = lambda v: "{:.2f}".format(v)
         d6 = lambda v: "{:.6f}".format(v)
+        z9 = lambda v: "{:09}".format(v)
 
         to_test = {
             # Info Tributaria
             "./infoTributaria/ambiente": '1',  # pruebas
-            "./infoTributaria/tipoEmision": '1', # online
+            "./infoTributaria/tipoEmision": '1',  # online
             "./infoTributaria/razonSocial": self.company.razon_social,
             "./infoTributaria/nombreComercial": self.company.nombre_comercial,
             "./infoTributaria/ruc": self.company.ruc,
@@ -795,7 +798,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             "./infoTributaria/codDoc": "01",  # factura
             # "./infoTributaria/estab": "FIXME",
             # "./infoTributaria/ptoEmi": "FIXME",
-            "./infoTributaria/secuencial": "{:09}".format(self.company.siguiente_comprobante_pruebas),
+            "./infoTributaria/secuencial":
+                z9(self.company.siguiente_comprobante_pruebas),
             "./infoTributaria/dirMatriz": self.company.direccion_matriz,
 
             # Info Factura
@@ -833,7 +837,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 d2(self.proformabill.items[0].valor_ice),
 
             "./infoFactura/propina": "0.00",
-            "./infoFactura/importeTotal": d2(self.proformabill.total_con_impuestos),
+            "./infoFactura/importeTotal":
+                d2(self.proformabill.total_con_impuestos),
             "./infoFactura/moneda": "DOLAR",
 
             # Detalle
@@ -869,8 +874,12 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         }
         for k, v in to_test.iteritems():
             node = tree.find(k)
-            self.assertNotEquals(node, None, "Node {} does not exist".format(k))
-            self.assertEquals(node.text, v, "Bad value for node {}: \n'{}' (should be \n'{}')".format(k, node.text, v))
+            self.assertNotEquals(node, None,
+                                 "Node {} does not exist".format(k))
+            self.assertEquals(
+                node.text, v,
+                "Bad value for node {}: \n'{}' (should be \n'{}')".format(
+                    k, node.text, v))
 
         # Enviar XML al SRI
         #   Esperar respuesta

@@ -1,20 +1,27 @@
 import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tienda_ecuador_project.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                      'tienda_ecuador_project.settings')
 
 import django
 django.setup()
 
-from billing.models import Company, Item, ProformaBill, ProformaBillItem, CompanyUser, Customer, Iva, Ice
-from django.contrib.auth.models import User
 from functools import partial
 from datetime import datetime
 import pytz
+from billing.models import (Company, Item, ProformaBill, ProformaBillItem,
+                            CompanyUser, Customer, Iva, Ice)
+from django.contrib.auth.models import User
+
 
 def get_date():
     return datetime.now(tz=pytz.timezone('America/Guayaquil'))
 
+
 def print_instance(klass, kwargs):
-    print "Adding", klass.__name__, ", ".join(["{}={}".format(k, v) for (k, v) in kwargs.iteritems()])
+    params = ", ".join(["{}={}".format(k, v)
+                        for (k, v) in kwargs.iteritems()])
+    print "Adding", klass.__name__, params
+
 
 def add_instance(klass, **kwargs):
     print_instance(klass, kwargs)
@@ -37,6 +44,7 @@ def add_User(**kwargs):
     u.save()
     return u
 
+
 def my_populate():
     u3, created = User.objects.get_or_create(username='javier')
     u3.set_password("tiaputa")
@@ -50,7 +58,8 @@ def my_populate():
                      razon_social='Tienda2', direccion_matriz='C del nabo')
 
     iva = add_instance(Iva, descripcion="12%", codigo="2", porcentaje=12.0)
-    ice = add_instance(Ice, descripcion="Bebidas gaseosas", grupo=1, codigo="3051", porcentaje=50.0)
+    ice = add_instance(Ice, descripcion="Bebidas gaseosas", grupo=1,
+                       codigo="3051", porcentaje=50.0)
     i11 = add_Item(sku='t1-123', name='Item T11',
                    iva=iva, ice=ice, unit_cost=10, unit_price=17,
                    description='Item 1 en Tienda 1', company=t1)
@@ -84,27 +93,31 @@ def my_populate():
     b1 = add_ProformaBill(issued_to=c1, number='145',
                           date=get_date(),
                           company=t1)
-    b1i1 = add_ProformaBillItem(sku='t1-123', name='Item T11',
-                                iva=iva, ice=ice, unit_cost=5.0, unit_price=6.0,
-                                description='Item 1 en Tienda 1', proforma_bill=b1, qty=4)
-    b1i1 = add_ProformaBillItem(sku='t1-146', name='Item T12',
-                                iva=iva, ice=ice, unit_cost=9.0, unit_price=12.0,
-                                description='Item 2 en Tienda 1', proforma_bill=b1, qty=8)
+    b1i1 = add_ProformaBillItem(
+        sku='t1-123', name='Item T11', iva=iva, ice=ice, unit_cost=5.0,
+        unit_price=6.0, description='Item 1 en Tienda 1', proforma_bill=b1,
+        qty=4)
+    b1i1 = add_ProformaBillItem(
+        sku='t1-146', name='Item T12', iva=iva, ice=ice, unit_cost=9.0,
+        unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b1,
+        qty=8)
 
     b2 = add_ProformaBill(issued_to=c1, number='1453',
                           date=get_date(),
                           company=t1)
-    b2i1 = add_ProformaBillItem(sku='t1-123', name='Item T11',
-                                iva=iva, ice=ice, unit_cost=4.0, unit_price=8.0,
-                                description='Item 1 en Tienda 1', proforma_bill=b2, qty=4)
-    b2i1 = add_ProformaBillItem(sku='t1-146', name='Item T12',
-                                iva=iva, ice=ice, unit_cost=9.0, unit_price=12.0,
-                                description='Item 2 en Tienda 1', proforma_bill=b2, qty=8)
+    b2i1 = add_ProformaBillItem(
+        sku='t1-123', name='Item T11', iva=iva, ice=ice, unit_cost=4.0,
+        unit_price=8.0, description='Item 1 en Tienda 1', proforma_bill=b2,
+        qty=4)
+    b2i1 = add_ProformaBillItem(
+        sku='t1-146', name='Item T12', iva=iva, ice=ice, unit_cost=9.0,
+        unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b2,
+        qty=8)
     b3 = add_ProformaBill(issued_to=c3, number='1453',
                           date=get_date(),
                           company=t2)
     return locals()
-    
+
 
 if __name__ == '__main__':
     print "Starting Billing population script..."

@@ -1,3 +1,6 @@
+import tempfile
+import os
+import base64
 import pytz
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -385,7 +388,8 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
         proformabill = context['proformabill']
 
         c = ClaveAcceso()
-        proformabill.date = proformabill.date.astimezone(pytz.timezone('America/Guayaquil'))
+        proformabill.date = proformabill.date.astimezone(
+            pytz.timezone('America/Guayaquil'))
         c.fecha_emision = (proformabill.date.year,
                            proformabill.date.month,
                            proformabill.date.day)
@@ -420,25 +424,26 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
         res.render()
         xml_content = res.content
         # sign xml_content
-        import tempfile
-        import os
         d = tempfile.mkdtemp()
         try:
             cert_path = os.path.join(d, "cert")
             xml_path = os.path.join(d, "xml")
             with open(cert_path, "w") as f:
-                import base64
                 f.write(base64.b64decode(self.company.cert))
             with open(xml_path, "w") as f:
                 f.write(xml_content)
-            os.system('cd {signer_dir} && '
-                      'java -classpath "core/*:deps/*:./sources/MITyCLibXADES/test/:." XAdESBESSignature'
-                      ' {xml_path} {keystore_path} {keystore_pw} {res_dir} xml_signed'.format(
-                            signer_dir='billing/signer/',
-                            xml_path=xml_path,
-                            keystore_path=cert_path,
-                            keystore_pw=self.company.key,
-                            res_dir=d))
+            os.system(
+                'cd {signer_dir} && '
+                'java'
+                ' -classpath "core/*:deps/*:./sources/MITyCLibXADES/test/:."'
+                ' XAdESBESSignature'
+                ' {xml_path} {keystore_path} {keystore_pw}'
+                ' {res_dir} xml_signed'.format(
+                    signer_dir='billing/signer/',
+                    xml_path=xml_path,
+                    keystore_path=cert_path,
+                    keystore_pw=self.company.key,
+                    res_dir=d))
             xml_content = open(os.path.join(d, "xml_signed")).read()
         except IOError:
             # Failure to sign
