@@ -1,6 +1,20 @@
 Sistema de contabilidad de pequeña tienda con factura electrónica
 Manejado por internet
     * Bajo Django
+Informes:
+    * Lista de facturas diaria, semanal y mensual
+        * Todos los clientes (requisito SRI)
+        * Por cliente
+        * Mostrar (si es posible) facturas anuladas
+    * Items vendidos diario, semanal y mensual
+    * Beneficios totales y por item
+    * Total ventas por cliente (anexo ventas mensual), exportar como XML de SRI
+    * Informe de cliente:
+        * Facturas y proformas del cliente
+        * Listado de productos vendidos
+Generador y escaner de codigos de barras para items
+Facturas recurrentes (mensuales)
+
 Tienda online acoplada
     * Usa la misma lista de productos
     * Usa uno de los precios de los productos
