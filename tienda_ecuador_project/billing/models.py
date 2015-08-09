@@ -83,6 +83,25 @@ class CompanyUser(models.Model):
         return self.user.username
 
 
+class Establecimiento(models.Model):
+    """
+    Represents a shop owned by the company
+    """
+    company = models.ForeignKey(Company)
+    descripcion = models.CharField(max_length=50)
+    codigo = models.CharField(max_length=3)
+    direccion = models.CharField(max_length=100)
+
+
+class PuntoEmision(models.Model):
+    """
+    Represents a cashing machine where bills are being emitted
+    """
+    establecimiento = models.ForeignKey(Establecimiento)
+    descripcion = models.CharField(max_length=50)
+    codigo = models.CharField(max_length=3)
+
+
 ##################################
 # Customers
 ##################################
@@ -264,13 +283,13 @@ class ProformaBill(BaseBill):
 
     @property
     def total_con_impuestos(self):
-        return sum([(i.total_sin_impuestos + i.valor_ice + i.valor_iva) for i in self.items])
+        return sum([(i.total_sin_impuestos + i.valor_ice + i.valor_iva)
+                    for i in self.items])
 
     @property
     def impuestos(self):
         # key: (codigo, codigo_porcentaje, porcentaje)
         # value: (base_imponible, valor)
-        from operator import add
         accum = {}
         for item in self.items:
             k = ("2", item.iva.codigo, item.iva.porcentaje)
@@ -290,8 +309,9 @@ class ProformaBill(BaseBill):
                 "porcentaje": porcentaje,
                 "base_imponible": base_imponible,
                 "valor": valor,
-            } for ((codigo, codigo_porcentaje, porcentaje), (base_imponible, valor))
-              in sorted(accum.iteritems())
+            } for ((codigo, codigo_porcentaje, porcentaje),
+                   (base_imponible, valor))
+            in sorted(accum.iteritems())
         ]
 
     @property

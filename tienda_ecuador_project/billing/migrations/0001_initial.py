@@ -113,6 +113,19 @@ class Migration(migrations.Migration):
             bases=('billing.basecustomer',),
         ),
         migrations.CreateModel(
+            name='Establecimiento',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('descripcion', models.CharField(max_length=50)),
+                ('codigo', models.CharField(max_length=3)),
+                ('direccion', models.CharField(max_length=100)),
+                ('company', models.ForeignKey(to='billing.Company')),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
             name='Ice',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -208,6 +221,18 @@ class Migration(migrations.Migration):
             options={
             },
             bases=('billing.iteminbill',),
+        ),
+        migrations.CreateModel(
+            name='PuntoEmision',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('descripcion', models.CharField(max_length=50)),
+                ('codigo', models.CharField(max_length=3)),
+                ('establecimiento', models.ForeignKey(to='billing.Establecimiento')),
+            ],
+            options={
+            },
+            bases=(models.Model,),
         ),
         migrations.AddField(
             model_name='item',

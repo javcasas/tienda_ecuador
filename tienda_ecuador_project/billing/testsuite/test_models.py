@@ -19,6 +19,8 @@ from billing.models import (ReadOnlyObject,
                             BillItemIva, BillItemIce,
                             ItemInBill,
                             BillCustomer,
+                            Establecimiento,
+                            PuntoEmision,
                             ClaveAcceso)
 
 from helpers import (add_instance,
@@ -50,6 +52,15 @@ base_data = {
         'siguiente_comprobante_produccion': 1,
         'cert': '',
         'key': '',
+    },
+    "Establecimiento": {
+        "codigo": "001",
+        "direccion": "C del pepino",
+        "descripcion": "",
+    },
+    "PuntoEmision": {
+        "codigo": "001",
+        "descripcion": "",
     },
     "BaseCustomer": {
         "razon_social": "Pepe",
@@ -90,6 +101,14 @@ class FieldsTests(TestCase, TestHelpersMixin):
     def setUp(self):
         self.company = add_Company(**base_data['Company'])
 
+        self.establecimiento = add_instance(Establecimiento,
+                                            company=self.company,
+                                            **base_data['Establecimiento'])
+
+        self.punto_emision = add_instance(PuntoEmision,
+                                          establecimiento=self.establecimiento,
+                                          **base_data['PuntoEmision'])
+
         self.user = add_User(username="Paco", password='')
 
         self.customer = add_Customer(
@@ -120,6 +139,10 @@ class FieldsTests(TestCase, TestHelpersMixin):
             (CompanyUser, {},
                 {'company': self.company,
                  'user': self.user}),
+            (Establecimiento, base_data['Establecimiento'],
+                {'company': self.company}),
+            (PuntoEmision, base_data['PuntoEmision'],
+                {'establecimiento': self.establecimiento}),
             (Customer, base_data['BaseCustomer'],
                 {"company": self.company}),
             (BillCustomer, base_data['BaseCustomer'],
@@ -322,12 +345,13 @@ class ItemTests(TestCase, TestHelpersMixin):
         """
         iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
         ice = Ice(descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
-        proforma = ProformaBillItem(sku="1234", name="asdf", description="asdf",
-                                    unit_cost=10, unit_price=10, qty=6,
-                                    iva=iva, ice=ice)
+        proforma = ProformaBillItem(
+            sku="1234", name="asdf", description="asdf", unit_cost=10,
+            unit_price=10, qty=6, iva=iva, ice=ice)
 
         # ICE
-        self.assertEquals(proforma.base_imponible_ice, proforma.total_sin_impuestos)
+        self.assertEquals(proforma.base_imponible_ice,
+                          proforma.total_sin_impuestos)
         valor_ice = proforma.base_imponible_ice * Decimal("0.5")
         self.assertEquals(proforma.valor_ice, valor_ice)
 
