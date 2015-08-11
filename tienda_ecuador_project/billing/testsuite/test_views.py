@@ -158,8 +158,6 @@ class GenericObjectCRUDTest(object):
         self.ob.save()
         self.index_keys = self.data.keys()
         self.reverse_index_args = (self.company.id,)
-#                                   self.establecimiento.id,
-#                                   self.punto_emision.id)
         self.reverse_object_args = self.reverse_index_args + (self.ob.id,)
         self.urls_to_test = [
             reverse(self.index_view, args=self.reverse_index_args),
@@ -217,7 +215,8 @@ class GenericObjectCRUDTest(object):
                 make_post(self.data),
             )
         self.assertRedirects(
-            r, reverse(self.detail_view, args=self.reverse_index_args + (new.id,)))
+            r, reverse(self.detail_view,
+                       args=self.reverse_index_args + (new.id,)))
         self.assertObjectMatchesData(new, self.data)
 
     def test_create_crossed_company_denied(self):
@@ -235,7 +234,8 @@ class GenericObjectCRUDTest(object):
                 make_post(dict(self.data, company_id=self.company2.id)),
             )
         self.assertRedirects(
-            r, reverse(self.detail_view, args=self.reverse_index_args + (new.id,)))
+            r, reverse(self.detail_view,
+                       args=self.reverse_index_args + (new.id,)))
         self.assertObjectMatchesData(new, self.data)
         self.assertEquals(new.company, self.company)
 
@@ -351,8 +351,22 @@ class GenericObjectCRUDTest(object):
             razon_social='Pace Pil',
             direccion_matriz="C del pepeno")
         add_CompanyUser(user=user, company=company3)
+        establecimiento3 = add_instance(
+            models.Establecimiento,
+            company=company3,
+            descripcion="Matriz",
+            direccion='C del pepano',
+            codigo="001",
+        )
+
+        add_instance(models.PuntoEmision,
+                     establecimiento=establecimiento3,
+                     descripcion="Caja de la matriz",
+                     codigo="001")
+
         ob3 = self.cls(**dict(self.data, company=company3))
         ob3.save()
+
         c = Client()
         r = c.post("/accounts/login/",
                    {'username': username, 'password': password})

@@ -20,6 +20,8 @@ from models import (Item,
                     Customer,
                     ProformaBill,
                     ProformaBillItem,
+                    Establecimiento,
+                    PuntoEmision,
                     ClaveAcceso)
 from forms import (ItemForm,
                    ProformaBillForm,
@@ -55,20 +57,40 @@ class CompanySelected(object):
         view = super(CompanySelected, cls).as_view(**initkwargs)
         return login_required(view)
 
-    def check_has_access_to_company(self):
-        company_id = self.kwargs['company_id']
-        get_object_or_404(
-            CompanyUser, user__id=self.request.user.id, company_id=company_id)
-
     @property
     def company(self):
         company_id = self.kwargs['company_id']
-        self.check_has_access_to_company()
+        # Ensure there is a corresponding CompanyUser, or 404
+        get_object_or_404(
+            CompanyUser, user_id=self.request.user.id, company_id=company_id)
         return get_object_or_404(Company, id=company_id)
+
+    @property
+    def establecimiento(self):
+        if self.kwargs.get("establecimiento_id"):
+            return get_object_or_404(
+                Establecimiento,
+                id=self.kwargs['establecimiento_id'],
+                company=self.company)
+        if self.punto_emision:
+            return get_object_or_404(
+                Establecimiento,
+                establecimiento=self.punto_emision.establecimiento,
+                company=self.company)
+
+    @property
+    def punto_emision(self):
+        if self.kwargs.get("punto_emision_id"):
+            return get_object_or_404(
+                PuntoEmision,
+                id=self.kwargs.get("punto_emision_id"),
+                establecimiento=self.establecimiento)
 
     def get_context_data(self, **kwargs):
         context = super(CompanySelected, self).get_context_data(**kwargs)
         context['company'] = self.company
+        context['establecimiento'] = self.establecimiento
+        context['punto_emision'] = self.punto_emision
         return context
 
 
