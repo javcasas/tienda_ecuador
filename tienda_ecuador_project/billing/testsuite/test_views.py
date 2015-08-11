@@ -81,6 +81,21 @@ class LoggedInWithCompanyTests(LoggedInTests):
             razon_social='Paca Pil',
             direccion_matriz="C del pepano")
 
+        self.establecimiento = add_instance(
+            models.Establecimiento,
+            company=self.company,
+            descripcion="Matriz",
+            direccion='C del pepino',
+            codigo="001",
+        )
+
+        self.punto_emision = add_instance(
+            models.PuntoEmision,
+            establecimiento=self.establecimiento,
+            descripcion="Caja de la matriz",
+            codigo="001"
+        )
+
 
 class IndexViewTests(LoggedInWithCompanyTests):
     def test_view_index_multiple_companies(self):
@@ -142,13 +157,24 @@ class GenericObjectCRUDTest(object):
         self.ob = self.cls(**dict(self.data, company=self.company))
         self.ob.save()
         self.index_keys = self.data.keys()
+        self.reverse_index_args = (self.company.id,)
+#                                   self.establecimiento.id,
+#                                   self.punto_emision.id)
+        self.reverse_object_args = self.reverse_index_args + (self.ob.id,)
+        self.urls_to_test = [
+            reverse(self.index_view, args=self.reverse_index_args),
+            reverse(self.detail_view, args=self.reverse_object_args),
+            reverse(self.create_view, args=self.reverse_index_args),
+            reverse(self.update_view, args=self.reverse_object_args),
+            reverse(self.delete_view, args=self.reverse_object_args),
+        ]
 
     def test_index(self):
         """
         Tests the index
         """
         r = self.c.get(
-            reverse(self.index_view, args=(self.company.id,)))
+            reverse(self.index_view, args=self.reverse_index_args))
         self.assertContainsObject(r, self.ob, self.index_keys)
 
     def test_view(self):
@@ -158,7 +184,7 @@ class GenericObjectCRUDTest(object):
             The view shows the attributes of the object
         """
         r = self.c.get(
-            reverse(self.detail_view, args=(self.company.id, self.ob.id)))
+            reverse(self.detail_view, args=self.reverse_object_args))
         self.assertContainsObject(r, self.ob, self.data.keys())
 
     def test_create_show_form(self):
@@ -169,14 +195,14 @@ class GenericObjectCRUDTest(object):
             * There is a back link
         """
         r = self.c.get(
-            reverse(self.create_view, args=(self.company.id,)),
+            reverse(self.create_view, args=self.reverse_index_args),
         )
         # Fields
         for key in self.data.keys():
             self.assertContains(r, key)
         # Back link
         self.assertContains(
-            r, reverse(self.index_view, args=(self.company.id,)))
+            r, reverse(self.index_view, args=self.reverse_index_args))
 
     def test_create(self):
         """
@@ -187,11 +213,11 @@ class GenericObjectCRUDTest(object):
         """
         with self.new_item(self.cls) as new:
             r = self.c.post(
-                reverse(self.create_view, args=(self.company.id,)),
+                reverse(self.create_view, args=self.reverse_index_args),
                 make_post(self.data),
             )
         self.assertRedirects(
-            r, reverse(self.detail_view, args=(self.company.id, new.id)))
+            r, reverse(self.detail_view, args=self.reverse_index_args + (new.id,)))
         self.assertObjectMatchesData(new, self.data)
 
     def test_create_crossed_company_denied(self):
@@ -205,11 +231,11 @@ class GenericObjectCRUDTest(object):
         """
         with self.new_item(self.cls) as new:
             r = self.c.post(
-                reverse(self.create_view, args=(self.company.id,)),
+                reverse(self.create_view, args=self.reverse_index_args),
                 make_post(dict(self.data, company_id=self.company2.id)),
             )
         self.assertRedirects(
-            r, reverse(self.detail_view, args=(self.company.id, new.id)))
+            r, reverse(self.detail_view, args=self.reverse_index_args + (new.id,)))
         self.assertObjectMatchesData(new, self.data)
         self.assertEquals(new.company, self.company)
 
@@ -222,7 +248,7 @@ class GenericObjectCRUDTest(object):
             * There is a back link
         """
         r = self.c.get(
-            reverse(self.update_view, args=(self.company.id, self.ob.id)),
+            reverse(self.update_view, args=self.reverse_object_args),
         )
         # Fields
         for key in self.data.keys():
@@ -231,7 +257,7 @@ class GenericObjectCRUDTest(object):
         self.assertContainsObject(r, self.ob, self.data.keys())
         # Back link
         self.assertContains(
-            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
+            r, reverse(self.detail_view, args=self.reverse_object_args))
 
     def test_update(self):
         """
@@ -241,11 +267,11 @@ class GenericObjectCRUDTest(object):
             The client is redirected to the object view
         """
         r = self.c.post(
-            reverse(self.update_view, args=(self.company.id, self.ob.id)),
+            reverse(self.update_view, args=self.reverse_object_args),
             make_post(self.newdata),
         )
         self.assertRedirects(
-            r, reverse(self.detail_view, args=(self.company.id, self.ob.id)))
+            r, reverse(self.detail_view, args=self.reverse_object_args))
         self.assertObjectMatchesData(
             self.cls.objects.get(id=self.ob.id), self.newdata)
 
@@ -257,11 +283,11 @@ class GenericObjectCRUDTest(object):
             The client is redirected to the object index
         """
         r = self.c.post(
-            reverse(self.delete_view, args=(self.company.id, self.ob.id)),
+            reverse(self.delete_view, args=self.reverse_object_args),
             {}
         )
         self.assertRedirects(
-            r, reverse(self.index_view, args=(self.company.id,)))
+            r, reverse(self.index_view, args=self.reverse_index_args))
         with self.assertRaises(self.cls.DoesNotExist):
             self.cls.objects.get(id=self.ob.id)
 
@@ -269,21 +295,14 @@ class GenericObjectCRUDTest(object):
         """
         Tests that no url can be reached without authentication
         """
-        urls = [
-            reverse(self.index_view, args=(self.company.id,)),
-            reverse(self.detail_view, args=(self.company.id, self.ob.id)),
-            reverse(self.create_view, args=(self.company.id,)),
-            reverse(self.update_view, args=(self.company.id, self.ob.id)),
-            reverse(self.delete_view, args=(self.company.id, self.ob.id)),
-        ]
         # Test get
-        for url in urls:
+        for url in self.urls_to_test:
             r = Client().get(url)
             msg = "Url {} can be GETted without authentication".format(url)
             self.assertEqual(r.status_code, 302, msg)
             self.assertRedirects(r, "/accounts/login/?next={}".format(url))
         # Test post
-        for url in urls:
+        for url in self.urls_to_test:
             r = Client().post(url, self.newdata)
             msg = "Url {} can be POSTed without authentication".format(url)
             self.assertEqual(r.status_code, 302, msg)
@@ -307,20 +326,13 @@ class GenericObjectCRUDTest(object):
                    {'username': username, 'password': password})
         self.assertEquals(r['location'],
                           "http://testserver" + reverse('index'))
-        urls = [
-            reverse(self.index_view, args=(self.company.id,)),
-            reverse(self.detail_view, args=(self.company.id, self.ob.id)),
-            reverse(self.create_view, args=(self.company.id,)),
-            reverse(self.update_view, args=(self.company.id, self.ob.id)),
-            reverse(self.delete_view, args=(self.company.id, self.ob.id)),
-        ]
         # Test get
-        for url in urls:
+        for url in self.urls_to_test:
             r = c.get(url)
             msg = "Url {} can be GETted from a different user".format(url)
             self.assertEqual(r.status_code, 404, msg)
         # Test post
-        for url in urls:
+        for url in self.urls_to_test:
             r = c.post(url, {})
             msg = "Url {} can be POSTed from a different user".format(url)
             # Some posts fail with method not allowed
