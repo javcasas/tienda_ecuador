@@ -122,6 +122,7 @@ class ItemView(RequiresCompany):
     Base class for an Item View
     """
     model = Item
+    context_object_name = 'item'
 
     def get_queryset(self):
         return self.model.objects.filter(company=self.company)
@@ -132,8 +133,7 @@ class ItemListView(ItemView, ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ItemListView, self).get_context_data(**kwargs)
-        context['item_list'] = Item.objects.filter(company=self.company)
-        context['company'] = self.company
+        context['item_list'] = Item.objects.filter(company=self.company)  # TODO: apply this to all, and test
         return context
 
 
@@ -143,25 +143,12 @@ class ItemListViewJson(JSONResponseMixin, ItemListView):
 
 
 class ItemDetailView(ItemView, DetailView):
-    context_object_name = 'item'
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
+    pass
 
 
 class ItemCreateView(ItemView, CreateView):
-    fields = ['sku', 'name', 'description',
-              'vat_percent', 'unit_cost', 'unit_price']
-    context_object_name = 'item'
     template_name_suffix = '_create_form'
     form_class = ItemForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
     def form_valid(self, form):
         form.instance.company = self.company
@@ -174,28 +161,13 @@ class ItemCreateView(ItemView, CreateView):
 
 
 class ItemUpdateView(ItemView, UpdateView):
-    fields = ['sku', 'name', 'description',
-              'vat_percent', 'unit_cost', 'unit_price']
-    context_object_name = 'item'
     form_class = ItemForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
 
 class ItemDeleteView(ItemView, DeleteView):
-    context_object_name = 'item'
-
     @property
     def success_url(self):
         return reverse("item_index", args=(self.company.id, ))
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
 
 ####################################################################
@@ -247,6 +219,7 @@ class CustomerDeleteView(CustomerView, DeleteView):
 #############################################################
 class ProformaBillView(RequiresCompany):
     model = ProformaBill
+    context_object_name = 'proformabill'
 
     def get_queryset(self):
         return self.model.objects.filter(company=self.company)
@@ -255,31 +228,15 @@ class ProformaBillView(RequiresCompany):
 class ProformaBillListView(ProformaBillView, ListView):
     context_object_name = "proformabill_list"
 
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
-
 
 class ProformaBillDetailView(ProformaBillView, DetailView):
-    context_object_name = 'proformabill'
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
+    pass
 
 
 class ProformaBillCreateView(ProformaBillView, CreateView):
     fields = ['number', 'issued_to', 'date']
-    context_object_name = 'proformabill'
     template_name_suffix = '_create_form'
     form_class = ProformaBillForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
@@ -294,13 +251,7 @@ class ProformaBillCreateView(ProformaBillView, CreateView):
 
 class ProformaBillUpdateView(ProformaBillView, UpdateView):
     fields = ['number', ]
-    context_object_name = 'proformabill'
     form_class = ProformaBillForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
@@ -310,39 +261,24 @@ class ProformaBillUpdateView(ProformaBillView, UpdateView):
 
 
 class ProformaBillDeleteView(ProformaBillView, DeleteView):
-    context_object_name = 'proformabill'
-
     @property
     def success_url(self):
         view_name = "{}_index".format(self.context_object_name)
         return reverse(view_name, args=(self.company.id, ))
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
 
 #############################################################
 #   Proforma Bill Emit Bill views
 #############################################################
 class ProformaBillEmitView(ProformaBillView, DetailView):
-    context_object_name = 'proformabill'
     template_name_suffix = '_emit'
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
 
 class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
-    context_object_name = 'proformabill'
     template_name_suffix = '_xml'
 
     def get_context_data(self, **kwargs):
         context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
 
         info_tributaria = {}
         info_tributaria['ambiente'] = {
@@ -434,7 +370,13 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
         return res
 
 
+#############################################################
+#   Proforma Bill Item views
+#############################################################
 class ProformaBillSelected(object):
+    model = ProformaBillItem
+    context_object_name = 'item'
+
     @property
     def proformabill(self):
         proformabill_id = self.kwargs['proformabill_id']
@@ -443,24 +385,18 @@ class ProformaBillSelected(object):
                                  company=self.company,
                                  id=proformabill_id)
 
+    def get_context_data(self, **kwargs):
+        context = super(ProformaBillSelected, self).get_context_data(**kwargs)
+        context['proformabill'] = self.proformabill
+        return context
 
-#############################################################
-#   Proforma Bill Item views
-#############################################################
+
 class ProformaBillAddItemView(RequiresCompany,
                               ProformaBillSelected,
                               CreateView):
-    model = ProformaBillItem
     fields = ['sku', 'name', 'description', ]
-    context_object_name = 'item'
     template_name_suffix = '_create_form'
     form_class = ProformaBillAddItemForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        context['proformabill'] = self.proformabill
-        return context
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
@@ -499,16 +435,8 @@ class ProformaBillAddItemView(RequiresCompany,
 class ProformaBillItemUpdateView(RequiresCompany,
                                  ProformaBillSelected,
                                  UpdateView):
-    model = ProformaBillItem
-    context_object_name = 'item'
     template_name_suffix = '_form'
     form_class = ProformaBillItemForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        context['proformabill'] = self.proformabill
-        return context
 
     def form_valid(self, form):
         form.instance.proforma_bill = self.proformabill
@@ -522,15 +450,8 @@ class ProformaBillItemUpdateView(RequiresCompany,
 class ProformaBillItemDeleteView(RequiresCompany,
                                  ProformaBillSelected,
                                  DeleteView):
-    context_object_name = 'item'
-    model = ProformaBillItem
 
     @property
     def success_url(self):
         return reverse("proformabill_detail",
                        args=(self.company.id, self.proformabill.id))
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
