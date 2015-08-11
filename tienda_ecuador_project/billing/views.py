@@ -45,14 +45,14 @@ def index(request):
     return render(request, "billing/index.html", param_dict)
 
 
-class RequiresCompany(object):
+class CompanySelected(object):
     """
     Class that offers the self.company attribute.
     The attribute checks that the company exists, or 404
     """
     @classmethod
     def as_view(cls, **initkwargs):
-        view = super(RequiresCompany, cls).as_view(**initkwargs)
+        view = super(CompanySelected, cls).as_view(**initkwargs)
         return login_required(view)
 
     def check_has_access_to_company(self):
@@ -67,7 +67,7 @@ class RequiresCompany(object):
         return get_object_or_404(Company, id=company_id)
 
     def get_context_data(self, **kwargs):
-        context = super(RequiresCompany, self).get_context_data(**kwargs)
+        context = super(CompanySelected, self).get_context_data(**kwargs)
         context['company'] = self.company
         return context
 
@@ -98,7 +98,10 @@ class JSONResponseMixin(object):
                    list(self.model.objects.filter(company=self.company)))
 
 
-class CompanyIndex(RequiresCompany, View):
+class CompanyIndex(CompanySelected, View):
+    """
+    View that shows a general index for a given company
+    """
     def get(self, request, company_id):
         """
         Shows an index for a company
@@ -109,7 +112,7 @@ class CompanyIndex(RequiresCompany, View):
             'bill_list': Bill.objects.filter(company=company),
             'proformabill_list': ProformaBill.objects.filter(company=company),
             'customer_list': Customer.objects.filter(company=company),
-            'company': self.company,
+            'company': company,
         }
         return render(request, "billing/company_index.html", context)
 
@@ -117,7 +120,7 @@ class CompanyIndex(RequiresCompany, View):
 ####################################################################
 #   Item views
 ####################################################################
-class ItemView(RequiresCompany):
+class ItemView(CompanySelected):
     """
     Base class for an Item View
     """
@@ -129,12 +132,10 @@ class ItemView(RequiresCompany):
 
 
 class ItemListView(ItemView, ListView):
+    """
+    View that shows the items for the current company
+    """
     context_object_name = "item_list"
-
-    def get_context_data(self, **kwargs):
-        context = super(ItemListView, self).get_context_data(**kwargs)
-        context['item_list'] = Item.objects.filter(company=self.company)  # TODO: apply this to all, and test
-        return context
 
 
 class ItemListViewJson(JSONResponseMixin, ItemListView):
@@ -143,21 +144,21 @@ class ItemListViewJson(JSONResponseMixin, ItemListView):
 
 
 class ItemDetailView(ItemView, DetailView):
-    pass
+    """
+    Detail view for Items
+    """
 
 
 class ItemCreateView(ItemView, CreateView):
+    """
+    Create view for items
+    """
     template_name_suffix = '_create_form'
     form_class = ItemForm
 
     def form_valid(self, form):
         form.instance.company = self.company
         return super(ItemCreateView, self).form_valid(form)
-
-    def form_invalid(self, form):
-        response = super(self.__class__, self).form_invalid(form)
-        self.company
-        return response
 
 
 class ItemUpdateView(ItemView, UpdateView):
@@ -173,7 +174,7 @@ class ItemDeleteView(ItemView, DeleteView):
 ####################################################################
 #   Customer views
 ####################################################################
-class CustomerView(RequiresCompany):
+class CustomerView(CompanySelected):
     """
     Base class for an Item View
     """
@@ -189,7 +190,9 @@ class CustomerListView(CustomerView, ListView):
 
 
 class CustomerDetailView(CustomerView, DetailView):
-    pass
+    """
+    Detail view for customers
+    """
 
 
 class CustomerCreateView(CustomerView, CreateView):
@@ -217,7 +220,7 @@ class CustomerDeleteView(CustomerView, DeleteView):
 #############################################################
 #   Proforma Bill views
 #############################################################
-class ProformaBillView(RequiresCompany):
+class ProformaBillView(CompanySelected):
     model = ProformaBill
     context_object_name = 'proformabill'
 
@@ -230,7 +233,9 @@ class ProformaBillListView(ProformaBillView, ListView):
 
 
 class ProformaBillDetailView(ProformaBillView, DetailView):
-    pass
+    """
+    Detail view for proforma bills
+    """
 
 
 class ProformaBillCreateView(ProformaBillView, CreateView):
@@ -373,26 +378,38 @@ class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
 #############################################################
 #   Proforma Bill Item views
 #############################################################
-class ProformaBillSelected(object):
+class ProformaBillSelected(CompanySelected):
     model = ProformaBillItem
     context_object_name = 'item'
 
     @property
     def proformabill(self):
+        """
+        Attribute that returns the current proformabill
+        """
         proformabill_id = self.kwargs['proformabill_id']
-        self.check_has_access_to_company()
         return get_object_or_404(ProformaBill,
                                  company=self.company,
                                  id=proformabill_id)
 
     def get_context_data(self, **kwargs):
+        """
+        Adds proformabill to the context data
+        """
         context = super(ProformaBillSelected, self).get_context_data(**kwargs)
         context['proformabill'] = self.proformabill
         return context
 
+    @property
+    def success_url(self):
+        """
+        Generic success URL, goes back to the proforma bill detail view
+        """
+        return reverse("proformabill_detail",
+                       args=(self.company.id, self.proformabill.id))
 
-class ProformaBillAddItemView(RequiresCompany,
-                              ProformaBillSelected,
+
+class ProformaBillAddItemView(ProformaBillSelected,
                               CreateView):
     fields = ['sku', 'name', 'description', ]
     template_name_suffix = '_create_form'
@@ -427,13 +444,8 @@ class ProformaBillAddItemView(RequiresCompany,
             form.instance.qty = current_item[0].qty + form.instance.qty
         return super(self.__class__, self).form_valid(form)
 
-    def get_success_url(self):
-        return reverse("proformabill_detail",
-                       args=(self.company.id, self.proformabill.id))
 
-
-class ProformaBillItemUpdateView(RequiresCompany,
-                                 ProformaBillSelected,
+class ProformaBillItemUpdateView(ProformaBillSelected,
                                  UpdateView):
     template_name_suffix = '_form'
     form_class = ProformaBillItemForm
@@ -442,16 +454,9 @@ class ProformaBillItemUpdateView(RequiresCompany,
         form.instance.proforma_bill = self.proformabill
         return super(self.__class__, self).form_valid(form)
 
-    def get_success_url(self):
-        return reverse("proformabill_detail",
-                       args=(self.company.id, self.proformabill.id))
 
-
-class ProformaBillItemDeleteView(RequiresCompany,
-                                 ProformaBillSelected,
+class ProformaBillItemDeleteView(ProformaBillSelected,
                                  DeleteView):
-
-    @property
-    def success_url(self):
-        return reverse("proformabill_detail",
-                       args=(self.company.id, self.proformabill.id))
+    """
+    Delete view for proformabill items
+    """

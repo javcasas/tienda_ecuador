@@ -338,6 +338,48 @@ class GenericObjectCRUDTest(object):
             # Some posts fail with method not allowed
             self.assertIn(r.status_code, [404, 405], msg)
 
+    def test_index_view_shows_only_available_objects(self):
+        """
+        Test that no URL can be reached
+        unless a corresponding CompanyUser exists
+        """
+        username, password = 'wisa', 'wis_pwa'
+        user = add_User(username=username, password=password)
+        company3 = add_Company(
+            nombre_comercial='Tienda 3',
+            ruc='1234567842',
+            razon_social='Pace Pil',
+            direccion_matriz="C del pepeno")
+        add_CompanyUser(user=user, company=company3)
+        ob3 = self.cls(**dict(self.data, company=company3))
+        ob3.save()
+        c = Client()
+        r = c.post("/accounts/login/",
+                   {'username': username, 'password': password})
+        self.assertEquals(r['location'],
+                          "http://testserver" + reverse('index'))
+
+        reverse_index_args = (company3.id,)
+        r = c.get(
+            reverse(self.index_view, args=reverse_index_args))
+        context_object_name = r.context_data['view'].context_object_name
+        self.assertEquals(
+            # queryset objects are never equal
+            # so I have to convert them to lists to compare properly
+            list(r.context_data[context_object_name]),
+            list(self.cls.objects.filter(company=company3)),
+            "The list view shows objects from a different company")
+
+        r = self.c.get(
+            reverse(self.index_view, args=self.reverse_index_args))
+        context_object_name = r.context_data['view'].context_object_name
+        self.assertEquals(
+            # queryset objects are never equal
+            # so I have to convert them to lists to compare properly
+            list(r.context_data[context_object_name]),
+            list(self.cls.objects.filter(company=self.company)),
+            "The list view shows objects from a different company")
+
 
 class LoggedInWithCustomerTests(LoggedInWithCompanyTests,
                                 GenericObjectCRUDTest):

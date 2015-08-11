@@ -38,7 +38,7 @@ class ItemForm(forms.ModelForm):
 
 class ProformaBillForm(forms.ModelForm):
     issued_to = forms.ModelChoiceField(
-        queryset=None,
+        queryset=Customer.objects,
         help_text="Please select the customer.")
     number = forms.CharField(
         max_length=50,
