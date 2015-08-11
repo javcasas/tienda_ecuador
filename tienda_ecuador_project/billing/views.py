@@ -66,6 +66,11 @@ class RequiresCompany(object):
         self.check_has_access_to_company()
         return get_object_or_404(Company, id=company_id)
 
+    def get_context_data(self, **kwargs):
+        context = super(RequiresCompany, self).get_context_data(**kwargs)
+        context['company'] = self.company
+        return context
+
 
 class JSONResponseMixin(object):
     """
@@ -201,6 +206,7 @@ class CustomerView(RequiresCompany):
     Base class for an Item View
     """
     model = Customer
+    context_object_name = 'customer'
 
     def get_queryset(self):
         return self.model.objects.filter(company=self.company)
@@ -209,31 +215,15 @@ class CustomerView(RequiresCompany):
 class CustomerListView(CustomerView, ListView):
     context_object_name = "customer_list"
 
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
-
 
 class CustomerDetailView(CustomerView, DetailView):
-    context_object_name = 'customer'
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
+    pass
 
 
 class CustomerCreateView(CustomerView, CreateView):
     fields = ['name', ]
-    context_object_name = 'customer'
     template_name_suffix = '_create_form'
     form_class = CustomerForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
     def form_valid(self, form):
         form.instance.company = self.company
@@ -242,27 +232,14 @@ class CustomerCreateView(CustomerView, CreateView):
 
 class CustomerUpdateView(CustomerView, UpdateView):
     fields = ['name', ]
-    context_object_name = 'customer'
     form_class = CustomerForm
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
 
 class CustomerDeleteView(CustomerView, DeleteView):
-    context_object_name = 'customer'
-
     @property
     def success_url(self):
         view_name = "{}_index".format(self.context_object_name)
         return reverse(view_name, args=(self.company.id, ))
-
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        return context
 
 
 #############################################################
