@@ -235,6 +235,12 @@ class Migration(migrations.Migration):
             bases=(models.Model,),
         ),
         migrations.AddField(
+            model_name='proformabill',
+            name='punto_emision',
+            field=models.ForeignKey(to='billing.PuntoEmision'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
             model_name='item',
             name='iva',
             field=models.ForeignKey(to='billing.Iva'),

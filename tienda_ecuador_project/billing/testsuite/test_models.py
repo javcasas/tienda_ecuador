@@ -117,6 +117,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.proforma_bill = add_ProformaBill(
             **dict(base_data['BaseBill'],
+                   punto_emision=self.punto_emision,
                    company=self.company,
                    issued_to=self.customer))
 
@@ -149,6 +150,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {}),
             (ProformaBill, base_data['BaseBill'],
                 {'company': self.company,
+                 'punto_emision': self.punto_emision,
                  'issued_to': self.customer}),
             (Bill, base_data['BaseBill'],
                 {'company': self.company,
@@ -272,6 +274,12 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
             nombre_comercial="Tienda 1", ruc='1234567890001',
             razon_social="Paco Pil", direccion_matriz="C del pepino",
             contribuyente_especial="")
+        self.establecimiento = add_instance(Establecimiento,
+                                            company=self.company,
+                                            **base_data['Establecimiento'])
+        self.punto_emision = add_instance(PuntoEmision,
+                                          establecimiento=self.establecimiento,
+                                          **base_data['PuntoEmision'])
         self.user = add_User(username="Paco", password='')
 
     def test_Customer_to_BillCustomer(self):
@@ -289,6 +297,7 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
                 **dict(base_data['BaseCustomer'], company=self.company))[0],
             company=self.company,
             date=get_date(),
+            punto_emision=self.punto_emision,
             number='3')
         proforma.save()
         bill = Bill.fromProformaBill(proforma)
@@ -303,6 +312,7 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
                 **dict(base_data['BaseCustomer'], company=self.company))[0],
             company=self.company,
             date=get_date(),
+            punto_emision=self.punto_emision,
             number='3')
         proforma.save()
         iva = add_instance(Iva, **base_data['Iva'])
@@ -461,6 +471,12 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
     """
     def setUp(self):
         self.company = Company.objects.get_or_create(**base_data['Company'])[0]
+        self.establecimiento = add_instance(Establecimiento,
+                                            company=self.company,
+                                            **base_data['Establecimiento'])
+        self.punto_emision = add_instance(PuntoEmision,
+                                          establecimiento=self.establecimiento,
+                                          **base_data['PuntoEmision'])
         self.customer = Customer.objects.get_or_create(
             company=self.company, **base_data['BaseCustomer'])[0]
         self.iva = add_instance(Iva, **base_data['Iva'])
@@ -469,6 +485,7 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         self.bill_ice = add_instance(BillItemIce, **base_data['Ice'])
         self.proforma = add_instance(ProformaBill,
                                      company=self.company,
+                                     punto_emision=self.punto_emision,
                                      number='3',
                                      date=get_date(),
                                      issued_to=self.customer)

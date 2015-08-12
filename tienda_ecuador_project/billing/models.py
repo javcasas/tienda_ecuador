@@ -255,6 +255,7 @@ class ProformaBill(BaseBill):
     Represents a proforma bill
     """
     issued_to = models.ForeignKey(Customer)
+    punto_emision = models.ForeignKey(PuntoEmision)
 
     @property
     def items(self):

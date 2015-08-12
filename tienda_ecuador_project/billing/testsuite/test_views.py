@@ -489,11 +489,20 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         self.new_customer = add_instance(models.Customer,
                                          **dict(self.new_customer_data,
                                                 company=self.company))
+        self.establecimiento = add_instance(models.Establecimiento,
+                                            company=self.company,
+                                            codigo='001')
+        self.punto_emision = add_instance(models.PuntoEmision,
+                                          establecimiento=self.establecimiento,
+                                          codigo='001')
 
         self.proformabill = add_instance(
             models.ProformaBill,
-            **dict(self.data, company=self.company, issued_to=self.customer)
-        )
+            company=self.company,
+            issued_to=self.customer,
+            punto_emision=self.punto_emision,
+            **self.data)
+        
         iva = add_instance(models.Iva,
                            descripcion="12%", codigo="2", porcentaje=12.0)
         ice = add_instance(models.Ice,
@@ -514,11 +523,11 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                     unit_price=12,
                     proforma_bill=self.proformabill))
 
-    def test_proformabill_index(self):
+    def test_proformabill_company_index(self):
         """
-        Check the proforma bill index view
+        Check the proforma bill company index view
         """
-        r = self.c.get(reverse('proformabill_index', args=(self.company.id,)))
+        r = self.c.get(reverse('proformabill_company_index', args=(self.company.id,)))
         self.assertContainsObject(
             r, self.proformabill, ['number', 'issued_to'])
         # Edit link
@@ -570,7 +579,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             'date': get_date(),
         }
         customer, created = models.Customer.objects.get_or_create(
-            **dict(self.customer_data, company=self.company))
+            company=self.company,
+            **self.customer_data)
         with self.new_item(self.cls) as new:
             r = self.c.post(
                 reverse('proformabill_create', args=(self.company.id,)),
@@ -633,7 +643,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             {}
         )
         self.assertRedirects(
-            r, reverse("proformabill_index", args=(self.company.id,)))
+            r, reverse("proformabill_company_index", args=(self.company.id,)))
         with self.assertRaises(models.ProformaBill.DoesNotExist):
             models.ProformaBill.objects.get(id=self.proformabill.id)
 

@@ -59,37 +59,63 @@ class CompanySelected(object):
 
     @property
     def company(self):
-        company_id = self.kwargs['company_id']
         # Ensure there is a corresponding CompanyUser, or 404
         get_object_or_404(
-            CompanyUser, user_id=self.request.user.id, company_id=company_id)
-        return get_object_or_404(Company, id=company_id)
+            CompanyUser, user_id=self.request.user.id, company_id=self.company_id)
+        return get_object_or_404(Company, id=self.company_id)
 
     @property
-    def establecimiento(self):
-        if self.kwargs.get("establecimiento_id"):
-            return get_object_or_404(
-                Establecimiento,
-                id=self.kwargs['establecimiento_id'],
-                company=self.company)
-        if self.punto_emision:
-            return get_object_or_404(
-                Establecimiento,
-                establecimiento=self.punto_emision.establecimiento,
-                company=self.company)
-
-    @property
-    def punto_emision(self):
-        if self.kwargs.get("punto_emision_id"):
-            return get_object_or_404(
-                PuntoEmision,
-                id=self.kwargs.get("punto_emision_id"),
-                establecimiento=self.establecimiento)
+    def company_id(self):
+        """
+        Overridable property to get the current company id
+        """
+        return self.kwargs['company_id']
 
     def get_context_data(self, **kwargs):
         context = super(CompanySelected, self).get_context_data(**kwargs)
         context['company'] = self.company
+        return context
+
+
+class EstablecimientoSelected(CompanySelected):
+    @property
+    def establecimiento(self):
+        return get_object_or_404(
+            Establecimiento,
+            id=self.establecimiento_id)
+
+    @property
+    def establecimiento_id(self):
+        return self.kwargs['establecimiento_id']
+
+    @property
+    def company_id(self):
+        return self.establecimiento.company.id
+
+    def get_context_data(self, **kwargs):
+        context = super(EstablecimientoSelected, self).get_context_data(**kwargs)
         context['establecimiento'] = self.establecimiento
+        return context
+
+
+class PuntoEmisionSelected(EstablecimientoSelected):
+    @property
+    def punto_emision(self):
+        return get_object_or_404(
+            PuntoEmision,
+            id=self.punto_emision_id)
+
+    @property
+    def punto_emision_id(self):
+        return self.kwargs["punto_emision_id"]
+
+    @property
+    def establecimiento_id(self):
+        return self.punto_emision.establecimiento.id
+    
+
+    def get_context_data(self, **kwargs):
+        context = super(PuntoEmisionSelected, self).get_context_data(**kwargs)
         context['punto_emision'] = self.punto_emision
         return context
 
@@ -242,25 +268,29 @@ class CustomerDeleteView(CustomerView, DeleteView):
 #############################################################
 #   Proforma Bill views
 #############################################################
-class ProformaBillView(CompanySelected):
+class ProformaBillView(object):
     model = ProformaBill
     context_object_name = 'proformabill'
 
     def get_queryset(self):
         return self.model.objects.filter(company=self.company)
 
+    @property
+    def punto_emision_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).punto_emision.id
 
-class ProformaBillListView(ProformaBillView, ListView):
+
+class ProformaBillCompanyListView(CompanySelected, ProformaBillView, ListView):
     context_object_name = "proformabill_list"
 
 
-class ProformaBillDetailView(ProformaBillView, DetailView):
+class ProformaBillDetailView(ProformaBillView, PuntoEmisionSelected, DetailView):
     """
     Detail view for proforma bills
     """
 
 
-class ProformaBillCreateView(ProformaBillView, CreateView):
+class ProformaBillCreateView(PuntoEmisionSelected, ProformaBillView, CreateView):
     fields = ['number', 'issued_to', 'date']
     template_name_suffix = '_create_form'
     form_class = ProformaBillForm
@@ -273,10 +303,11 @@ class ProformaBillCreateView(ProformaBillView, CreateView):
 
     def form_valid(self, form):
         form.instance.company = self.company
+        form.instance.punto_emision = self.punto_emision
         return super(self.__class__, self).form_valid(form)
 
 
-class ProformaBillUpdateView(ProformaBillView, UpdateView):
+class ProformaBillUpdateView(ProformaBillView, PuntoEmisionSelected, UpdateView):
     fields = ['number', ]
     form_class = ProformaBillForm
 
@@ -287,10 +318,10 @@ class ProformaBillUpdateView(ProformaBillView, UpdateView):
         return form
 
 
-class ProformaBillDeleteView(ProformaBillView, DeleteView):
+class ProformaBillDeleteView(ProformaBillView, PuntoEmisionSelected, DeleteView):
     @property
     def success_url(self):
-        view_name = "{}_index".format(self.context_object_name)
+        view_name = "{}_company_index".format(self.context_object_name)
         return reverse(view_name, args=(self.company.id, ))
 
 

@@ -10,6 +10,7 @@ from datetime import datetime
 import pytz
 from billing.models import (Company, Item, ProformaBill, ProformaBillItem,
                             CompanyUser, Customer, Iva, Ice)
+from billing import models
 from django.contrib.auth.models import User
 
 
@@ -56,6 +57,18 @@ def my_populate():
                      razon_social='Tienda1', direccion_matriz='C del pipino')
     t2 = add_Company(nombre_comercial="Tienda 2", ruc='1234567891',
                      razon_social='Tienda2', direccion_matriz='C del nabo')
+    e1 = add_instance(models.Establecimiento,
+                      company=t1,
+                      codigo='001')
+    e2 = add_instance(models.Establecimiento,
+                      company=t2,
+                      codigo='001')
+    pe1 = add_instance(models.PuntoEmision,
+                       establecimiento=e1,
+                       codigo='001')
+    pe2 = add_instance(models.PuntoEmision,
+                       establecimiento=e2,
+                       codigo='001')
 
     iva = add_instance(Iva, descripcion="12%", codigo="2", porcentaje=12.0)
     ice = add_instance(Ice, descripcion="Bebidas gaseosas", grupo=1,
@@ -91,6 +104,7 @@ def my_populate():
     ut3 = add_CompanyUser(user=u3, company=t1)
 
     b1 = add_ProformaBill(issued_to=c1, number='145',
+                          punto_emision=pe1,
                           date=get_date(),
                           company=t1)
     b1i1 = add_ProformaBillItem(
@@ -104,6 +118,7 @@ def my_populate():
 
     b2 = add_ProformaBill(issued_to=c1, number='1453',
                           date=get_date(),
+                          punto_emision=pe1,
                           company=t1)
     b2i1 = add_ProformaBillItem(
         sku='t1-123', name='Item T11', iva=iva, ice=ice, unit_cost=4.0,
@@ -115,6 +130,7 @@ def my_populate():
         qty=8)
     b3 = add_ProformaBill(issued_to=c3, number='1453',
                           date=get_date(),
+                          punto_emision=pe2,
                           company=t2)
     return locals()
 
