@@ -530,10 +530,65 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         r = self.c.get(reverse('proformabill_company_index', args=(self.company.id,)))
         self.assertContainsObject(
             r, self.proformabill, ['number', 'issued_to'])
+        self.assertEquals(
+            list(r.context['proformabill_list']),
+            [self.proformabill])
         # Edit link
         self.assertContains(
             r, reverse('proformabill_detail',
                        args=(self.company.id, self.proformabill.id)))
+
+    def test_proformabill_establecimiento_index(self):
+        """
+        Check the proforma bill index view
+        """
+        establecimiento2 = add_instance(models.Establecimiento,
+                                        company=self.company,
+                                        codigo='002')
+        punto_emision2 = add_instance(models.PuntoEmision,
+                                      establecimiento=establecimiento2,
+                                      codigo='002')
+        proformabill2 = add_instance(
+            models.ProformaBill,
+            company=self.company,
+            issued_to=self.customer,
+            punto_emision=punto_emision2,
+            **self.data)
+        r = self.c.get(reverse('proformabill_establecimiento_index', args=(establecimiento2.id,)))
+        self.assertContainsObject(
+            r, self.proformabill, ['number', 'issued_to'])
+        self.assertEquals(
+            list(r.context['proformabill_list']),
+            [proformabill2])
+        # Edit link
+        self.assertContains(
+            r, reverse('proformabill_detail',
+                       args=(self.company.id, proformabill2.id)))
+
+    def test_proformabill_punto_emision_index(self):
+        """
+        Check the proforma bill index view
+        """
+        punto_emision2 = add_instance(models.PuntoEmision,
+                                          establecimiento=self.establecimiento,
+                                          codigo='002')
+        proformabill2 = add_instance(
+            models.ProformaBill,
+            company=self.company,
+            issued_to=self.customer,
+            punto_emision=punto_emision2,
+            **self.data)
+
+        r = self.c.get(reverse('proformabill_punto_emision_index', args=(punto_emision2.id,)))
+        self.assertContainsObject(
+            r, proformabill2, ['number', 'issued_to'])
+        self.assertEquals(
+            list(r.context['proformabill_list']),
+            [proformabill2])
+        # Edit link
+        self.assertContains(
+            r, reverse('proformabill_detail',
+                       args=(self.company.id, proformabill2.id)))
 
     def test_proformabill_detail(self):
         """
@@ -668,11 +723,18 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         self.customer = add_instance(models.Customer,
                                      **dict(self.customer_data,
                                             company=self.company))
+        self.establecimiento = add_instance(models.Establecimiento,
+                                            company=self.company,
+                                            codigo='001')
+        self.punto_emision = add_instance(models.PuntoEmision,
+                                          establecimiento=self.establecimiento,
+                                          codigo='001')
         self.proformabill = add_instance(
             models.ProformaBill,
-            **dict(self.proformabill_data,
-                   company=self.company, issued_to=self.customer)
-        )
+            company=self.company,
+            issued_to=self.customer,
+            punto_emision=self.punto_emision,
+            **self.proformabill_data)
         self.iva = add_instance(
             models.Iva,
             descripcion="12%", porcentaje=12.0, codigo=2)
@@ -787,13 +849,19 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                              tzinfo=pytz.timezone('America/Guayaquil')),
         }
         self.customer = add_instance(models.Customer,
-                                     **dict(self.customer_data,
-                                            company=self.company))
+                                     company=self.company,
+                                     **self.customer_data)
+        self.establecimiento = add_instance(models.Establecimiento,
+                                            company=self.company,
+                                            codigo='001')
+        self.punto_emision = add_instance(models.PuntoEmision,
+                                          establecimiento=self.establecimiento,
+                                          codigo='001')
         self.proformabill = add_instance(
             models.ProformaBill,
-            **dict(self.proformabill_data,
-                   company=self.company, issued_to=self.customer)
-        )
+            punto_emision=self.punto_emision,
+            company=self.company, issued_to=self.customer,
+            **self.proformabill_data)
         self.iva = add_instance(
             models.Iva,
             descripcion="12%", porcentaje=12.0, codigo=2)
@@ -811,7 +879,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             description='Item3 description')
         self.item = add_instance(
             models.Item,
-            **dict(self.item_data, company=self.company))
+            company=self.company,
+            **self.item_data)
         self.proformabill_item_data = dict(
             sku="SKU001",
             name='Item 1',
@@ -823,8 +892,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             qty=3)
         self.proformabill_item = add_instance(
             models.ProformaBillItem,
-            **dict(self.proformabill_item_data,
-                   proforma_bill=self.proformabill))
+            proforma_bill=self.proformabill,
+            **self.proformabill_item_data)
 
     def test_emitir_factura(self):
         """

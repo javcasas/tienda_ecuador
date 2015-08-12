@@ -61,7 +61,8 @@ class CompanySelected(object):
     def company(self):
         # Ensure there is a corresponding CompanyUser, or 404
         get_object_or_404(
-            CompanyUser, user_id=self.request.user.id, company_id=self.company_id)
+            CompanyUser,
+            user_id=self.request.user.id, company_id=self.company_id)
         return get_object_or_404(Company, id=self.company_id)
 
     @property
@@ -112,7 +113,6 @@ class PuntoEmisionSelected(EstablecimientoSelected):
     @property
     def establecimiento_id(self):
         return self.punto_emision.establecimiento.id
-    
 
     def get_context_data(self, **kwargs):
         context = super(PuntoEmisionSelected, self).get_context_data(**kwargs)
@@ -283,14 +283,28 @@ class ProformaBillView(object):
 class ProformaBillCompanyListView(CompanySelected, ProformaBillView, ListView):
     context_object_name = "proformabill_list"
 
+class ProformaBillEstablecimientoListView(EstablecimientoSelected, ProformaBillView, ListView):
+    context_object_name = "proformabill_list"
+    def get_queryset(self):
+        return self.model.objects.filter(punto_emision__establecimiento=self.establecimiento)
 
-class ProformaBillDetailView(ProformaBillView, PuntoEmisionSelected, DetailView):
+class ProformaBillPuntoEmisionListView(PuntoEmisionSelected, ProformaBillView, ListView):
+    context_object_name = "proformabill_list"
+    def get_queryset(self):
+        return self.model.objects.filter(punto_emision=self.punto_emision)
+
+
+class ProformaBillDetailView(ProformaBillView,
+                             PuntoEmisionSelected,
+                             DetailView):
     """
     Detail view for proforma bills
     """
 
 
-class ProformaBillCreateView(PuntoEmisionSelected, ProformaBillView, CreateView):
+class ProformaBillCreateView(PuntoEmisionSelected,
+                             ProformaBillView,
+                             CreateView):
     fields = ['number', 'issued_to', 'date']
     template_name_suffix = '_create_form'
     form_class = ProformaBillForm
@@ -318,7 +332,9 @@ class ProformaBillUpdateView(ProformaBillView, PuntoEmisionSelected, UpdateView)
         return form
 
 
-class ProformaBillDeleteView(ProformaBillView, PuntoEmisionSelected, DeleteView):
+class ProformaBillDeleteView(ProformaBillView,
+                             PuntoEmisionSelected,
+                             DeleteView):
     @property
     def success_url(self):
         view_name = "{}_company_index".format(self.context_object_name)
@@ -328,11 +344,13 @@ class ProformaBillDeleteView(ProformaBillView, PuntoEmisionSelected, DeleteView)
 #############################################################
 #   Proforma Bill Emit Bill views
 #############################################################
-class ProformaBillEmitView(ProformaBillView, DetailView):
+class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_emit'
 
 
-class ProformaBillEmitGenXMLView(ProformaBillView, DetailView):
+class ProformaBillEmitGenXMLView(ProformaBillView,
+                                 PuntoEmisionSelected,
+                                 DetailView):
     template_name_suffix = '_xml'
 
     def get_context_data(self, **kwargs):

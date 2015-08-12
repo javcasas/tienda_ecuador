@@ -40,10 +40,10 @@ urlpatterns = patterns(
     #######################
     url(r'^proforma_bill/c/(?P<company_id>[0-9]+)/$',
         views.ProformaBillCompanyListView.as_view(), name='proformabill_company_index'),
-    #url(r'^(?P<establecimiento_id>[0-9]+)/e/proforma_bill/$',
-    #    views.ProformaBillEstablecimientoListView.as_view(), name='proformabill_establecimiento_index'),
-    #url(r'^(?P<punto_emision_id>[0-9]+)/p/proforma_bill/$',
-    #    views.ProformaBillListView.as_view(), name='proformabill_punto_emision_index'),
+    url(r'^(?P<establecimiento_id>[0-9]+)/e/proforma_bill/$',
+        views.ProformaBillEstablecimientoListView.as_view(), name='proformabill_establecimiento_index'),
+    url(r'^(?P<punto_emision_id>[0-9]+)/p/proforma_bill/$',
+        views.ProformaBillPuntoEmisionListView.as_view(), name='proformabill_punto_emision_index'),
     # Solo se pueden hacer facturas en un punto de emision
     url(r'^proforma_bill/p/(?P<punto_emision_id>[0-9]+)/$',
         views.ProformaBillCreateView.as_view(), name='proformabill_create'),
