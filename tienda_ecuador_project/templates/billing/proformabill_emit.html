@@ -68,7 +68,7 @@
                 <th>Total a pagar</th><td>{{ proformabill.total|stringformat:".2f" }}</td>
             </tr>
         </table>
-        <form action='{% url 'proformabill_emit_to_bill' company.id proformabill.id %}' method='post'>
+        <form action='{% url 'proformabill_emit_to_bill' proformabill.id %}' method='post'>
             <input type='submit'>Emitir</input>
         </form>
 

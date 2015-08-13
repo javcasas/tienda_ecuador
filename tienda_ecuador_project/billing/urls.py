@@ -55,10 +55,10 @@ urlpatterns = patterns(
         views.ProformaBillDeleteView.as_view(), name='proformabill_delete'),
 
     # Proforma bill emitting views
-    url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/emit/$',
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/$',
         views.ProformaBillEmitView.as_view(),
         name='proformabill_emit_to_bill'),
-    url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/emit/gen_xml/$',
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/gen_xml/$',
         views.ProformaBillEmitGenXMLView.as_view(),
         name='proformabill_emit_gen_xml'),
 

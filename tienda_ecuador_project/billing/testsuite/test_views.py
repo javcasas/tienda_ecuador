@@ -906,11 +906,11 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         # Confirmar la emision de la factura
         r = self.c.get(
             reverse('proformabill_emit_to_bill',
-                    args=(self.company.id, self.proformabill.id)))
+                    args=(self.proformabill.id,)))
         self.assertContains(  # same link as POST
             r,
             reverse('proformabill_emit_to_bill',
-                    args=(self.company.id, self.proformabill.id)))
+                    args=(self.proformabill.id,)))
 
         # Generar XML
         #   Generar claves para el XML
@@ -918,7 +918,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         #   Guardar XML en proforma
         r = self.c.get(
             reverse('proformabill_emit_gen_xml',
-                    args=(self.company.id, self.proformabill.id)))
+                    args=(self.proformabill.id,)))
         tree = ET.fromstring(r.content)
 
         d2 = lambda v: "{:.2f}".format(v)
