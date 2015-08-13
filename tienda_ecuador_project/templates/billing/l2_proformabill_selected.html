@@ -3,7 +3,7 @@
 
 {% block breadcrumbs_l1 %}
     &gt; <a href='{% url 'proformabill_company_index' company.id %}'>Proformas</a>
-    &gt; <a href='{% url 'proformabill_detail' company.id proformabill.id %}'>{{ proformabill.number }} - {{ proformabill.issued_to.razon_social }}</a>
+    &gt; <a href='{% url 'proformabill_detail' proformabill.id %}'>{{ proformabill.number }} - {{ proformabill.issued_to.razon_social }}</a>
     {% block breadcrumbs_l2 %}
     {% endblock %}
 {% endblock %}

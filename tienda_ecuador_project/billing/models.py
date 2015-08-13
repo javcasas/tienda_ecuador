@@ -325,7 +325,7 @@ class ProformaBill(BaseBill):
 
     def get_absolute_url(self):
         return reverse('proformabill_detail',
-                       kwargs={'company_id': self.company.id, 'pk': self.pk})
+                       kwargs={'pk': self.pk})
 
     def __unicode__(self):
         try:

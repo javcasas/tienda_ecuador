@@ -38,20 +38,20 @@ urlpatterns = patterns(
     #######################
     # Proforma bill views #
     #######################
-    url(r'^proforma_bill/c/(?P<company_id>[0-9]+)/$',
+    url(r'^proforma_bill/list/c/(?P<company_id>[0-9]+)/$',
         views.ProformaBillCompanyListView.as_view(), name='proformabill_company_index'),
-    url(r'^(?P<establecimiento_id>[0-9]+)/e/proforma_bill/$',
+    url(r'^proforma_bill/list/e/(?P<establecimiento_id>[0-9]+)/$',
         views.ProformaBillEstablecimientoListView.as_view(), name='proformabill_establecimiento_index'),
-    url(r'^(?P<punto_emision_id>[0-9]+)/p/proforma_bill/$',
+    url(r'^proforma_bill/list/pe/(?P<punto_emision_id>[0-9]+)/$',
         views.ProformaBillPuntoEmisionListView.as_view(), name='proformabill_punto_emision_index'),
     # Solo se pueden hacer facturas en un punto de emision
-    url(r'^proforma_bill/p/(?P<punto_emision_id>[0-9]+)/$',
+    url(r'^proforma_bill/new/(?P<punto_emision_id>[0-9]+)/$',
         views.ProformaBillCreateView.as_view(), name='proformabill_create'),
-    url(r'^proforma_bill/(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/$',
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/read/$',
         views.ProformaBillDetailView.as_view(), name='proformabill_detail'),
-    url(r'^proforma_bill/(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/edit/$',
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/update/$',
         views.ProformaBillUpdateView.as_view(), name='proformabill_update'),
-    url(r'^proforma_bill/(?P<company_id>[0-9]+)/proforma_bill/(?P<pk>[0-9]+)/delete/$',
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/delete/$',
         views.ProformaBillDeleteView.as_view(), name='proformabill_delete'),
 
     # Proforma bill emitting views

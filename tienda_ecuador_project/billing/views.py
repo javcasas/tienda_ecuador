@@ -280,16 +280,27 @@ class ProformaBillView(object):
         return self.model.objects.get(id=self.kwargs['pk']).punto_emision.id
 
 
-class ProformaBillCompanyListView(CompanySelected, ProformaBillView, ListView):
+class ProformaBillCompanyListView(CompanySelected,
+                                  ProformaBillView,
+                                  ListView):
     context_object_name = "proformabill_list"
 
-class ProformaBillEstablecimientoListView(EstablecimientoSelected, ProformaBillView, ListView):
+
+class ProformaBillEstablecimientoListView(EstablecimientoSelected,
+                                          ProformaBillView,
+                                          ListView):
     context_object_name = "proformabill_list"
+
     def get_queryset(self):
-        return self.model.objects.filter(punto_emision__establecimiento=self.establecimiento)
+        return self.model.objects.filter(
+            punto_emision__establecimiento=self.establecimiento)
 
-class ProformaBillPuntoEmisionListView(PuntoEmisionSelected, ProformaBillView, ListView):
+
+class ProformaBillPuntoEmisionListView(PuntoEmisionSelected,
+                                       ProformaBillView,
+                                       ListView):
     context_object_name = "proformabill_list"
+
     def get_queryset(self):
         return self.model.objects.filter(punto_emision=self.punto_emision)
 
@@ -477,7 +488,7 @@ class ProformaBillSelected(CompanySelected):
         Generic success URL, goes back to the proforma bill detail view
         """
         return reverse("proformabill_detail",
-                       args=(self.company.id, self.proformabill.id))
+                       args=(self.proformabill.id,))
 
 
 class ProformaBillAddItemView(ProformaBillSelected,

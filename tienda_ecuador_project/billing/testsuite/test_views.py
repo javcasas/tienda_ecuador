@@ -536,7 +536,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         # Edit link
         self.assertContains(
             r, reverse('proformabill_detail',
-                       args=(self.company.id, self.proformabill.id)))
+                       args=(self.proformabill.id,)))
 
     def test_proformabill_establecimiento_index(self):
         """
@@ -563,7 +563,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         # Edit link
         self.assertContains(
             r, reverse('proformabill_detail',
-                       args=(self.company.id, proformabill2.id)))
+                       args=(proformabill2.id,)))
 
     def test_proformabill_punto_emision_index(self):
         """
@@ -588,7 +588,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         # Edit link
         self.assertContains(
             r, reverse('proformabill_detail',
-                       args=(self.company.id, proformabill2.id)))
+                       args=(proformabill2.id,)))
 
     def test_proformabill_detail(self):
         """
@@ -596,7 +596,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         r = self.c.get(
             reverse('proformabill_detail',
-                    args=(self.company.id, self.proformabill.id)))
+                    args=(self.proformabill.id,)))
         self.assertContainsObject(r, self.proformabill,
                                   fix_keys(self.data.keys()))
         for item in self.items:
@@ -621,7 +621,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         Check the proforma bill creation view
         """
-        r = self.c.get(reverse('proformabill_create', args=(self.company.id,)))
+        r = self.c.get(reverse('proformabill_create', args=(self.punto_emision.id,)))
         for field in ['number', 'issued_to']:
             self.assertContains(r, field)
 
@@ -638,11 +638,11 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             **self.customer_data)
         with self.new_item(self.cls) as new:
             r = self.c.post(
-                reverse('proformabill_create', args=(self.company.id,)),
+                reverse('proformabill_create', args=(self.punto_emision.id,)),
                 make_post(dict(proformabill_data, issued_to=customer.id)),
             )
         self.assertRedirects(
-            r, reverse('proformabill_detail', args=(self.company.id, new.id)))
+            r, reverse('proformabill_detail', args=(new.id,)))
         self.assertObjectMatchesData(new, proformabill_data)
         self.assertObjectMatchesData(new.issued_to, self.customer_data)
 
@@ -652,7 +652,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         r = self.c.get(
             reverse('proformabill_update',
-                    args=(self.company.id, self.proformabill.id)))
+                    args=(self.proformabill.id,)))
         self.assertContainsObject(r, self.customer,
                                   ['razon_social', 'identificacion'])
         self.assertContainsObject(r, self.proformabill,
@@ -664,11 +664,11 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         r = self.c.post(
             reverse('proformabill_update',
-                    args=(self.company.id, self.proformabill.id)),
+                    args=(self.proformabill.id,)),
             make_post(dict(self.new_data, issued_to=self.new_customer.id)))
         self.assertRedirects(
             r, reverse('proformabill_detail',
-                       args=(self.company.id, self.proformabill.id)))
+                       args=(self.proformabill.id,)))
         self.assertObjectMatchesData(
             models.ProformaBill.objects.get(id=self.proformabill.id),
             self.new_data)
@@ -681,7 +681,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         r = self.c.get(
             reverse("proformabill_delete",
-                    args=(self.company.id, self.proformabill.id)))
+                    args=(self.proformabill.id,)))
         self.assertContains(r, self.proformabill.number)
         self.assertContains(r, self.proformabill.issued_to.razon_social)
 
@@ -694,7 +694,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         r = self.c.post(
             reverse("proformabill_delete",
-                    args=(self.company.id, self.proformabill.id)),
+                    args=(self.proformabill.id,)),
             {}
         )
         self.assertRedirects(
@@ -1057,7 +1057,7 @@ class PopulateBillingTest(TestCase):
             reverse("customer_detail", args=(data['t1'].id, data['c3'].id,)),
             reverse("item_detail", args=(data['t1'].id, data['i22'].id,)),
             reverse("proformabill_detail",
-                    args=(data['t1'].id, data['b3'].id,)),
+                    args=(data['b3'].id,)),
         ]
         for url in urls:
             r = c.get(url)

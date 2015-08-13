@@ -14,7 +14,7 @@
         <table border='1'>
         {% for proformabill in proformabill_list %}
             <tr><td>
-            <a href="{% url 'proformabill_detail' company.id proformabill.id %}">{{ proformabill.number }} - {{ proformabill.issued_to.name }}</a>
+            <a href="{% url 'proformabill_detail' proformabill.id %}">{{ proformabill.number }} - {{ proformabill.issued_to.name }}</a>
             </td></tr>
         {% endfor %}
         </table>

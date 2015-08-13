@@ -12,7 +12,7 @@
         <table border='1'>
         {% for proformabill in proformabill_list %}
             <tr><td>
-            <a href="{% url 'proformabill_detail' company.id proformabill.id %}">{{ proformabill }}</a>
+            <a href="{% url 'proformabill_detail' proformabill.id %}">{{ proformabill }}</a>
             </td></tr>
         {% endfor %}
         </table>

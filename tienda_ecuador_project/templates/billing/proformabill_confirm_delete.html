@@ -5,5 +5,5 @@
         <p>Are you sure you want to delete "{{ proformabill }}"?</p>
         <input type="submit" value="Confirm" />
     </form>
-    <a href='{% url 'proformabill_detail' company.id proformabill.id %}'>Cancel</a>
+    <a href='{% url 'proformabill_detail' proformabill.id %}'>Cancel</a>
 {% endblock %}
