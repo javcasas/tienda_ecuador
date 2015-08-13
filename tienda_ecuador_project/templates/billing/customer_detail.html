@@ -5,7 +5,7 @@
             (<span id='tipo_identificacion' value='{{ customer.tipo_identificacion }}'>{{ customer.tipo_identificacion.capitalize }}</span>) <br />
         Dirección: {{ customer.direccion }} <br />
         Email: {{ customer.email }} <br />
-        <a href='{% url "customer_update" company.id customer.id %}'>Editar</a>
+        <a href='{% url "customer_update" customer.id %}'>Editar</a>
         <a href='{% url "customer_index" company.id %}'>Clientes</a>
         <a href='{% url "company_index" company.id %}'>Back</a>
 {% endblock %}

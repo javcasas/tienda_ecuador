@@ -143,7 +143,7 @@ class Customer(BaseCustomer):
 
     def get_absolute_url(self):
         return reverse('customer_detail',
-                       kwargs={'company_id': self.company.id, 'pk': self.pk})
+                       kwargs={'pk': self.pk})
 
 
 class BillCustomer(ReadOnlyMixin, BaseCustomer):

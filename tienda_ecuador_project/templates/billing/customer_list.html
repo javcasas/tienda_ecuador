@@ -8,7 +8,7 @@
     {% for customer in customer_list %}
         Razón social: {{ customer.razon_social }} <br />
         Identificación: {{ customer.identificacion }} <br />
-        <a href='{% url "customer_update" company.id customer.id %}'>Editar</a>
+        <a href='{% url "customer_update" customer.id %}'>Editar</a>
     {% endfor %}
     <a href='{% url "company_index" company.id %}'>Back</a>
 {% endblock %}

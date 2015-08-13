@@ -5,5 +5,5 @@
         <p>Are you sure you want to delete "{{ customer }}"?</p>
         <input type="submit" value="Confirm" />
     </form>
-    <a href='{% url 'customer_detail' company.id customer.id %}'>Cancel</a>
+    <a href='{% url 'customer_detail' customer.id %}'>Cancel</a>
 {% endblock %}

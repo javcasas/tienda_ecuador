@@ -1053,7 +1053,7 @@ class PopulateBillingTest(TestCase):
 
         # It seems I can view customers and items for a different company
         urls = [
-            reverse("customer_detail", args=(data['t1'].id, data['c3'].id,)),
+            reverse("customer_detail", args=(data['c3'].id,)),
             reverse("item_detail", args=(data['i22'].id,)),
             reverse("proformabill_detail",
                     args=(data['b3'].id,)),

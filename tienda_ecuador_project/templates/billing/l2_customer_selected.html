@@ -3,7 +3,7 @@
 
 {% block breadcrumbs_l1 %}
     &gt; <a href='{% url 'customer_index' company.id %}'>Clientes</a>
-    &gt; <a href='{% url 'customer_detail' company.id customer.id %}'>{{ customer.razon_social }}</a>
+    &gt; <a href='{% url 'customer_detail' customer.id %}'>{{ customer.razon_social }}</a>
     {% block breadcrumbs_l2 %}
     {% endblock %}
 {% endblock %}

@@ -226,7 +226,7 @@ class ItemDeleteView(ItemView, CompanySelected, DeleteView):
 ####################################################################
 #   Customer views
 ####################################################################
-class CustomerView(CompanySelected):
+class CustomerView(object):
     """
     Base class for an Item View
     """
@@ -236,18 +236,22 @@ class CustomerView(CompanySelected):
     def get_queryset(self):
         return self.model.objects.filter(company=self.company)
 
+    @property
+    def company_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).company.id
 
-class CustomerListView(CustomerView, ListView):
+
+class CustomerListView(CompanySelected, CustomerView, ListView):
     context_object_name = "customer_list"
 
 
-class CustomerDetailView(CustomerView, DetailView):
+class CustomerDetailView(CustomerView, CompanySelected, DetailView):
     """
     Detail view for customers
     """
 
 
-class CustomerCreateView(CustomerView, CreateView):
+class CustomerCreateView(CompanySelected, CustomerView, CreateView):
     fields = ['name', ]
     template_name_suffix = '_create_form'
     form_class = CustomerForm
@@ -257,12 +261,12 @@ class CustomerCreateView(CustomerView, CreateView):
         return super(self.__class__, self).form_valid(form)
 
 
-class CustomerUpdateView(CustomerView, UpdateView):
+class CustomerUpdateView(CustomerView, CompanySelected, UpdateView):
     fields = ['name', ]
     form_class = CustomerForm
 
 
-class CustomerDeleteView(CustomerView, DeleteView):
+class CustomerDeleteView(CustomerView, CompanySelected, DeleteView):
     @property
     def success_url(self):
         view_name = "{}_index".format(self.context_object_name)
