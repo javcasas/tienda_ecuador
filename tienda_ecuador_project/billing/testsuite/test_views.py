@@ -605,12 +605,12 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                 r,
                 reverse(
                     'proformabillitem_update',
-                    args=(self.company.id, self.proformabill.id, item.id)))
+                    args=(item.id,)))
             self.assertContains(
                 r,
                 reverse(
                     'proformabillitem_delete',
-                    args=(self.company.id, self.proformabill.id, item.id)))
+                    args=(item.id,)))
         subtotal = sum([i.total_sin_impuestos + i.valor_ice
                         for i in self.items])
         self.assertContains(r, subtotal)          # Total sin IVA
@@ -770,14 +770,14 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
     def test_add_item_to_bill_show_form(self):
         r = self.c.get(
             reverse('proformabill_add_item',
-                    args=(self.company.id, self.proformabill.id)))
+                    args=(self.proformabill.id,)))
         self.assertContainsObject(r, self.item, ['sku', 'name'])
 
     def test_add_item_to_bill_submit(self):
         with self.new_item(models.ProformaBillItem) as new:
             self.c.post(
                 reverse('proformabill_add_item',
-                        args=(self.company.id, self.proformabill.id)),
+                        args=(self.proformabill.id,)),
                 {'copy_from': self.item.id,
                  'qty': 1})
         self.assertEquals(new.qty, 1)
@@ -786,13 +786,13 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         with self.new_item(models.ProformaBillItem) as new:
             self.c.post(
                 reverse('proformabill_add_item',
-                        args=(self.company.id, self.proformabill.id)),
+                        args=(self.proformabill.id,)),
                 {'copy_from': self.item.id,
                  'qty': 1})
         self.assertEquals(new.qty, 1)
         self.c.post(
             reverse('proformabill_add_item',
-                    args=(self.company.id, self.proformabill.id)),
+                    args=(self.proformabill.id,)),
             {'copy_from': self.item.id,
              'qty': 1})
         self.assertEquals(models.ProformaBillItem.objects.get(pk=new.pk).qty,
@@ -801,8 +801,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
     def test_edit_item_in_bill_form(self):
         r = self.c.get(
             reverse('proformabillitem_update',
-                    args=(self.company.id, self.proformabill.id,
-                          self.proformabill_item.id)))
+                    args=(self.proformabill_item.id,)))
         self.assertContainsObject(
             r,
             models.ProformaBillItem.objects.get(pk=self.proformabill_item.id),
@@ -815,7 +814,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         new_data.update(qty=new_qty)
         self.c.post(
             reverse('proformabillitem_update',
-                    args=(self.company.id, self.proformabill.id, pk)),
+                    args=(pk,)),
             make_post(new_data))
         self.assertEquals(models.ProformaBillItem.objects.get(pk=pk).qty,
                           new_qty)
@@ -824,7 +823,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         pk = self.proformabill_item.id
         self.c.post(
             reverse('proformabillitem_delete',
-                    args=(self.company.id, self.proformabill.id, pk)),
+                    args=(pk,)),
             {})
         with self.assertRaises(models.ProformaBillItem.DoesNotExist):
             models.ProformaBillItem.objects.get(pk=pk)

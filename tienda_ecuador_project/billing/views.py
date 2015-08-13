@@ -460,7 +460,7 @@ class ProformaBillEmitGenXMLView(ProformaBillView,
 #############################################################
 #   Proforma Bill Item views
 #############################################################
-class ProformaBillSelected(CompanySelected):
+class ProformaBillSelected(PuntoEmisionSelected):
     model = ProformaBillItem
     context_object_name = 'item'
 
@@ -469,10 +469,16 @@ class ProformaBillSelected(CompanySelected):
         """
         Attribute that returns the current proformabill
         """
-        proformabill_id = self.kwargs['proformabill_id']
         return get_object_or_404(ProformaBill,
-                                 company=self.company,
-                                 id=proformabill_id)
+                                 id=self.proformabill_id)
+
+    @property
+    def proformabill_id(self):
+        return self.kwargs['proformabill_id']
+
+    @property
+    def punto_emision_id(self):
+        return self.proformabill.punto_emision.id
 
     def get_context_data(self, **kwargs):
         """
@@ -489,6 +495,18 @@ class ProformaBillSelected(CompanySelected):
         """
         return reverse("proformabill_detail",
                        args=(self.proformabill.id,))
+
+
+class ProformaBillItemView(object):
+    model = ProformaBillItem
+    context_object_name = 'item'
+
+    def get_queryset(self):
+        return self.model.objects.filter(proforma_bill=self.proformabill)
+
+    @property
+    def proformabill_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).proforma_bill.id
 
 
 class ProformaBillAddItemView(ProformaBillSelected,
@@ -527,7 +545,8 @@ class ProformaBillAddItemView(ProformaBillSelected,
         return super(self.__class__, self).form_valid(form)
 
 
-class ProformaBillItemUpdateView(ProformaBillSelected,
+class ProformaBillItemUpdateView(ProformaBillItemView,
+                                 ProformaBillSelected,
                                  UpdateView):
     template_name_suffix = '_form'
     form_class = ProformaBillItemForm
@@ -537,7 +556,8 @@ class ProformaBillItemUpdateView(ProformaBillSelected,
         return super(self.__class__, self).form_valid(form)
 
 
-class ProformaBillItemDeleteView(ProformaBillSelected,
+class ProformaBillItemDeleteView(ProformaBillItemView,
+                                 ProformaBillSelected,
                                  DeleteView):
     """
     Delete view for proformabill items

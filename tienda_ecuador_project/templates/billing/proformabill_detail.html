@@ -52,10 +52,10 @@
                 <td>{{ item.subtotal|floatformat:2 }}</td>
                 <td>{{ item.total_impuestos|floatformat:2 }}</td>
                 <td class='edit_button'>
-                    <a href="{% url 'proformabillitem_update' company.id proformabill.id item.id %}">Edit</a>
+                    <a href="{% url 'proformabillitem_update' item.id %}">Edit</a>
                 </td>
                 <td class='delete_button'>
-                    <form action="{% url 'proformabillitem_delete' company.id proformabill.id item.id %}" method='post'>
+                    <form action="{% url 'proformabillitem_delete' item.id %}" method='post'>
                         {% csrf_token %}
                         <button type='submit'>Delete</button>
                     </form>
@@ -63,7 +63,7 @@
             <tr/>
         {% endfor %}
         </table>
-        <a href="{% url "proformabill_add_item" company.id proformabill.id %}">Add Item</a>
+        <a href="{% url "proformabill_add_item" proformabill.id %}">Add Item</a>
         <table border='1'>
             <tr>
                 <th>Subtotal IVA 12%</th><td>{{ proformabill.subtotal.12|floatformat:2 }}</td>

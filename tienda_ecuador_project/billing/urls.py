@@ -63,13 +63,13 @@ urlpatterns = patterns(
         name='proformabill_emit_gen_xml'),
 
     # Proforma bill item views
-    url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<proformabill_id>[0-9]+)/add_item/$',
+    url(r'^proforma_bill/(?P<proformabill_id>[0-9]+)/add_item/$',
         views.ProformaBillAddItemView.as_view(),
         name='proformabill_add_item'),
-    url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<proformabill_id>[0-9]+)/(?P<pk>[0-9]+)/edit/$',
+    url(r'^proforma_bill/item/(?P<pk>[0-9]+)/edit/$',
         views.ProformaBillItemUpdateView.as_view(),
         name='proformabillitem_update'),
-    url(r'^(?P<company_id>[0-9]+)/proforma_bill/(?P<proformabill_id>[0-9]+)/(?P<pk>[0-9]+)/delete/$',
+    url(r'^proforma_bill/item/(?P<pk>[0-9]+)/delete/$',
         views.ProformaBillItemDeleteView.as_view(),
         name='proformabillitem_delete'),
 )
