@@ -10,17 +10,17 @@ urlpatterns = patterns(
         views.CompanyIndex.as_view(), name='company_index'),
 
     # Item views
-    url(r'^(?P<company_id>[0-9]+)/item/$',
+    url(r'^item/index/(?P<company_id>[0-9]+)/$',
         views.ItemListView.as_view(), name='item_index'),
-    url(r'^(?P<company_id>[0-9]+)/item/json/$',
+    url(r'^item/index/(?P<company_id>[0-9]+)/json/$',
         views.ItemListViewJson.as_view(), name='item_index_json'),
-    url(r'^(?P<company_id>[0-9]+)/item/new/$',
+    url(r'^item/new/c/(?P<company_id>[0-9]+)/$',
         views.ItemCreateView.as_view(), name='item_create'),
-    url(r'^(?P<company_id>[0-9]+)/item/(?P<pk>[0-9]+)/$',
+    url(r'^item/detail/(?P<pk>[0-9]+)/$',
         views.ItemDetailView.as_view(), name='item_detail'),
-    url(r'^(?P<company_id>[0-9]+)/item/(?P<pk>[0-9]+)/edit/$',
+    url(r'^item/edit/(?P<pk>[0-9]+)/$',
         views.ItemUpdateView.as_view(), name='item_update'),
-    url(r'^(?P<company_id>[0-9]+)/item/(?P<pk>[0-9]+)/delete/$',
+    url(r'^item/delete/(?P<pk>[0-9]+)/$',
         views.ItemDeleteView.as_view(), name='item_delete'),
 
     # Customer views

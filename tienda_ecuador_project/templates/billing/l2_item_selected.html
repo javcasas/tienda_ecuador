@@ -3,7 +3,7 @@
 
 {% block breadcrumbs_l1 %}
     &gt; <a href='{% url 'item_index' company.id %}'>Items</a>
-    &gt; <a href='{% url 'item_detail' company.id item.id %}'>{{ item.sku }}</a>
+    &gt; <a href='{% url 'item_detail' item.id %}'>{{ item.sku }}</a>
     {% block breadcrumbs_l2 %}
     {% endblock %}
 {% endblock %}

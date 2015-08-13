@@ -168,7 +168,7 @@ class CompanyIndex(CompanySelected, View):
 ####################################################################
 #   Item views
 ####################################################################
-class ItemView(CompanySelected):
+class ItemView(object):
     """
     Base class for an Item View
     """
@@ -178,8 +178,12 @@ class ItemView(CompanySelected):
     def get_queryset(self):
         return self.model.objects.filter(company=self.company)
 
+    @property
+    def company_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).company.id
 
-class ItemListView(ItemView, ListView):
+
+class ItemListView(CompanySelected, ItemView, ListView):
     """
     View that shows the items for the current company
     """
@@ -191,13 +195,13 @@ class ItemListViewJson(JSONResponseMixin, ItemListView):
         return self.render_to_json_response(context, **response_kwargs)
 
 
-class ItemDetailView(ItemView, DetailView):
+class ItemDetailView(ItemView, CompanySelected, DetailView):
     """
     Detail view for Items
     """
 
 
-class ItemCreateView(ItemView, CreateView):
+class ItemCreateView(CompanySelected, ItemView, CreateView):
     """
     Create view for items
     """
@@ -209,11 +213,11 @@ class ItemCreateView(ItemView, CreateView):
         return super(ItemCreateView, self).form_valid(form)
 
 
-class ItemUpdateView(ItemView, UpdateView):
+class ItemUpdateView(ItemView, CompanySelected, UpdateView):
     form_class = ItemForm
 
 
-class ItemDeleteView(ItemView, DeleteView):
+class ItemDeleteView(ItemView, CompanySelected, DeleteView):
     @property
     def success_url(self):
         return reverse("item_index", args=(self.company.id, ))

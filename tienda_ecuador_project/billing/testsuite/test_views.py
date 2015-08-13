@@ -158,7 +158,7 @@ class GenericObjectCRUDTest(object):
         self.ob.save()
         self.index_keys = self.data.keys()
         self.reverse_index_args = (self.company.id,)
-        self.reverse_object_args = self.reverse_index_args + (self.ob.id,)
+        self.reverse_object_args = (self.ob.id,)
         self.urls_to_test = [
             reverse(self.index_view, args=self.reverse_index_args),
             reverse(self.detail_view, args=self.reverse_object_args),
@@ -216,7 +216,7 @@ class GenericObjectCRUDTest(object):
             )
         self.assertRedirects(
             r, reverse(self.detail_view,
-                       args=self.reverse_index_args + (new.id,)))
+                       args=(new.id,)))
         self.assertObjectMatchesData(new, self.data)
 
     def test_create_crossed_company_denied(self):
@@ -235,7 +235,7 @@ class GenericObjectCRUDTest(object):
             )
         self.assertRedirects(
             r, reverse(self.detail_view,
-                       args=self.reverse_index_args + (new.id,)))
+                       args=(new.id,)))
         self.assertObjectMatchesData(new, self.data)
         self.assertEquals(new.company, self.company)
 
@@ -1054,7 +1054,7 @@ class PopulateBillingTest(TestCase):
         # It seems I can view customers and items for a different company
         urls = [
             reverse("customer_detail", args=(data['t1'].id, data['c3'].id,)),
-            reverse("item_detail", args=(data['t1'].id, data['i22'].id,)),
+            reverse("item_detail", args=(data['i22'].id,)),
             reverse("proformabill_detail",
                     args=(data['b3'].id,)),
         ]

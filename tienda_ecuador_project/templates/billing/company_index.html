@@ -5,7 +5,7 @@
         <table border='1'>
         {% for item in item_list %}
             <tr><td>
-            <a href="{% url 'item_detail' company.id item.id %}">{{ item.sku }}- {{ item.name }}</a>
+            <a href="{% url 'item_detail' item.id %}">{{ item.sku }}- {{ item.name }}</a>
             </td></tr>
         {% endfor %}
         </table>

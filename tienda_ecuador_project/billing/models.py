@@ -413,7 +413,7 @@ class Item(BaseItem):
 
     def get_absolute_url(self):
         return reverse('item_detail',
-                       kwargs={'company_id': self.company.id, 'pk': self.pk})
+                       kwargs={'pk': self.pk})
 
     def __unicode__(self):
         return "{} - {}".format(self.sku, self.name)
