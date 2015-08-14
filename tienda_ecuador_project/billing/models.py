@@ -170,7 +170,6 @@ class BaseBill(models.Model):
     Represents a generic bill
     """
     number = models.CharField(max_length=20, blank=True)
-    company = models.ForeignKey(Company)
     date = models.DateTimeField()
 
     def __unicode__(self):
@@ -186,7 +185,7 @@ class Bill(ReadOnlyMixin, BaseBill):
     @classmethod
     def fromProformaBill(cls, proforma):
         customer = BillCustomer.fromCustomer(proforma.issued_to)
-        fields = ['number', 'company', 'date']
+        fields = ['number', 'date']
         data = {}
         for field in fields:
             data[field] = getattr(proforma, field)

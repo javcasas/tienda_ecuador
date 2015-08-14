@@ -258,10 +258,4 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(to='billing.BillCustomer'),
             preserve_default=True,
         ),
-        migrations.AddField(
-            model_name='basebill',
-            name='company',
-            field=models.ForeignKey(to='billing.Company'),
-            preserve_default=True,
-        ),
     ]

@@ -105,8 +105,7 @@ def my_populate():
 
     b1 = add_ProformaBill(issued_to=c1, number='145',
                           punto_emision=pe1,
-                          date=get_date(),
-                          company=t1)
+                          date=get_date())
     b1i1 = add_ProformaBillItem(
         sku='t1-123', name='Item T11', iva=iva, ice=ice, unit_cost=5.0,
         unit_price=6.0, description='Item 1 en Tienda 1', proforma_bill=b1,
@@ -118,8 +117,7 @@ def my_populate():
 
     b2 = add_ProformaBill(issued_to=c1, number='1453',
                           date=get_date(),
-                          punto_emision=pe1,
-                          company=t1)
+                          punto_emision=pe1)
     b2i1 = add_ProformaBillItem(
         sku='t1-123', name='Item T11', iva=iva, ice=ice, unit_cost=4.0,
         unit_price=8.0, description='Item 1 en Tienda 1', proforma_bill=b2,
@@ -130,8 +128,7 @@ def my_populate():
         qty=8)
     b3 = add_ProformaBill(issued_to=c3, number='1453',
                           date=get_date(),
-                          punto_emision=pe2,
-                          company=t2)
+                          punto_emision=pe2)
     return locals()
 
 

@@ -118,12 +118,10 @@ class FieldsTests(TestCase, TestHelpersMixin):
         self.proforma_bill = add_ProformaBill(
             **dict(base_data['BaseBill'],
                    punto_emision=self.punto_emision,
-                   company=self.company,
                    issued_to=self.customer))
 
         self.bill = add_Bill(
             **dict(base_data['BaseBill'],
-                   company=self.company,
                    issued_to=self.bill_customer))
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
@@ -149,12 +147,10 @@ class FieldsTests(TestCase, TestHelpersMixin):
             (BillCustomer, base_data['BaseCustomer'],
                 {}),
             (ProformaBill, base_data['BaseBill'],
-                {'company': self.company,
-                 'punto_emision': self.punto_emision,
+                {'punto_emision': self.punto_emision,
                  'issued_to': self.customer}),
             (Bill, base_data['BaseBill'],
-                {'company': self.company,
-                 'issued_to': self.bill_customer}),
+                {'issued_to': self.bill_customer}),
             (Item, base_data['BaseItem'],
                 {"company": self.company,
                  'iva': self.iva,
@@ -207,8 +203,7 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
         self.tests = [
             (BillCustomer, base_data['BaseCustomer']),
             (Bill,
-                {'company': self.company,
-                 'number': '3',
+                {'number': '3',
                  'date': get_date(),
                  'issued_to': self.bill_customer}),
             (BillItem,
@@ -220,8 +215,7 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
                  'unit_price': 15.5,
                  'iva': self.bill_iva,
                  'ice': self.bill_ice,
-                 'bill': add_Bill(company=self.company,
-                                  number='32',
+                 'bill': add_Bill(number='32',
                                   date=get_date(),
                                   issued_to=self.bill_customer),
                  }),
@@ -295,13 +289,11 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
         proforma = ProformaBill(
             issued_to=Customer.objects.get_or_create(
                 **dict(base_data['BaseCustomer'], company=self.company))[0],
-            company=self.company,
             date=get_date(),
             punto_emision=self.punto_emision,
             number='3')
         proforma.save()
         bill = Bill.fromProformaBill(proforma)
-        self.assertEquals(bill.company, self.company)
         self.assertEquals(bill.number, '3')
         self.assertEquals(bill.issued_to.razon_social,
                           base_data['BaseCustomer']['razon_social'])
@@ -310,7 +302,6 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
         proforma = ProformaBill(
             issued_to=Customer.objects.get_or_create(
                 **dict(base_data['BaseCustomer'], company=self.company))[0],
-            company=self.company,
             date=get_date(),
             punto_emision=self.punto_emision,
             number='3')
@@ -484,7 +475,6 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         self.bill_iva = add_instance(BillItemIva, **base_data['Iva'])
         self.bill_ice = add_instance(BillItemIce, **base_data['Ice'])
         self.proforma = add_instance(ProformaBill,
-                                     company=self.company,
                                      punto_emision=self.punto_emision,
                                      number='3',
                                      date=get_date(),

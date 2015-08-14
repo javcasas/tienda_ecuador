@@ -157,8 +157,8 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {
             'item_list': Item.objects.filter(company=company),
-            'bill_list': Bill.objects.filter(company=company),
-            'proformabill_list': ProformaBill.objects.filter(company=company),
+            'bill_list': [], # FIXME Bill.objects.filter(company=company),
+            'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company),
             'customer_list': Customer.objects.filter(company=company),
             'company': company,
         }
@@ -281,7 +281,7 @@ class ProformaBillView(object):
     context_object_name = 'proformabill'
 
     def get_queryset(self):
-        return self.model.objects.filter(company=self.company)
+        return self.model.objects.filter(punto_emision__establecimiento__company=self.company)
 
     @property
     def punto_emision_id(self):

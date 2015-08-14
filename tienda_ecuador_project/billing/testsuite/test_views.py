@@ -498,7 +498,6 @@ class ProformaBillTests(LoggedInWithCompanyTests):
 
         self.proformabill = add_instance(
             models.ProformaBill,
-            company=self.company,
             issued_to=self.customer,
             punto_emision=self.punto_emision,
             **self.data)
@@ -550,7 +549,6 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                                       codigo='002')
         proformabill2 = add_instance(
             models.ProformaBill,
-            company=self.company,
             issued_to=self.customer,
             punto_emision=punto_emision2,
             **self.data)
@@ -574,7 +572,6 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                                           codigo='002')
         proformabill2 = add_instance(
             models.ProformaBill,
-            company=self.company,
             issued_to=self.customer,
             punto_emision=punto_emision2,
             **self.data)
@@ -731,7 +728,6 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
                                           codigo='001')
         self.proformabill = add_instance(
             models.ProformaBill,
-            company=self.company,
             issued_to=self.customer,
             punto_emision=self.punto_emision,
             **self.proformabill_data)
@@ -859,7 +855,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.proformabill = add_instance(
             models.ProformaBill,
             punto_emision=self.punto_emision,
-            company=self.company, issued_to=self.customer,
+            issued_to=self.customer,
             **self.proformabill_data)
         self.iva = add_instance(
             models.Iva,
