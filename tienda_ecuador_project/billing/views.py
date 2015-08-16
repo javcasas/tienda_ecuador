@@ -157,7 +157,7 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {
             'item_list': Item.objects.filter(company=company),
-            'bill_list': [], # FIXME Bill.objects.filter(company=company),
+            'bill_list': Bill.objects.filter(company=company),
             'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company),
             'customer_list': Customer.objects.filter(company=company),
             'company': company,

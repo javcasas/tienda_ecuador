@@ -263,13 +263,22 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
     def test_ProformaBill_to_Bill(self):
         proforma = ProformaBill(
             issued_to=Customer.objects.get_or_create(
-                **dict(base_data['BaseCustomer'], company=self.company))[0],
+                company=self.company,
+                **base_data['BaseCustomer'])[0],
             date=get_date(),
             punto_emision=self.punto_emision,
+            xml_content='bleh' * 1000,     # 4KB
+            ride_content='blah' * 100000,  # 400KB
             number='3')
         proforma.save()
         bill = Bill.fromProformaBill(proforma)
-        self.assertEquals(bill.number, '3')
+        for field in ['number', 'date', 'xml_content', 'ride_content']:
+            v1 = getattr(bill, field)
+            v2 = getattr(proforma, field)
+            self.assertEquals(
+                v1, v2,
+                "Field '{}' is different: {} != {}".format(field, repr(v1), repr(v2)))
+        self.assertEquals(bill.company, proforma.punto_emision.establecimiento.company)
 
 
 

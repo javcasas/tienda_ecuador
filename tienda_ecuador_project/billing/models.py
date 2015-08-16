@@ -185,7 +185,7 @@ class Bill(ReadOnlyMixin, BaseBill):
     """
     company = models.ForeignKey(Company)
 
-    copy_from_fields = ['number', 'date']
+    copy_from_fields = ['number', 'date', 'xml_content', 'ride_content']
 
     @classmethod
     def fromProformaBill(cls, proforma):
