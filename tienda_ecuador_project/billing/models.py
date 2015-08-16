@@ -147,22 +147,6 @@ class Customer(BaseCustomer):
                        kwargs={'pk': self.pk})
 
 
-class BillCustomer(ReadOnlyMixin, BaseCustomer):
-    """
-    A customer in a final bill
-    """
-    @classmethod
-    def fromCustomer(cls, c):
-        fields = ['razon_social', 'tipo_identificacion', 'identificacion',
-                  'email', 'direccion']
-        data = {}
-        for field in fields:
-            data[field] = getattr(c, field)
-        new = BillCustomer(**data)
-        new.secret_save()
-        return new
-
-
 #####################################
 # Bill
 #####################################
@@ -335,56 +319,32 @@ class ProformaBill(BaseBill):
 ##########################
 # Taxes
 ##########################
-class Iva(models.Model):
+class Tax(models.Model):
+    descripcion = models.CharField(max_length=100)
+    codigo = models.CharField(max_length=10)
+    porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
+    valor_fijo = models.DecimalField(decimal_places=2, max_digits=6, default=Decimal('0.00'))
+
+
+class Iva(Tax):
     """
     Representa el IVA
     """
-    descripcion = models.CharField(max_length=50)
-    codigo = models.CharField(max_length=10)
-    porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
-
     def __unicode__(self):
         return "{:.0f}% - {}".format(self.porcentaje, self.descripcion)
 
 
-class BillItemIva(ReadOnlyMixin, Iva):
-    """
-    IVA para items cerrados
-    """
-    @classmethod
-    def fromIva(cls, iva):
-        fields = ['descripcion', 'codigo', 'porcentaje']
-        data = {k: getattr(iva, k) for k in fields}
-        new, created = BillItemIva.objects.get_or_create(**data)
-        return new
-
-
-class Ice(models.Model):
+class Ice(Tax):
     """
     Representa el ICE
     """
-    descripcion = models.CharField(max_length=50)
     grupo = models.IntegerField()
-    codigo = models.CharField(max_length=10)
-    porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
 
     def __nonzero__(self):
         return self.descripcion != "No ICE"
 
     def __unicode__(self):
         return "{:.0f}% - {}".format(self.porcentaje, self.descripcion)
-
-
-class BillItemIce(ReadOnlyMixin, Ice):
-    """
-    ICE para items cerrados
-    """
-    @classmethod
-    def fromIce(cls, ice):
-        fields = ['descripcion', 'grupo', 'codigo', 'porcentaje']
-        data = {k: getattr(ice, k) for k in fields}
-        new, created = BillItemIce.objects.get_or_create(**data)
-        return new
 
 
 ###########################
@@ -399,6 +359,19 @@ class BaseItem(models.Model):
     description = models.CharField(max_length=500)
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
     unit_price = models.DecimalField(max_digits=20, decimal_places=8)
+    tax_items = models.ManyToManyField(Tax)
+    @property
+    def taxes(self):
+        """
+        Returns the properly typed tax items
+        """
+        def typecast(v):
+            for t in [Iva, Ice]:
+                try:
+                    return t.objects.get(id=v.id)
+                except t.DoesNotExist:
+                    pass
+        return map(typecast, self.tax_items.all())
 
 
 class Item(BaseItem):
@@ -406,8 +379,6 @@ class Item(BaseItem):
     Represents an item that can be sold or bought
     """
     company = models.ForeignKey(Company)
-    iva = models.ForeignKey(Iva)
-    ice = models.ForeignKey(Ice)
 
     def get_absolute_url(self):
         return reverse('item_detail',
@@ -427,6 +398,17 @@ class ItemInBill(BaseItem):
     def total_sin_impuestos(self):
         return self.qty * self.unit_price
 
+    @property
+    def ice(self):
+        for i in self.taxes:
+            if type(i) == Ice:
+                return i
+
+    @property
+    def iva(self):
+        for i in self.taxes:
+            if type(i) == Iva:
+                return i
     @property
     def valor_ice(self):
         return (self.total_sin_impuestos *
@@ -455,28 +437,3 @@ class ProformaBillItem(ItemInBill):
     Represents an item in a proforma bill
     """
     proforma_bill = models.ForeignKey(ProformaBill)
-    iva = models.ForeignKey(Iva)
-    ice = models.ForeignKey(Ice)
-
-
-class BillItem(ReadOnlyMixin, ItemInBill):
-    """
-    Represents an item in a final bill
-    """
-    bill = models.ForeignKey(Bill)
-    iva = models.ForeignKey(BillItemIva)
-    ice = models.ForeignKey(BillItemIce)
-
-    @classmethod
-    def fromProformaBillItem(self, billitem, bill):
-        fields = ['sku', 'name', 'description', 'qty',
-                  'unit_cost', 'unit_price']
-        data = {}
-        for field in fields:
-            data[field] = getattr(billitem, field)
-        data['bill'] = bill
-        data['iva'] = BillItemIva.fromIva(billitem.iva)
-        data['ice'] = BillItemIce.fromIce(billitem.ice)
-        new = BillItem(**data)
-        new.secret_save()
-        return new

@@ -74,20 +74,22 @@ def my_populate():
     ice = add_instance(Ice, descripcion="Bebidas gaseosas", grupo=1,
                        codigo="3051", porcentaje=50.0)
     i11 = add_Item(sku='t1-123', name='Item T11',
-                   iva=iva, ice=ice, unit_cost=10, unit_price=17,
-                   description='Item 1 en Tienda 1', company=t1)
+                   unit_cost=10, unit_price=17,
+                   description='Item 1 en Tienda 1', company=t1,)
     i12 = add_Item(sku='t1-146', name='Item T12',
-                   iva=iva, ice=ice, unit_cost=1, unit_price=3,
+                   unit_cost=1, unit_price=3,
                    description='Item 2 en Tienda 1', company=t1)
     i21 = add_Item(sku='t2-723', name='Item T21',
-                   iva=iva, ice=ice, unit_cost=10, unit_price=17,
+                   unit_cost=10, unit_price=17,
                    description='Item 1 en Tienda 2', company=t2)
     i22 = add_Item(sku='t2-946', name='Item T22',
-                   iva=iva, ice=ice, unit_cost=33, unit_price=37,
+                   unit_cost=33, unit_price=37,
                    description='Item 2 en Tienda 2', company=t2)
     i23 = add_Item(sku='t2-146', name='Item T23',
-                   iva=iva, ice=ice, unit_cost=20, unit_price=27,
+                   unit_cost=20, unit_price=27,
                    description='Item 3 en Tienda 2', company=t2)
+    for i in [i11, i12, i21, i22, i23]:
+        i.tax_items.add(iva, ice)
 
     c1 = add_Customer(razon_social='Paco', tipo_identificacion='cedula',
                       identificacion="1756760292", email='paco@paco.net',
@@ -107,11 +109,11 @@ def my_populate():
                           punto_emision=pe1,
                           date=get_date())
     b1i1 = add_ProformaBillItem(
-        sku='t1-123', name='Item T11', iva=iva, ice=ice, unit_cost=5.0,
+        sku='t1-123', name='Item T11', unit_cost=5.0,
         unit_price=6.0, description='Item 1 en Tienda 1', proforma_bill=b1,
         qty=4)
     b1i1 = add_ProformaBillItem(
-        sku='t1-146', name='Item T12', iva=iva, ice=ice, unit_cost=9.0,
+        sku='t1-146', name='Item T12', unit_cost=9.0,
         unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b1,
         qty=8)
 
@@ -119,11 +121,11 @@ def my_populate():
                           date=get_date(),
                           punto_emision=pe1)
     b2i1 = add_ProformaBillItem(
-        sku='t1-123', name='Item T11', iva=iva, ice=ice, unit_cost=4.0,
+        sku='t1-123', name='Item T11', unit_cost=4.0,
         unit_price=8.0, description='Item 1 en Tienda 1', proforma_bill=b2,
         qty=4)
     b2i1 = add_ProformaBillItem(
-        sku='t1-146', name='Item T12', iva=iva, ice=ice, unit_cost=9.0,
+        sku='t1-146', name='Item T12', unit_cost=9.0,
         unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b2,
         qty=8)
     b3 = add_ProformaBill(issued_to=c3, number='1453',

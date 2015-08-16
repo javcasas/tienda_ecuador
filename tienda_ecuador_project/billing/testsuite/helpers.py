@@ -25,10 +25,8 @@ add_Bill = partial(add_instance, models.Bill)
 
 add_Item = partial(add_instance, models.Item)
 add_ProformaBillItem = partial(add_instance, models.ProformaBillItem)
-add_BillItem = partial(add_instance, models.BillItem)
 
 add_Customer = partial(add_instance, models.Customer)
-add_BillCustomer = partial(add_instance, models.BillCustomer)
 
 
 def add_User(**kwargs):

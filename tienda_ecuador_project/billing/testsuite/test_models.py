@@ -13,12 +13,9 @@ from billing.models import (ReadOnlyObject,
                             Bill,
                             Item,
                             ProformaBillItem,
-                            BillItem,
                             Customer,
                             Iva, Ice,
-                            BillItemIva, BillItemIce,
                             ItemInBill,
-                            BillCustomer,
                             Establecimiento,
                             PuntoEmision,
                             ClaveAcceso)
@@ -31,7 +28,6 @@ from helpers import (add_instance,
                      add_ProformaBill,
                      add_Bill,
                      add_Customer,
-                     add_BillCustomer,
                      TestHelpersMixin)
 
 
@@ -117,7 +113,6 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.customer = add_Customer(
             **dict(base_data['BaseCustomer'], company=self.company))
-        self.bill_customer = add_BillCustomer(**base_data['BaseCustomer'])
 
         self.proforma_bill = add_ProformaBill(
             **dict(base_data['BaseBill'],
@@ -130,9 +125,6 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
         self.ice = add_instance(Ice, **dict(base_data['Ice']))
-
-        self.bill_iva = add_instance(BillItemIva, **dict(base_data['Iva']))
-        self.bill_ice = add_instance(BillItemIce, **dict(base_data['Ice']))
 
         self.tests = [
             (Company, base_data['Company'],
@@ -148,27 +140,18 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'establecimiento': self.establecimiento}),
             (Customer, base_data['BaseCustomer'],
                 {"company": self.company}),
-            (BillCustomer, base_data['BaseCustomer'],
-                {}),
             (ProformaBill, base_data['BaseBill'],
                 {'punto_emision': self.punto_emision,
                  'issued_to': self.customer}),
             (Bill, base_data['BaseBill'],
-                {'company': self.company,}),
+                {'company': self.company,
+                }),
             (Item, base_data['BaseItem'],
                 {"company": self.company,
-                 'iva': self.iva,
-                 'ice': self.ice}),
+                 }),
             (ProformaBillItem, base_data['BaseItem'],
                 {"proforma_bill": self.proforma_bill,
-                 'iva': self.iva,
-                 'ice': self.ice,
                  'qty': 6}),
-            (BillItem, base_data['BaseItem'],
-                {"bill": self.bill,
-                 'iva': self.bill_iva,
-                 'ice': self.bill_ice,
-                 'qty': 8}),
         ]
 
     def test_all_clases(self):
@@ -300,11 +283,13 @@ class ItemTests(TestCase, TestHelpersMixin):
         """
         Prueba los calculos de iva e ice
         """
-        iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
-        ice = Ice(descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
-        proforma = ProformaBillItem(
+        iva = add_instance(Iva, descripcion="12%", codigo="12", porcentaje=12)
+        ice = add_instance(Ice, descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
+        proforma = ItemInBill(
             sku="1234", name="asdf", description="asdf", unit_cost=10,
-            unit_price=10, qty=6, iva=iva, ice=ice)
+            unit_price=10, qty=6)
+        proforma.save()
+        proforma.tax_items.add(iva, ice)
 
         # ICE
         self.assertEquals(proforma.base_imponible_ice,
@@ -323,10 +308,8 @@ class ItemTests(TestCase, TestHelpersMixin):
         """
         Prueba str() y unicode()
         """
-        iva = Iva(descripcion="12%", codigo="12", porcentaje=12)
-        ice = Ice(descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
         ob = Item(sku="1234", name="asdf", description="asdf",
-                  unit_cost=10, unit_price=10, iva=iva, ice=ice)
+                  unit_cost=10, unit_price=10)
         self.assertEquals(str(ob), "1234 - asdf")
 
 
@@ -428,24 +411,22 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
             company=self.company, **base_data['BaseCustomer'])[0]
         self.iva = add_instance(Iva, **base_data['Iva'])
         self.ice = add_instance(Ice, **base_data['Ice'])
-        self.bill_iva = add_instance(BillItemIva, **base_data['Iva'])
-        self.bill_ice = add_instance(BillItemIce, **base_data['Ice'])
         self.proforma = add_instance(ProformaBill,
                                      punto_emision=self.punto_emision,
                                      number='3',
                                      date=get_date(),
                                      issued_to=self.customer)
         for i in range(1, 5):
-            add_instance(ProformaBillItem,
-                         proforma_bill=self.proforma,
-                         sku='T123{}'.format(i),
-                         name='Widget{}'.format(i),
-                         description='Widget description',
-                         qty=i,
-                         unit_cost=5,
-                         unit_price=10,
-                         iva=self.bill_iva,
-                         ice=self.bill_ice)
+            ob = add_instance(ProformaBillItem,
+                              proforma_bill=self.proforma,
+                              sku='T123{}'.format(i),
+                              name='Widget{}'.format(i),
+                              description='Widget description',
+                              qty=i,
+                              unit_cost=5,
+                              unit_price=10,)
+            ob.tax_items.add(self.iva, self.ice)
+            
 
     def test_subtotal(self):
         self.assertEquals(self.proforma.subtotal,

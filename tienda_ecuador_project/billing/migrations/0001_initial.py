@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+from decimal import Decimal
 import billing.validators
 from django.conf import settings
 import billing.models
@@ -128,33 +129,10 @@ class Migration(migrations.Migration):
             bases=(models.Model,),
         ),
         migrations.CreateModel(
-            name='Ice',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('descripcion', models.CharField(max_length=50)),
-                ('grupo', models.IntegerField()),
-                ('codigo', models.CharField(max_length=10)),
-                ('porcentaje', models.DecimalField(max_digits=6, decimal_places=2)),
-            ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='BillItemIce',
-            fields=[
-                ('ice_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Ice')),
-            ],
-            options={
-            },
-            bases=(billing.models.ReadOnlyMixin, 'billing.ice'),
-        ),
-        migrations.CreateModel(
             name='Item',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
                 ('company', models.ForeignKey(to='billing.Company')),
-                ('ice', models.ForeignKey(to='billing.Ice')),
             ],
             options={
             },
@@ -175,32 +153,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('iteminbill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.ItemInBill')),
                 ('bill', models.ForeignKey(to='billing.Bill')),
-                ('ice', models.ForeignKey(to='billing.BillItemIce')),
             ],
             options={
             },
             bases=(billing.models.ReadOnlyMixin, 'billing.iteminbill'),
-        ),
-        migrations.CreateModel(
-            name='Iva',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('descripcion', models.CharField(max_length=50)),
-                ('codigo', models.CharField(max_length=10)),
-                ('porcentaje', models.DecimalField(max_digits=6, decimal_places=2)),
-            ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='BillItemIva',
-            fields=[
-                ('iva_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Iva')),
-            ],
-            options={
-            },
-            bases=(billing.models.ReadOnlyMixin, 'billing.iva'),
         ),
         migrations.CreateModel(
             name='ProformaBill',
@@ -216,8 +172,6 @@ class Migration(migrations.Migration):
             name='ProformaBillItem',
             fields=[
                 ('iteminbill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.ItemInBill')),
-                ('ice', models.ForeignKey(to='billing.Ice')),
-                ('iva', models.ForeignKey(to='billing.Iva')),
                 ('proforma_bill', models.ForeignKey(to='billing.ProformaBill')),
             ],
             options={
@@ -236,6 +190,56 @@ class Migration(migrations.Migration):
             },
             bases=(models.Model,),
         ),
+        migrations.CreateModel(
+            name='Tax',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('descripcion', models.CharField(max_length=100)),
+                ('codigo', models.CharField(max_length=10)),
+                ('porcentaje', models.DecimalField(max_digits=6, decimal_places=2)),
+                ('valor_fijo', models.DecimalField(default=Decimal('0.00'), max_digits=6, decimal_places=2)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Iva',
+            fields=[
+                ('tax_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Tax')),
+            ],
+            options={
+            },
+            bases=('billing.tax',),
+        ),
+        migrations.CreateModel(
+            name='BillItemIva',
+            fields=[
+                ('iva_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Iva')),
+            ],
+            options={
+            },
+            bases=(billing.models.ReadOnlyMixin, 'billing.iva'),
+        ),
+        migrations.CreateModel(
+            name='Ice',
+            fields=[
+                ('tax_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Tax')),
+                ('grupo', models.IntegerField()),
+            ],
+            options={
+            },
+            bases=('billing.tax',),
+        ),
+        migrations.CreateModel(
+            name='BillItemIce',
+            fields=[
+                ('ice_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Ice')),
+            ],
+            options={
+            },
+            bases=(billing.models.ReadOnlyMixin, 'billing.ice'),
+        ),
         migrations.AddField(
             model_name='proformabill',
             name='punto_emision',
@@ -243,9 +247,9 @@ class Migration(migrations.Migration):
             preserve_default=True,
         ),
         migrations.AddField(
-            model_name='item',
-            name='iva',
-            field=models.ForeignKey(to='billing.Iva'),
+            model_name='billitem',
+            name='ice',
+            field=models.ForeignKey(to='billing.BillItemIce'),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -258,6 +262,12 @@ class Migration(migrations.Migration):
             model_name='bill',
             name='company',
             field=models.ForeignKey(to='billing.Company'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='baseitem',
+            name='tax_items',
+            field=models.ManyToManyField(to='billing.Tax'),
             preserve_default=True,
         ),
     ]
