@@ -173,28 +173,24 @@ class BaseBill(models.Model):
     date = models.DateTimeField()
 
     def __unicode__(self):
-        return "{} - {}".format(self.number, self.issued_to)
+        return "{} - {}".format(self.number, self.date)
 
 
 class Bill(ReadOnlyMixin, BaseBill):
     """
     Represents a bill
     """
-    issued_to = models.ForeignKey(BillCustomer)
+    company = models.ForeignKey(Company)
 
     @classmethod
     def fromProformaBill(cls, proforma):
-        customer = BillCustomer.fromCustomer(proforma.issued_to)
         fields = ['number', 'date']
         data = {}
         for field in fields:
             data[field] = getattr(proforma, field)
-        data['issued_to'] = customer
+        data['company'] = proforma.punto_emision.establecimiento.company
         new = Bill(**data)
         new.secret_save()
-        for proformaitem in proforma.items:
-            item = BillItem.fromProformaBillItem(proformaitem, bill=new)
-            item.secret_save()
         return new
 
     @property

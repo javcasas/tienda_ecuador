@@ -23,6 +23,8 @@ from billing.models import (ReadOnlyObject,
                             PuntoEmision,
                             ClaveAcceso)
 
+from billing import models
+
 from helpers import (add_instance,
                      add_User,
                      add_Company,
@@ -122,7 +124,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.bill = add_Bill(
             **dict(base_data['BaseBill'],
-                   issued_to=self.bill_customer))
+                   company=self.company))
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
         self.ice = add_instance(Ice, **dict(base_data['Ice']))
@@ -150,7 +152,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'punto_emision': self.punto_emision,
                  'issued_to': self.customer}),
             (Bill, base_data['BaseBill'],
-                {'issued_to': self.bill_customer}),
+                {'company': self.company,}),
             (Item, base_data['BaseItem'],
                 {"company": self.company,
                  'iva': self.iva,
@@ -194,31 +196,11 @@ class ReadOnlyTests(TestCase, TestHelpersMixin):
     """
     def setUp(self):
         self.company = Company.objects.get_or_create(**base_data['Company'])[0]
-        self.bill_customer = BillCustomer.objects.get_or_create(
-            **base_data['BaseCustomer'])[0]
-        self.iva = add_instance(Iva, **base_data['Iva'])
-        self.ice = add_instance(Ice, **base_data['Ice'])
-        self.bill_iva = add_instance(BillItemIva, **base_data['Iva'])
-        self.bill_ice = add_instance(BillItemIce, **base_data['Ice'])
         self.tests = [
-            (BillCustomer, base_data['BaseCustomer']),
             (Bill,
                 {'number': '3',
                  'date': get_date(),
-                 'issued_to': self.bill_customer}),
-            (BillItem,
-                {'sku': 'T123',
-                 'name': 'Widget',
-                 'description': 'Widget description',
-                 'qty': 14,
-                 'unit_cost': 11.5,
-                 'unit_price': 15.5,
-                 'iva': self.bill_iva,
-                 'ice': self.bill_ice,
-                 'bill': add_Bill(number='32',
-                                  date=get_date(),
-                                  issued_to=self.bill_customer),
-                 }),
+                 'company': self.company})
         ]
 
     def test_update_disabled(self):
@@ -276,15 +258,6 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
                                           **base_data['PuntoEmision'])
         self.user = add_User(username="Paco", password='')
 
-    def test_Customer_to_BillCustomer(self):
-        customer = Customer(
-            razon_social="Pepe", tipo_identificacion="ruc",
-            identificacion="1713831152001", email="papa@ble.com",
-            direccion="dfdf gfwergwer", company=self.company)
-        customer.save()
-        billcustomer = BillCustomer.fromCustomer(customer)
-        self.assertEquals(billcustomer.razon_social, 'Pepe')
-
     def test_ProformaBill_to_Bill(self):
         proforma = ProformaBill(
             issued_to=Customer.objects.get_or_create(
@@ -295,35 +268,7 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
         proforma.save()
         bill = Bill.fromProformaBill(proforma)
         self.assertEquals(bill.number, '3')
-        self.assertEquals(bill.issued_to.razon_social,
-                          base_data['BaseCustomer']['razon_social'])
 
-    def test_ProformaBillItem_to_BillItem(self):
-        proforma = ProformaBill(
-            issued_to=Customer.objects.get_or_create(
-                **dict(base_data['BaseCustomer'], company=self.company))[0],
-            date=get_date(),
-            punto_emision=self.punto_emision,
-            number='3')
-        proforma.save()
-        iva = add_instance(Iva, **base_data['Iva'])
-        ice = add_instance(Ice, **base_data['Ice'])
-        data = dict(sku='T123',
-                    name='Widget',
-                    description='Widget description',
-                    unit_cost=10.5,
-                    unit_price=14.5,
-                    iva=iva,
-                    ice=ice,
-                    qty=14)
-        proforma_item = ProformaBillItem(proforma_bill=proforma, **data)
-        proforma_item.save()
-        bill = Bill.fromProformaBill(proforma)
-        self.assertObjectMatchesData(
-            bill.items[0],
-            dict(data, bill=bill,
-                 iva=BillItemIva.fromIva(iva),
-                 ice=BillItemIce.fromIce(ice)))
 
 
 class ItemTests(TestCase, TestHelpersMixin):
