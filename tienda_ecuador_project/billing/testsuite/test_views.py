@@ -154,7 +154,7 @@ class GenericObjectCRUDTest(object):
         self.detail_view = "{}_detail".format(self.entity)
         self.update_view = "{}_update".format(self.entity)
         self.delete_view = "{}_delete".format(self.entity)
-        self.ob = self.cls(**dict(self.data, company=self.company))
+        self.ob = self.cls(company=self.company, **self.data)
         self.ob.save()
         self.index_keys = self.data.keys()
         self.reverse_index_args = (self.company.id,)
@@ -364,7 +364,7 @@ class GenericObjectCRUDTest(object):
                      descripcion="Caja de la matriz",
                      codigo="001")
 
-        ob3 = self.cls(**dict(self.data, company=company3))
+        ob3 = self.cls(company=company3, **self.data)
         ob3.save()
 
         c = Client()
@@ -445,9 +445,8 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
         ice = add_instance(models.Ice,
                            descripcion="Bebidas gaseosas", grupo=1,
                            codigo='3051', porcentaje=50.0)
-        self.data['iva'] = self.newdata['iva'] = iva
-        self.data['ice'] = self.newdata['ice'] = ice
         self.make_object()
+        self.ob.tax_items.add(iva, ice)
         self.index_keys = ['sku', 'name']
 
 
@@ -484,11 +483,11 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             'date': get_date(),
         }
         self.customer = add_instance(models.Customer,
-                                     **dict(self.customer_data,
-                                            company=self.company))
+                                     company=self.company,
+                                     **self.customer_data)
         self.new_customer = add_instance(models.Customer,
-                                         **dict(self.new_customer_data,
-                                                company=self.company))
+                                         company=self.company,
+                                         **self.new_customer_data)
         self.establecimiento = add_instance(models.Establecimiento,
                                             company=self.company,
                                             codigo='001')
@@ -509,18 +508,18 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                            codigo=1000, porcentaje=50)
         self.items = []
         for i in range(5):
-            self.items.append(
-                add_instance(
-                    models.ProformaBillItem,
-                    sku="SKU00{}".format(i),
-                    name='Item {}'.format(i),
-                    description='Description of item {}'.format(i),
-                    qty=3 + i,
-                    iva=iva,
-                    ice=ice,
-                    unit_cost=5,
-                    unit_price=12,
-                    proforma_bill=self.proformabill))
+            ob = add_instance(
+                models.ProformaBillItem,
+                sku="SKU00{}".format(i),
+                name='Item {}'.format(i),
+                description='Description of item {}'.format(i),
+                qty=3 + i,
+                unit_cost=5,
+                unit_price=12,
+                proforma_bill=self.proformabill)
+            ob.tax_items.add(iva, ice)
+            self.items.append(ob)
+            
 
     def test_proformabill_company_index(self):
         """
@@ -718,8 +717,8 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             'date': get_date(),
         }
         self.customer = add_instance(models.Customer,
-                                     **dict(self.customer_data,
-                                            company=self.company))
+                                     company=self.company,
+                                     **self.customer_data)
         self.establecimiento = add_instance(models.Establecimiento,
                                             company=self.company,
                                             codigo='001')
@@ -741,27 +740,24 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         self.item_data = dict(
             sku='SKU222',
             name='Item 3',
-            iva=self.iva,
-            ice=self.ice,
             unit_cost=5.3,
             unit_price=8,
             description='Item3 description')
         self.item = add_instance(
             models.Item,
-            **dict(self.item_data, company=self.company))
+            company=self.company,
+            **self.item_data)
         self.proformabill_item_data = dict(
             sku="SKU001",
             name='Item 1',
             description='Description of item 1',
-            iva=self.iva,
-            ice=self.ice,
             unit_cost=9.1,
             unit_price=16,
             qty=3)
         self.proformabill_item = add_instance(
             models.ProformaBillItem,
-            **dict(self.proformabill_item_data,
-                   proforma_bill=self.proformabill))
+            proforma_bill=self.proformabill,
+            **self.proformabill_item_data)
 
     def test_add_item_to_bill_show_form(self):
         r = self.c.get(
@@ -867,8 +863,6 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.item_data = dict(
             sku='SKU222',
             name='Item 3',
-            iva=self.iva,
-            ice=self.ice,
             unit_cost=5.3,
             unit_price=8,
             description='Item3 description')
@@ -880,8 +874,6 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             sku="SKU001",
             name='Item 1',
             description='Description of item 1',
-            iva=self.iva,
-            ice=self.ice,
             unit_cost=9.1,
             unit_price=16,
             qty=3)
@@ -889,6 +881,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             models.ProformaBillItem,
             proforma_bill=self.proformabill,
             **self.proformabill_item_data)
+        self.proformabill_item.tax_items.add(self.iva, self.ice)
 
     def test_emitir_factura(self):
         """
