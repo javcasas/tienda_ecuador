@@ -1,4 +1,5 @@
 # * encoding: utf8 *
+from datetime import date
 from decimal import Decimal
 
 from django.db import models
@@ -171,6 +172,8 @@ class BaseBill(models.Model):
     """
     number = models.CharField(max_length=20, blank=True)
     date = models.DateTimeField()
+    xml_content = models.TextField()
+    ride_content = models.TextField()
 
     def __unicode__(self):
         return "{} - {}".format(self.number, self.date)
@@ -182,11 +185,12 @@ class Bill(ReadOnlyMixin, BaseBill):
     """
     company = models.ForeignKey(Company)
 
+    copy_from_fields = ['number', 'date']
+
     @classmethod
     def fromProformaBill(cls, proforma):
-        fields = ['number', 'date']
         data = {}
-        for field in fields:
+        for field in cls.copy_from_fields:
             data[field] = getattr(proforma, field)
         data['company'] = proforma.punto_emision.establecimiento.company
         new = Bill(**data)
@@ -200,7 +204,6 @@ class Bill(ReadOnlyMixin, BaseBill):
 
 class ClaveAcceso(object):
     def fecha_emision_validator(v):
-        from datetime import date
         try:
             y, m, d = v
             date(y, m, d)

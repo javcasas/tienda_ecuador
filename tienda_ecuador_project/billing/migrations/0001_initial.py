@@ -20,6 +20,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('number', models.CharField(max_length=20, blank=True)),
                 ('date', models.DateTimeField()),
+                ('xml_content', models.TextField()),
+                ('ride_content', models.TextField()),
             ],
             options={
             },

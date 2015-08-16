@@ -81,6 +81,8 @@ base_data = {
     "BaseBill": {
         'number': '3',
         'date': get_date(),
+        'xml_content': '',
+        'ride_content': '',
     },
     'Iva': {
         'descripcion': "12%",
