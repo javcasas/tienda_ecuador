@@ -8,8 +8,8 @@
         <ruc>{{ company.ruc }}</ruc>
         <claveAcceso>{{ info_tributaria.clave_acceso }}</claveAcceso>
         <codDoc>{{ info_tributaria.cod_doc }}</codDoc>
-        <estab>{{ info_tributaria.establecimiento }}</estab>
-        <ptoEmi>{{ info_tributaria.punto_emision }}</ptoEmi>
+        <estab>{{ proformabill.punto_emision.establecimiento.codigo }}</estab>
+        <ptoEmi>{{ proformabill.punto_emision.codigo }}</ptoEmi>
         <secuencial>{{ info_tributaria.secuencial|stringformat:'09d' }}</secuencial>
         <dirMatriz>{{ company.direccion_matriz }}</dirMatriz>
     </infoTributaria>

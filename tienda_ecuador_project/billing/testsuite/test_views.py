@@ -931,8 +931,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 "1",
                 "8"]),
             "./infoTributaria/codDoc": "01",  # factura
-            # "./infoTributaria/estab": "FIXME",
-            # "./infoTributaria/ptoEmi": "FIXME",
+            "./infoTributaria/estab": "001",
+            "./infoTributaria/ptoEmi": "001",
             "./infoTributaria/secuencial":
                 z9(self.company.siguiente_comprobante_pruebas),
             "./infoTributaria/dirMatriz": self.company.direccion_matriz,
