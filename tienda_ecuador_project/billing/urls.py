@@ -72,4 +72,9 @@ urlpatterns = patterns(
     url(r'^proforma_bill/item/(?P<pk>[0-9]+)/delete/$',
         views.ProformaBillItemDeleteView.as_view(),
         name='proformabillitem_delete'),
+
+    # Report views
+    url(r'^report/(?P<company_id>[0-9]+)/bills/day/(?P<year>[0-9]+)/(?P<month>[0-9]+)/(?P<day>[0-9]+)/$',
+        views.BillDayListReport.as_view(),
+        name='report_daily_bills'),
 )

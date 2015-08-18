@@ -2,6 +2,7 @@ import tempfile
 import os
 import base64
 import pytz
+from datetime import datetime, timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -570,3 +571,34 @@ class ProformaBillItemDeleteView(ProformaBillItemView,
     """
     Delete view for proformabill items
     """
+
+################
+# Bill Reports #
+################
+class BillView(CompanySelected):
+    model = Bill
+    context_object_name = 'bill'
+
+    def get_queryset(self):
+        return self.model.objects.filter(company=self.company)
+
+    @property
+    def punto_emision_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).punto_emision.id
+
+
+class BillDayListReport(BillView, ListView):
+    context_object_name = "bill_list"
+
+    def get_queryset(self):
+        start_date = datetime(int(self.kwargs['year']),
+                              int(self.kwargs['month']),
+                              int(self.kwargs['day']))
+        end_date = start_date + timedelta(days=1)
+        return self.model.objects.filter(company=self.company).filter(date__gte=start_date, date__lt=end_date)
+
+    def get_context_data(self, **kwargs):
+        context = super(BillDayListReport, self).get_context_data(**kwargs)
+        for key in ['year', 'month', 'day']:
+            context[key] = self.kwargs[key]
+        return context

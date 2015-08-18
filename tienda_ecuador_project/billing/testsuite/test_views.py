@@ -1024,6 +1024,61 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         #   Si no
         #       Mostrar errores
 
+class ReportViews(LoggedInWithCompanyTests):
+    """
+    Checks several report views
+    """
+    def setUp(self):
+        super(ReportViews, self).setUp()
+        self.bill1 = add_instance(
+            models.Bill,
+            company=self.company,
+            date=datetime(2015, 5, 9, 11, 30),
+            number='001-001-123456789',
+            xml_content='blah'*20,
+            ride_content='blih'*50)
+        self.bill2 = add_instance(
+            models.Bill,
+            company=self.company,
+            date=datetime(2015, 5, 10, 11, 30),
+            number='001-001-123456790',
+            xml_content='blah'*20,
+            ride_content='blih'*50)
+
+    def test_daily_bills_SRI(self):
+        """
+        Shows a list of all the bills emitted on a day
+        """
+        y = 2015
+        m = 5
+        d = 9
+        r = self.c.get(
+            reverse('report_daily_bills',
+                    args=(self.company.id, y, m, d)))
+        self.assertEquals(
+            list(r.context_data['bill_list']),
+            [self.bill1])
+        self.assertContains(r, "{}/{}/{}".format(d, m, y))
+
+#    def test_weekly_bills(self):
+#        """
+#        Shows a list of all the bills emitted on a week
+#        """
+#        self.fail("TODO")
+
+#    def test_monthly_bills(self):
+#        """
+#        Shows a list of all the bills emitted on a month
+#        """
+#        self.fail("TODO")
+
+#    def test_monthly_ATS_annex_SRI(self):
+#        """
+#        Shows a helper list
+#            * Anexo Transaccional Simplificado (ATS)
+#        """
+#        self.fail("TODO")
+
 
 class PopulateBillingTest(TestCase):
     """
