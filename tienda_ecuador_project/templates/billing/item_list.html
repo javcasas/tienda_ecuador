@@ -1,15 +1,25 @@
 {% extends 'billing/l1_company_selected.html' %}
 
 {% block breadcrumbs_l1 %}
-    &gt; <a href='{% url 'item_index' company.id %}'>Items</a>
+    &gt; <a href='{% url 'item_index' company.id %}'>Artículos</a>
 {% endblock %}
 
 {% block body_l1 %}
+    <table border='1'>
+        <tr>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Precio Unitario</th>
+        </tr>
     {% for item in item_list %}
-        SKU: {{ item.sku }} <br />
-        Name: {{ item.name }} <br />
-        Description: {{ item.description }} <br />
-        <a href='{% url "item_update" item.id %}'>Editar</a>
+        <tr>
+            <td>{{ item.sku }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.unit_price }}</td>
+            <td><a href='{% url "item_update" item.id %}'>Editar</a></td>
+            <td><a href='{% url "item_delete" item.id %}'>Eliminar</a></td>
+        </tr>
     {% endfor %}
-    <a href='{% url "company_index" company.id %}'>Back</a>
+    </table>
+    <a href='{% url "company_index" company.id %}'>Volver</a>
 {% endblock %}

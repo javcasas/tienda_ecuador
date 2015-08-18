@@ -156,12 +156,18 @@ class CompanyIndex(CompanySelected, View):
         Shows an index for a company
         """
         company = self.company
+        single_punto_emision = PuntoEmision.objects.filter(establecimiento__company=self.company)
+        if len(single_punto_emision) == 1:
+            single_punto_emision = single_punto_emision[0]
+        else:
+            single_punto_emision = None
         context = {
             'item_list': Item.objects.filter(company=company),
             'bill_list': Bill.objects.filter(company=company),
             'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company),
             'customer_list': Customer.objects.filter(company=company),
             'company': company,
+            'single_punto_emision': single_punto_emision,
         }
         return render(request, "billing/company_index.html", context)
 

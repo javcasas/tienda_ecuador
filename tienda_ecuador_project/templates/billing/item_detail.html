@@ -1,13 +1,22 @@
 {% extends 'billing/l2_item_selected.html' %}
 {% block body_l2 %}
-        SKU: {{ item.sku }} <br />
-        Name: {{ item.name }} <br />
-        Description: {{ item.description }} <br />
-        Iva: {{ item.iva }} <br />
-        Ice: {{ item.ice }} <br />
-        Unit cost: {{ item.unit_cost }} <br />
-        Unit price: {{ item.unit_price }} <br />
-        <a href='{% url "item_update" item.id %}'>Editar</a>
-        <a href='{% url "item_index" company.id %}'>Items</a>
-        <a href='{% url "company_index" company.id %}'>Back</a>
+<table border='1'>
+    <tr>
+        <td>SKU</td> <td>{{ item.sku }}</td>
+    </tr> <tr>
+        <td>Nombre</td> <td>{{ item.name }}</td>
+    </tr> <tr>
+        <td>Descripción</td> <td>{{ item.description }}</td>
+    </tr> <tr>
+        <td>Iva</td> <td>{{ item.iva }}</td>
+    </tr> <tr>
+        <td>Ice</td> <td>{{ item.ice }}</td>
+    </tr> <tr>
+        <td>Coste Unitario</td> <td>{{ item.unit_cost }}</td>
+    </tr> <tr>
+        <td>Precio Unitario</td> <td>{{ item.unit_price }}</td>
+</table>
+        <a href='{% url "item_update" item.id %}'>Editar</a><br />
+        <a href='{% url "item_index" company.id %}'>Artículos</a><br />
+        <a href='{% url "company_index" company.id %}'>Volver</a><br />
 {% endblock %}

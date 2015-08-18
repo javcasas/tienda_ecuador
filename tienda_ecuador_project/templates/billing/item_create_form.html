@@ -1,10 +1,11 @@
 {% extends 'billing/l1_company_selected.html' %}
-{% block title %}Nuevo item - {% endblock %}
+{% block title %}Nuevo Artículo - {% endblock %}
 {% block body_l1 %}
+        <h1>Nuevo artículo</h1>
         <form method='post' action='.'>
             {% csrf_token %}
             {{ form.as_p }}
-            <button type='submit'>Submit</button>
+            <button type='submit'>Guardar</button>
         </form>
-        <a href='{% url 'item_index' company.id %}'>Cancel</a>
+        <a href='{% url 'item_index' company.id %}'>Cancelar</a>
 {% endblock %}

@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from datetime import datetime
 from django import forms
 from billing import models
@@ -6,38 +7,45 @@ from billing import models
 class ItemForm(forms.ModelForm):
     sku = forms.CharField(
         max_length=50,
-        help_text="Please enter the SKU.")
+        label='Código de stock (SKU)',
+        help_text="Por favor teclee un código de stock.")
     name = forms.CharField(
+        label='Nombre',
         max_length=50,
-        help_text="Please enter the name of the item.")
+        help_text="Por favor teclee el nombre del artículo.")
     description = forms.CharField(
+        label="Descripción",
         max_length=500,
-        help_text="Please enter the description.")
+        widget=forms.Textarea(),
+        help_text="Por favor teclee una descripción.")
     unit_cost = forms.DecimalField(
         decimal_places=4,
-        help_text="Please enter the unit cost.")
+        label="Coste por unidad",
+        help_text='Por favor introduzca el coste por unidad.')
     unit_price = forms.DecimalField(
         decimal_places=4,
-        help_text="Please enter the unit price.")
+        label="Precio por unidad",
+        help_text='Por favor introduzca el precio por unidad.')
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.Item
-        fields = ('sku', 'name', 'description',
-                  'unit_cost', 'unit_price')
+        fields = ('sku', 'name', 'unit_price', 'unit_cost', 'description')
 
 
 class ProformaBillForm(forms.ModelForm):
     issued_to = forms.ModelChoiceField(
+        label="Cliente",
         queryset=models.Customer.objects,
-        help_text="Please select the customer.")
+        help_text="Por favor seleccione el cliente.")
     number = forms.CharField(
+        label="Identificador",
         max_length=50,
-        help_text="Please enter the number of the bill.")
+        help_text="Por favor teclee un código identificador para la proforma.")
     date = forms.DateTimeField(
         initial=datetime.utcnow,
-        help_text='Please select the date')
+        widget=forms.HiddenInput())
 
     class Meta:
         # Provide an association between the ModelForm and a model
@@ -47,20 +55,25 @@ class ProformaBillForm(forms.ModelForm):
 
 class CustomerForm(forms.ModelForm):
     razon_social = forms.CharField(
+        label="Razón Social",
         max_length=50,
         help_text="Por favor teclee la razon social.")
     tipo_identificacion = forms.ChoiceField(
+        label="Tipo de Identificación",
         choices=[('ruc', 'RUC'), ('cedula', 'Cedula')],
-        help_text="Por favor teclee la razon social.")
+        help_text="Por favor seleccione el tipo de identificación.")
     identificacion = forms.CharField(
+        label="Identificación",
         max_length=50,
-        help_text="Por favor teclee la identificacion.")
+        help_text="Por favor teclee la identificación.")
     email = forms.CharField(
+        label="E-Mail",
         max_length=50,
         help_text="Por favor teclee el email.")
     direccion = forms.CharField(
+        label="Dirección",
         max_length=50,
-        help_text="Por favor teclee la direccion.")
+        help_text="Por favor teclee la dirección.")
 
     # An inline class to provide additional information on the form.
     class Meta:
@@ -72,19 +85,15 @@ class CustomerForm(forms.ModelForm):
 
 class ProformaBillAddItemForm(forms.ModelForm):
     sku = forms.CharField(
-        max_length=50,
-        help_text="Please enter the SKU.",
         widget=forms.HiddenInput())
     name = forms.CharField(
-        max_length=50,
-        help_text="Please enter the name of the item.",
         widget=forms.HiddenInput())
     description = forms.CharField(
-        max_length=500,
-        help_text="Please enter the description.",
         widget=forms.HiddenInput())
     qty = forms.IntegerField(
-        help_text='Please enter the quantity')
+        label="Cantidad",
+        initial=1,
+        help_text='Por favor introduzca la cantidad.')
     unit_cost = forms.DecimalField(
         widget=forms.HiddenInput())
     unit_price = forms.DecimalField(
@@ -93,9 +102,10 @@ class ProformaBillAddItemForm(forms.ModelForm):
         queryset=models.ProformaBill.objects,
         widget=forms.HiddenInput())
     copy_from = forms.ModelChoiceField(
+        label='Artículo',
         queryset=None,
         required=False,
-        help_text="Please select the item to copy from.")
+        help_text="Seleccione un artículo que añadir a la factura.")
 
     # An inline class to provide additional information on the form.
     class Meta:
@@ -107,18 +117,26 @@ class ProformaBillAddItemForm(forms.ModelForm):
 
 class ProformaBillItemForm(forms.ModelForm):
     sku = forms.CharField(
+        label='Código de stock (SKU)',
         max_length=50,
-        help_text="Please enter the SKU.")
+        help_text="Por favor teclee un código de stock.")
     name = forms.CharField(
+        label="Nombre",
         max_length=50,
-        help_text="Please enter the name of the item.")
-    description = forms.CharField(
-        max_length=500,
-        help_text="Please enter the description.")
+        help_text="Por favor teclee el nombre del artículo.")
+    unit_price = forms.DecimalField(
+        label="Precio por unidad",
+        help_text='Por favor introduzca el precio por unidad.')
     qty = forms.IntegerField(
-        help_text='Please enter the quantity')
-    unit_cost = forms.DecimalField()
-    unit_price = forms.DecimalField()
+        label="Cantidad",
+        help_text='Por favor introduzca la cantidad.')
+    description = forms.CharField(
+        label="Descripción",
+        max_length=500,
+        widget=forms.Textarea(),
+        help_text="Por favor teclee una descripción.")
+    unit_cost = forms.DecimalField(
+        widget=forms.HiddenInput())
     proforma_bill = forms.ModelChoiceField(
         queryset=models.ProformaBill.objects,
         widget=forms.HiddenInput())
@@ -127,5 +145,5 @@ class ProformaBillItemForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.ProformaBillItem
-        fields = ('sku', 'name', 'description', 'qty', 'unit_cost',
-                  'unit_price')
+        fields = ('sku', 'name', 'qty', 'unit_price', 'description',
+                  'unit_cost')

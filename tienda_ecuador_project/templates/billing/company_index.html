@@ -1,14 +1,6 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% block title_l1 %}Menú General - {% endblock %}
 {% block body_l1 %}
-        <h1>Items</h1>
-        <table border='1'>
-        {% for item in item_list %}
-            <tr><td>
-            <a href="{% url 'item_detail' item.id %}">{{ item.sku }}- {{ item.name }}</a>
-            </td></tr>
-        {% endfor %}
-        </table>
 
         <h1>Proformas</h1>
         <table border='1'>
@@ -18,15 +10,12 @@
             </td></tr>
         {% endfor %}
         </table>
-
-        <h1>Facturas</h1>
-        <table border='1'>
-        {% for bill in bill_list %}
-            <tr><td>
-            <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
-            </td></tr>
-        {% endfor %}
-        </table>
+        {% if single_punto_emision %}
+            <a href="{% url 'proformabill_create' single_punto_emision.id %}">Nueva proforma</a>
+        {% else %}
+            Ir a punto de emision
+            {# TODO #}
+        {% endif %}
 
         <h1>Clientes</h1>
         <table border='1'>
@@ -34,6 +23,42 @@
             <tr><td>
             <a href="{% url 'customer_detail' customer.id %}">{{ customer.razon_social }} ({{customer.identificacion}})</a>
             </td></tr>
+        {% empty %}
+            {# FIXME: text in <table> without <tr> and <td> #}
+            No hay clientes.
         {% endfor %}
         </table>
+        <a href="{% url 'customer_create' company.id %}">Nuevo cliente</a>
+
+        <h1>Facturas</h1>
+        <table border='1'>
+        {% for bill in bill_list %}
+            <tr><td>
+            <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
+            </td></tr>
+        {% empty %}
+            {# FIXME: text in <table> without <tr> and <td> #}
+            {% if single_punto_emision %}
+                No hay facturas. Para emitir una factura, primero cree una 
+                <a href='{% url 'proformabill_create' single_punto_emision.id %}'>Nueva Proforma</a>
+                , y después emita la factura.
+            {% else %}
+                {# FIXME #}
+            {% endif %}
+        {% endfor %}
+        </table>
+
+        <h1>Artículos en venta</h1>
+        <table border='1'>
+        {% for item in item_list %}
+            <tr><td>
+            <a href="{% url 'item_detail' item.id %}">{{ item.sku }}- {{ item.name }}</a>
+            </td></tr>
+        {% empty %}
+            {# FIXME: text in <table> without <tr> and <td> #}
+            No hay artículos.
+        {% endfor %}
+        </table>
+        <a href="{% url 'item_create' company.id %}">Nuevo Artículo</a>
+
 {% endblock %}
