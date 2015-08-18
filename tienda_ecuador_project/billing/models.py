@@ -360,6 +360,10 @@ class BaseItem(models.Model):
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
     unit_price = models.DecimalField(max_digits=20, decimal_places=8)
     tax_items = models.ManyToManyField(Tax)
+    tipo = models.CharField(
+        max_length=10,
+        validators=[OneOf("producto", "servicio")])
+
     @property
     def taxes(self):
         """

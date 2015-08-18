@@ -51,6 +51,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=500)),
                 ('unit_cost', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('unit_price', models.DecimalField(max_digits=20, decimal_places=8)),
+                ('tipo', models.CharField(max_length=10, validators=[billing.validators.OneOf(b'producto', b'servicio')])),
             ],
             options={
             },
@@ -64,15 +65,6 @@ class Migration(migrations.Migration):
             options={
             },
             bases=(billing.models.ReadOnlyMixin, 'billing.basebill'),
-        ),
-        migrations.CreateModel(
-            name='BillCustomer',
-            fields=[
-                ('basecustomer_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseCustomer')),
-            ],
-            options={
-            },
-            bases=(billing.models.ReadOnlyMixin, 'billing.basecustomer'),
         ),
         migrations.CreateModel(
             name='Company',
@@ -149,16 +141,6 @@ class Migration(migrations.Migration):
             bases=('billing.baseitem',),
         ),
         migrations.CreateModel(
-            name='BillItem',
-            fields=[
-                ('iteminbill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.ItemInBill')),
-                ('bill', models.ForeignKey(to='billing.Bill')),
-            ],
-            options={
-            },
-            bases=(billing.models.ReadOnlyMixin, 'billing.iteminbill'),
-        ),
-        migrations.CreateModel(
             name='ProformaBill',
             fields=[
                 ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
@@ -213,15 +195,6 @@ class Migration(migrations.Migration):
             bases=('billing.tax',),
         ),
         migrations.CreateModel(
-            name='BillItemIva',
-            fields=[
-                ('iva_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Iva')),
-            ],
-            options={
-            },
-            bases=(billing.models.ReadOnlyMixin, 'billing.iva'),
-        ),
-        migrations.CreateModel(
             name='Ice',
             fields=[
                 ('tax_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Tax')),
@@ -231,31 +204,10 @@ class Migration(migrations.Migration):
             },
             bases=('billing.tax',),
         ),
-        migrations.CreateModel(
-            name='BillItemIce',
-            fields=[
-                ('ice_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Ice')),
-            ],
-            options={
-            },
-            bases=(billing.models.ReadOnlyMixin, 'billing.ice'),
-        ),
         migrations.AddField(
             model_name='proformabill',
             name='punto_emision',
             field=models.ForeignKey(to='billing.PuntoEmision'),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='billitem',
-            name='ice',
-            field=models.ForeignKey(to='billing.BillItemIce'),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='billitem',
-            name='iva',
-            field=models.ForeignKey(to='billing.BillItemIva'),
             preserve_default=True,
         ),
         migrations.AddField(

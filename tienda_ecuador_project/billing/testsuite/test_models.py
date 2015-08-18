@@ -73,6 +73,7 @@ base_data = {
         'description': 'Widget description',
         'unit_cost': 11.5,
         'unit_price': 15.5,
+        'tipo': 'producto',
     },
     "BaseBill": {
         'number': '3',
