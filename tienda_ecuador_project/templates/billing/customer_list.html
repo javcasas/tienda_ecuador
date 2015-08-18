@@ -1,14 +1,26 @@
 {% extends 'billing/l1_company_selected.html' %}
+{% load bootstrap3 %}
 
 {% block breadcrumbs_l1 %}
     <li><a href='{% url 'customer_index' company.id %}'>Clientes</a></li>
 {% endblock %}
 
 {% block body_l1 %}
-    {% for customer in customer_list %}
-        Razón social: {{ customer.razon_social }} <br />
-        Identificación: {{ customer.identificacion }} <br />
-        <a href='{% url "customer_update" customer.id %}'>Editar</a>
-    {% endfor %}
-    <a href='{% url "company_index" company.id %}'>Back</a>
+    <table class='table table-hover'>
+        <tr>
+            <th>Razón Social</th>
+            <th>Identificación</th>
+            <th></th>
+        </tr>
+        {% for customer in customer_list %}
+            <tr>
+                <td>{{ customer.razon_social }}</td>
+                <td>{{ customer.identificacion }}</td>
+                <td><a href='{% url "customer_update" customer.id %}' class="btn btn-default">Editar</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% buttons %}
+        <a href='{% url "company_index" company.id %}' class='btn btn-default'>Volver</a>
+    {% endbuttons %}
 {% endblock %}

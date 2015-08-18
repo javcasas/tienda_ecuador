@@ -1,9 +1,10 @@
 {% extends 'billing/l2_proformabill_selected.html' %}
+{% load bootstrap3 %}
 {% block title_l1 %}Ver Proforma {{ proformabill }}- {% endblock %}
 {% block body_l1 %}
         <h1>Proforma</h1>
         <style>
-            table {
+/*            table {
                 width: 100%;
             }
             td  {
@@ -14,27 +15,32 @@
             .edit_button, .delete_button {
                 width: 0px;
             }
-
+*/
         </style>
 
-        <table border='1'>
+        <table class='table table-hover'>
             <tr>
-                <th>Numero</th><td>{{ proformabill.number }}</td>
+                <th>Numero</th>
+                <td>{{ proformabill.number }}</td>
                 <td rowspan='4'>
-                    <a href="{% url "proformabill_update" proformabill.id %}">Editar datos</a>
+                    <a href="{% url "proformabill_update" proformabill.id %}" class='btn btn-default'>Editar datos</a>
                 </td>
             </tr>
             <tr>
-                <th>Cliente</th><td>({{ proformabill.issued_to.tipo_identificacion }}) {{ proformabill.issued_to.identificacion }} </td>
+                <th>Cliente</th>
+                <td>({{ proformabill.issued_to.tipo_identificacion }}) {{ proformabill.issued_to.identificacion }} </td>
             </tr>
             <tr>
-                 <th></th><td>{{ proformabill.issued_to.razon_social }}</td>
+                <th></th>
+                <td>{{ proformabill.issued_to.razon_social }}</td>
             </tr>
             <tr>
-                <th>Fecha</th><td>{{ proformabill.date }}</td>
+                <th>Fecha</th>
+                <td>{{ proformabill.date }}</td>
             </tr>
         </table>
-        <table border=1>
+        <h2>Detalle</h2>
+        <table class='table table-hover'>
             <tr>
                 <th>Código</th>
                 <th>Nombre</th>
@@ -42,6 +48,7 @@
                 <th>Precio unitario</th>
                 <th>Subtotal</th>
                 <th>Impuestos</th>
+                <th></th>
             </tr>
         {% for item in proformabill.items %}
             <tr>
@@ -51,20 +58,23 @@
                 <td>{{ item.unit_price|floatformat:4 }}</td>
                 <td>{{ item.subtotal|floatformat:2 }}</td>
                 <td>{{ item.total_impuestos|floatformat:2 }}</td>
-                <td class='edit_button'>
-                    <a href="{% url 'proformabillitem_update' item.id %}">Editar</a>
-                </td>
-                <td class='delete_button'>
+                <td>
+                    {% buttons %}
                     <form action="{% url 'proformabillitem_delete' item.id %}" method='post'>
                         {% csrf_token %}
-                        <button type='submit'>Eliminar</button>
+                        <a href="{% url 'proformabillitem_update' item.id %}" class='btn btn-default'>Editar</a>
+                        <button type='submit' class='btn btn-danger'>Eliminar</button>
                     </form>
+                    {% endbuttons %}
                 </td>
             <tr/>
         {% endfor %}
         </table>
-        <a href="{% url "proformabill_add_item" proformabill.id %}">Añadir Artículo</a>
-        <table border='1'>
+        {% buttons %}
+            <a href="{% url "proformabill_add_item" proformabill.id %}" class='btn btn-primary'>Añadir Artículo</a>
+        {% endbuttons %}
+        <h2>Totales</h2>
+        <table class='table table-hover'>
             <tr>
                 <th>Subtotal IVA 12%</th><td>{{ proformabill.subtotal.12|floatformat:2 }}</td>
             </tr>
@@ -78,5 +88,9 @@
                 <th>Total a pagar</th><td>{{ proformabill.total|stringformat:".2f" }}</td>
             </tr>
         </table>
+        {% buttons %}
+            <a href="{% url "proformabill_emit_to_bill" proformabill.id %}" class='btn btn-primary'>Emitir Proforma</a>
+            <a href="{% url "proformabill_delete" proformabill.id %}" class='btn btn-danger'>Eliminar</a>
+        {% endbuttons %}
 
 {% endblock %}

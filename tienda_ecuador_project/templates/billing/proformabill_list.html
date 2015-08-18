@@ -1,4 +1,5 @@
 {% extends 'billing/l1_company_selected.html' %}
+{% load bootstrap3 %}
 {% block title_l1 %}Proformas - {% endblock %}
 
 {% block breadcrumbs_l1 %}
@@ -9,11 +10,16 @@
 
 {% block body_l1 %}
         <h1>Proformas</h1>
-        <table border='1'>
+        <table class='table table-hover'>
+            <tr>
+                <th>Proforma</th>
+                <th></th>
+            </tr>
         {% for proformabill in proformabill_list %}
-            <tr><td>
-            <a href="{% url 'proformabill_detail' proformabill.id %}">{{ proformabill }}</a>
-            </td></tr>
+            <tr>
+                <td>{{ proformabill }}</td>
+                <td><a href="{% url 'proformabill_detail' proformabill.id %}" class='btn btn-default'>Detalle</a></td>
+            </tr>
         {% endfor %}
         </table>
 {% endblock %}

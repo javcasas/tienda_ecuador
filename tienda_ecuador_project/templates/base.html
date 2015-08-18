@@ -1,14 +1,10 @@
 {% load bootstrap3 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
-
-{# Display django.contrib.messages as Bootstrap alerts #}
-{% bootstrap_messages %}
-
 <!DOCTYPE html>
 <html>
     <head>
         <title>{% block title %}{% endblock %}Facturación</title>
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
     </head>
     <style>
         body {
@@ -38,6 +34,8 @@
     </style>
 
     <body>
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
         <div id='base_header'>
             <h1>
                 Sistema de Facturación DSSTI
