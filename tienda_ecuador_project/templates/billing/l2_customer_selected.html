@@ -2,8 +2,8 @@
 {% block title_l1 %}{% block title_l2 %}{% endblock %}{{ customer.razon_social }} - {% endblock %}
 
 {% block breadcrumbs_l1 %}
-    &gt; <a href='{% url 'customer_index' company.id %}'>Clientes</a>
-    &gt; <a href='{% url 'customer_detail' customer.id %}'>{{ customer.razon_social }}</a>
+    <li><a href='{% url 'customer_index' company.id %}'>Clientes</a></li>
+    <li><a href='{% url 'customer_detail' customer.id %}'>{{ customer.razon_social }}</a></li>
     {% block breadcrumbs_l2 %}
     {% endblock %}
 {% endblock %}

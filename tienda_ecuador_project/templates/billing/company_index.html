@@ -1,64 +1,112 @@
 {% extends 'billing/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+
 {% block title_l1 %}Menú General - {% endblock %}
+
 {% block body_l1 %}
+    <div class='row'>
+        <div class='col-md-6'>
+            <h1>Proformas</h1>
+            <table class='table table-hover'>
+                <tr>
+                    <th>Identificador</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+            {% for proformabill in proformabill_list %}
+                <tr>
+                    <td>{{ proformabill.number }}</td>
+                    <td>{{ proformabill.issued_to }}</td>
+                    <td>&dollar;{{ proformabill.total }}</td>
+                    <td>
+                        <a href="{% url 'proformabill_detail' proformabill.id %}" class='btn btn-default'>Detalle</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </table>
+            {% buttons %}
+                {% if single_punto_emision %}
+                    <a href="{% url 'proformabill_create' single_punto_emision.id %}" class='btn btn-primary'>Nueva proforma</a>
+                {% else %}
+                    Ir a punto de emision
+                    {# TODO #}
+                {% endif %}
+            {% endbuttons %}
+        </div>
 
-        <h1>Proformas</h1>
-        <table border='1'>
-        {% for proformabill in proformabill_list %}
-            <tr><td>
-            <a href="{% url 'proformabill_detail' proformabill.id %}">{{ proformabill.number }} - {{ proformabill.issued_to.name }}</a>
-            </td></tr>
-        {% endfor %}
-        </table>
-        {% if single_punto_emision %}
-            <a href="{% url 'proformabill_create' single_punto_emision.id %}">Nueva proforma</a>
-        {% else %}
-            Ir a punto de emision
-            {# TODO #}
-        {% endif %}
+        <div class='col-md-6'>
+            <h1>Clientes</h1>
+            <table class='table table-hover'>
+                <tr>
+                    <th>Identificación</th>
+                    <th>Razón Social</th>
+                    <th></th>
+                </tr>
+            {% for customer in customer_list %}
+                <tr>
+                    <td>({{customer.tipo_identificacion}}) {{ customer.identificacion }}</td>
+                    <td>{{ customer.razon_social }}</td>
+                    <td><a href="{% url 'customer_detail' customer.id %}" class='btn btn-default'>Detalle</a></td>
+                </tr>
+            {% empty %}
+                {# FIXME: text in <table> without <tr> and <td> #}
+                No hay clientes.
+            {% endfor %}
+            </table>
+            {% buttons %}
+                <a href="{% url 'customer_create' company.id %}" class='btn btn-primary'>Nuevo cliente</a>
+            {% endbuttons %}
+        </div>
+    </div>
 
-        <h1>Clientes</h1>
-        <table border='1'>
-        {% for customer in customer_list %}
-            <tr><td>
-            <a href="{% url 'customer_detail' customer.id %}">{{ customer.razon_social }} ({{customer.identificacion}})</a>
-            </td></tr>
-        {% empty %}
-            {# FIXME: text in <table> without <tr> and <td> #}
-            No hay clientes.
-        {% endfor %}
-        </table>
-        <a href="{% url 'customer_create' company.id %}">Nuevo cliente</a>
+    <div class='row'>
+        <div class='col-md-6'>
+            <h1>Facturas</h1>
+            <table class='table table-hover'>
+            {% for bill in bill_list %}
+                <tr><td>
+                <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
+                </td></tr>
+            {% empty %}
+                {# FIXME: text in <table> without <tr> and <td> #}
+                {% if single_punto_emision %}
+                    No hay facturas. Para emitir una factura, primero cree una 
+                    <a href='{% url 'proformabill_create' single_punto_emision.id %}'>Nueva Proforma</a>
+                    , y después emita la factura.
+                {% else %}
+                    {# FIXME #}
+                {% endif %}
+            {% endfor %}
+            </table>
+        </div>
 
-        <h1>Facturas</h1>
-        <table border='1'>
-        {% for bill in bill_list %}
-            <tr><td>
-            <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
-            </td></tr>
-        {% empty %}
-            {# FIXME: text in <table> without <tr> and <td> #}
-            {% if single_punto_emision %}
-                No hay facturas. Para emitir una factura, primero cree una 
-                <a href='{% url 'proformabill_create' single_punto_emision.id %}'>Nueva Proforma</a>
-                , y después emita la factura.
-            {% else %}
-                {# FIXME #}
-            {% endif %}
-        {% endfor %}
-        </table>
-
-        <h1>Artículos en venta</h1>
-        <table border='1'>
-        {% for item in item_list %}
-            <tr><td>
-            <a href="{% url 'item_detail' item.id %}">{{ item.sku }}- {{ item.name }}</a>
-            </td></tr>
-        {% empty %}
-            {# FIXME: text in <table> without <tr> and <td> #}
-            No hay artículos.
-        {% endfor %}
-        </table>
-        <a href="{% url 'item_create' company.id %}">Nuevo Artículo</a>
+        <div class='col-md-6'>
+            <h1>Artículos en venta</h1>
+            <table class='table table-hover'>
+                <tr>
+                    <th>SKU</th>
+                    <th>Nombre</th>
+                    <th>Precio Unitario</th>
+                    <th></th>
+                </tr>
+            {% for item in item_list %}
+                <tr>
+                    <td>{{ item.sku }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.unit_price }}</td>
+                    <td><a href="{% url 'item_detail' item.id %}" class='btn btn-default'>Detalle</a></td>
+                </tr>
+            {% empty %}
+                {# FIXME: text in <table> without <tr> and <td> #}
+                No hay artículos.
+            {% endfor %}
+            </table>
+            {% buttons %}
+                <a href="{% url 'item_create' company.id %}" class='btn btn-primary'>Nuevo Artículo</a>
+            {% endbuttons %}
+        </div>
+    </div>
 
 {% endblock %}

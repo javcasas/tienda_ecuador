@@ -2,8 +2,8 @@
 {% block title_l1 %}{% block title_l2 %}{% endblock %}{{ proformabill }} - {% endblock %}
 
 {% block breadcrumbs_l1 %}
-    &gt; <a href='{% url 'proformabill_company_index' company.id %}'>Proformas</a>
-    &gt; <a href='{% url 'proformabill_detail' proformabill.id %}'>{{ proformabill.number }} - {{ proformabill.issued_to.razon_social }}</a>
+    <li><a href='{% url 'proformabill_company_index' company.id %}'>Proformas</a></li>
+    <li><a href='{% url 'proformabill_detail' proformabill.id %}'>{{ proformabill.number }} - {{ proformabill.issued_to.razon_social }}</a></li>
     {% block breadcrumbs_l2 %}
     {% endblock %}
 {% endblock %}

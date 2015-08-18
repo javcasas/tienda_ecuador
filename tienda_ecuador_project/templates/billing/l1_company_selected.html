@@ -1,4 +1,4 @@
-{% extends 'billing/base.html' %}
+{% extends 'base.html' %}
 {% block title %}{% block title_l1 %}{% endblock %}{{ company.nombre_comercial }} - {% endblock %}
 
 
@@ -8,9 +8,11 @@
         <h3>({{ company.razon_social }})</h3>
     </div>
     <div id='breadcrumbs'>
-        <a href='{% url 'company_index' company.id %}'>{{ company.nombre_comercial }}</a>
-        {% block breadcrumbs_l1 %}
-        {% endblock %}
+        <ol class='breadcrumb'>
+            <li><a href='{% url 'company_index' company.id %}'>{{ company.nombre_comercial }}</a></li>
+            {% block breadcrumbs_l1 %}
+            {% endblock %}
+        </ol>
     </div>
     {% block body_l1 %}
     {% endblock %}

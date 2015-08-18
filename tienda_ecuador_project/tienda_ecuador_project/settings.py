@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'billing',
     'registration',
+    'bootstrap3',
 )
 
 REGISTRATION_OPEN = False       # If True, users can register

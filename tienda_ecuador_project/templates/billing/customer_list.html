@@ -1,7 +1,7 @@
 {% extends 'billing/l1_company_selected.html' %}
 
 {% block breadcrumbs_l1 %}
-    &gt; <a href='{% url 'customer_index' company.id %}'>Clientes</a>
+    <li><a href='{% url 'customer_index' company.id %}'>Clientes</a></li>
 {% endblock %}
 
 {% block body_l1 %}
