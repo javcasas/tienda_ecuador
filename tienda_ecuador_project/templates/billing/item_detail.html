@@ -1,22 +1,33 @@
 {% extends 'billing/l2_item_selected.html' %}
+{% load bootstrap3 %}
+
 {% block body_l2 %}
-<table border='1'>
+<table class='table table-hover'>
     <tr>
-        <td>SKU</td> <td>{{ item.sku }}</td>
-    </tr> <tr>
-        <td>Nombre</td> <td>{{ item.name }}</td>
-    </tr> <tr>
-        <td>Descripción</td> <td>{{ item.description }}</td>
-    </tr> <tr>
-        <td>Iva</td> <td>{{ item.iva }}</td>
-    </tr> <tr>
-        <td>Ice</td> <td>{{ item.ice }}</td>
-    </tr> <tr>
-        <td>Coste Unitario</td> <td>{{ item.unit_cost }}</td>
-    </tr> <tr>
-        <td>Precio Unitario</td> <td>{{ item.unit_price }}</td>
+        <th>SKU</th> <td>{{ item.sku }}</td>
+    </tr>
+    <tr>
+        <th>Nombre</th> <td>{{ item.name }}</td>
+    </tr>
+    <tr>
+        <th>Precio Unitario</th> <td>{{ item.unit_price }}</td>
+    </tr>
+    <tr>
+        <th>Descripción</th> <td>{{ item.description }}</td>
+    </tr>
+    <tr>
+        <th>Iva</th> <td>{{ item.iva }}</td>
+    </tr>
+    <tr>
+        <th>Ice</th> <td>{{ item.ice }}</td>
+    </tr>
+    <tr>
+        <th>Coste Unitario</th> <td>{{ item.unit_cost }}</td>
+    </tr>
 </table>
-        <a href='{% url "item_update" item.id %}'>Editar</a><br />
-        <a href='{% url "item_index" company.id %}'>Artículos</a><br />
-        <a href='{% url "company_index" company.id %}'>Volver</a><br />
+{% buttons %}
+    <a href='{% url "item_update" item.id %}' class='btn btn-primary'>Editar</a>
+    <a href='{% url "item_index" company.id %}' class='btn btn-default'>Artículos</a>
+    <a href='{% url "company_index" company.id %}' class='btn btn-default'>Menú General</a>
+{% endbuttons %}
 {% endblock %}

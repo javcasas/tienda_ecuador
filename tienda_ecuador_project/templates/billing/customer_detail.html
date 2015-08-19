@@ -1,11 +1,27 @@
 {% extends 'billing/l2_customer_selected.html' %}
+{% load bootstrap3 %}
 {% block body_l2 %}
-        Razón social: {{ customer.razon_social }} <br />
-        Identificación: {{ customer.identificacion }}
-            (<span id='tipo_identificacion' value='{{ customer.tipo_identificacion }}'>{{ customer.tipo_identificacion.capitalize }}</span>) <br />
-        Dirección: {{ customer.direccion }} <br />
-        Email: {{ customer.email }} <br />
-        <a href='{% url "customer_update" customer.id %}'>Editar</a>
-        <a href='{% url "customer_index" company.id %}'>Clientes</a>
-        <a href='{% url "company_index" company.id %}'>Back</a>
+    <table class='table table-hover'>
+        <tr>
+            <th>Razón social</th><td>{{ customer.razon_social }}</td>
+        </tr>
+        <tr>
+            <th>Identificación</th>
+            <td>{{ customer.identificacion }}
+                (<span id='tipo_identificacion' value='{{ customer.tipo_identificacion }}'>
+                {{ customer.tipo_identificacion.capitalize }}</span>)
+            </td>
+        </tr>
+        <tr>
+            <th>Dirección</th><td>{{ customer.direccion }}</td>
+        </tr>
+        <tr>
+            <th>Email</th><td>{{ customer.email }}</td>
+        </tr>
+    </table>
+    {% buttons %}
+        <a href='{% url "customer_update" customer.id %}' class='btn btn-primary'>Editar</a>
+        <a href='{% url "customer_index" company.id %}' class='btn btn-default'>Clientes</a>
+        <a href='{% url "company_index" company.id %}' class='btn btn-default'>Menú General</a>
+    {% endbuttons %}
 {% endblock %}

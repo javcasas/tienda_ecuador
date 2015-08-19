@@ -1,11 +1,15 @@
 {% extends 'billing/l1_company_selected.html' %}
+{% load bootstrap3 %}
+
 {% block title %}Nuevo Artículo - {% endblock %}
 {% block body_l1 %}
         <h1>Nuevo artículo</h1>
-        <form method='post' action='.'>
+        <form method='post' action='.' class='form'>
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type='submit'>Guardar</button>
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type='submit' class='btn btn-primary'>Guardar</button>
+            <a href='{% url 'item_index' company.id %}' class='btn btn-default'>Cancelar</a>
+            {% endbuttons %}
         </form>
-        <a href='{% url 'item_index' company.id %}'>Cancelar</a>
 {% endblock %}
