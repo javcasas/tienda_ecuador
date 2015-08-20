@@ -30,6 +30,8 @@ from forms import (ItemForm,
                    ProformaBillItemForm,
                    CustomerForm)
 
+tz = pytz.timezone('America/Guayaquil')
+
 
 @login_required
 def index(request):
@@ -331,7 +333,6 @@ class ProformaBillDetailView(ProformaBillView,
 class ProformaBillCreateView(PuntoEmisionSelected,
                              ProformaBillView,
                              CreateView):
-    fields = ['number', 'issued_to', 'date']
     template_name_suffix = '_create_form'
     form_class = ProformaBillForm
 
@@ -344,7 +345,8 @@ class ProformaBillCreateView(PuntoEmisionSelected,
     def form_valid(self, form):
         form.instance.company = self.company
         form.instance.punto_emision = self.punto_emision
-        return super(self.__class__, self).form_valid(form)
+        form.instance.date = datetime.now(tz).replace(microsecond=0)
+        return super(ProformaBillCreateView, self).form_valid(form)
 
 
 class ProformaBillUpdateView(ProformaBillView, PuntoEmisionSelected, UpdateView):

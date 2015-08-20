@@ -14,8 +14,6 @@ from helpers import (add_Company,
                      add_instance,
                      make_post)
 
-from xml.etree import ElementTree as ET
-
 
 def get_date():
     now = datetime.now(tz=pytz.timezone('America/Guayaquil'))
@@ -60,7 +58,9 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         """
         for field in fields:
             value = getattr(item, field)
-            self.assertContains(response, str(value), html=False)
+            self.assertContains(
+                response, str(value), html=False,
+                msg_prefix='Field {} ({}) not found'.format(field, value))
 
     def simulate_post(self, url, data_to_post, client=None):
         """
@@ -84,6 +84,11 @@ class LoggedInTests(TestCase, TestHelpersMixin):
             # Added values
             if type_ != "hidden" and data_to_post.get(key):
                 data_to_use[key] = data_to_post[key]
+            if type_ == 'hidden' and data_to_post.get(key):
+                self.fail(
+                    "Test error: Attempt to post custom"
+                    " value for hidden field: {} = {}".format(
+                        key, data_to_post[key]))
 
         # textarea fields
         textareas = root.findall(".//form//textarea")
@@ -95,13 +100,13 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         selects = root.findall(".//form//select")
         for s in selects:
             key = s.get('name')
-            selected_option_xpath = ".//form//select[@name='{}']/option[@selected]".format(key)
-            selected_option = root.findall(selected_option_xpath)
+            selected_option = root.findall(
+                ".//form//select[@name='{}']"
+                "/option[@selected]".format(key))
             default = selected_option[0].get("value") if selected_option else ""
             data_to_use[key] = data_to_post.get(key, default)
 
         return client.post(url, data_to_use)
-
 
 
 class LoggedInWithCompanyTests(LoggedInTests):
@@ -208,6 +213,7 @@ class GenericObjectCRUDTest(object):
             reverse(self.update_view, args=self.reverse_object_args),
             reverse(self.delete_view, args=self.reverse_object_args),
         ]
+        self.fields_in_view = self.data.keys()
 
     def test_index(self):
         """
@@ -225,7 +231,7 @@ class GenericObjectCRUDTest(object):
         """
         r = self.c.get(
             reverse(self.detail_view, args=self.reverse_object_args))
-        self.assertContainsObject(r, self.ob, self.data.keys())
+        self.assertContainsObject(r, self.ob, self.fields_in_view)
 
     def test_create_show_form(self):
         """
@@ -490,6 +496,7 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
         self.make_object()
         self.ob.tax_items.add(iva, ice)
         self.index_keys = ['sku', 'name']
+        self.fields_in_view = ['sku', 'name', 'unit_price', 'description']
 
 
 class ProformaBillTests(LoggedInWithCompanyTests):
@@ -542,7 +549,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             issued_to=self.customer,
             punto_emision=self.punto_emision,
             **self.data)
-        
+
         iva = add_instance(models.Iva,
                            descripcion="12%", codigo="2", porcentaje=12.0)
         ice = add_instance(models.Ice,
@@ -561,13 +568,13 @@ class ProformaBillTests(LoggedInWithCompanyTests):
                 proforma_bill=self.proformabill)
             ob.tax_items.add(iva, ice)
             self.items.append(ob)
-            
 
     def test_proformabill_company_index(self):
         """
         Check the proforma bill company index view
         """
-        r = self.c.get(reverse('proformabill_company_index', args=(self.company.id,)))
+        r = self.c.get(reverse('proformabill_company_index',
+                               args=(self.company.id,)))
         self.assertContainsObject(
             r, self.proformabill, ['number', 'issued_to'])
         self.assertEquals(
@@ -593,7 +600,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             issued_to=self.customer,
             punto_emision=punto_emision2,
             **self.data)
-        r = self.c.get(reverse('proformabill_establecimiento_index', args=(establecimiento2.id,)))
+        r = self.c.get(reverse('proformabill_establecimiento_index',
+                               args=(establecimiento2.id,)))
         self.assertContainsObject(
             r, self.proformabill, ['number', 'issued_to'])
         self.assertEquals(
@@ -609,15 +617,16 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         Check the proforma bill index view
         """
         punto_emision2 = add_instance(models.PuntoEmision,
-                                          establecimiento=self.establecimiento,
-                                          codigo='002')
+                                      establecimiento=self.establecimiento,
+                                      codigo='002')
         proformabill2 = add_instance(
             models.ProformaBill,
             issued_to=self.customer,
             punto_emision=punto_emision2,
             **self.data)
 
-        r = self.c.get(reverse('proformabill_punto_emision_index', args=(punto_emision2.id,)))
+        r = self.c.get(reverse('proformabill_punto_emision_index',
+                       args=(punto_emision2.id,)))
         self.assertContainsObject(
             r, proformabill2, ['number', 'issued_to'])
         self.assertEquals(
@@ -659,7 +668,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         Check the proforma bill creation view
         """
-        r = self.c.get(reverse('proformabill_create', args=(self.punto_emision.id,)))
+        r = self.c.get(reverse('proformabill_create',
+                               args=(self.punto_emision.id,)))
         for field in ['number', 'issued_to']:
             self.assertContains(r, field)
 
@@ -793,12 +803,12 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             sku="SKU001",
             name='Item 1',
             description='Description of item 1',
-            unit_cost=9.1,
             unit_price=16,
             qty=3)
         self.proformabill_item = add_instance(
             models.ProformaBillItem,
             proforma_bill=self.proformabill,
+            unit_cost=9.1,
             **self.proformabill_item_data)
 
     def test_add_item_to_bill_show_form(self):
@@ -841,24 +851,16 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             models.ProformaBillItem.objects.get(pk=self.proformabill_item.id),
             ['sku', 'name', 'description', 'qty'])
 
-    def test_simulate_post(self):
-        data = models.ProformaBillItem.objects.filter(pk=self.proformabill_item.id).values()[0]
-        data.update(qty=9)
-        self.simulate_post(
-            reverse('proformabillitem_update', args=(self.proformabill_item.id,)),
-            data)
-
     def test_edit_item_in_bill_submit(self):
         new_qty = 9
         pk = self.proformabill_item.id
-        new_data = models.ProformaBillItem.objects.filter(pk=pk).values()[0]
-        new_data.update(qty=new_qty)
         self.simulate_post(
             reverse('proformabillitem_update',
                     args=(pk,)),
-            new_data)
-        self.assertEquals(models.ProformaBillItem.objects.get(pk=pk).qty,
-                          new_qty)
+            dict(qty=new_qty))
+        self.assertEquals(
+            models.ProformaBillItem.objects.get(id=pk).qty,
+            new_qty)
 
     def test_delete_item_from_bill_submit(self):
         pk = self.proformabill_item.id
@@ -1072,6 +1074,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         #       Emitir correo electronico al cliente
         #   Si no
         #       Mostrar errores
+
 
 class ReportViews(LoggedInWithCompanyTests):
     """

@@ -1,5 +1,4 @@
 # -*- coding: utf8 -*-
-from datetime import datetime
 from django import forms
 from billing import models
 
@@ -43,14 +42,11 @@ class ProformaBillForm(forms.ModelForm):
         label="Identificador",
         max_length=50,
         help_text="Por favor teclee un código identificador para la proforma.")
-    date = forms.DateTimeField(
-        initial=datetime.utcnow,
-        widget=forms.HiddenInput())
 
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.ProformaBill
-        fields = ('issued_to', 'number', 'date')
+        fields = ('issued_to', 'number')
 
 
 class CustomerForm(forms.ModelForm):
@@ -84,23 +80,10 @@ class CustomerForm(forms.ModelForm):
 
 
 class ProformaBillAddItemForm(forms.ModelForm):
-    #sku = forms.CharField(
-    #    widget=forms.HiddenInput())
-    #name = forms.CharField(
-    #    widget=forms.HiddenInput())
-    #description = forms.CharField(
-    #    widget=forms.HiddenInput())
     qty = forms.IntegerField(
         label="Cantidad",
         initial=1,
         help_text='Por favor introduzca la cantidad.')
-    #unit_cost = forms.DecimalField(
-    #    widget=forms.HiddenInput())
-    #unit_price = forms.DecimalField(
-    #    widget=forms.HiddenInput())
-    #proforma_bill = forms.ModelChoiceField(
-    #    queryset=models.ProformaBill.objects,
-    #    widget=forms.HiddenInput())
     copy_from = forms.ModelChoiceField(
         label='Artículo',
         queryset=None,
@@ -110,8 +93,6 @@ class ProformaBillAddItemForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.ProformaBillItem
-        #fields = ('sku', 'name', 'description', 'qty', 'unit_cost',
-        #          'unit_price')
         fields = ('qty', 'copy_from')
 
 
