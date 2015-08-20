@@ -1,7 +1,8 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% load bootstrap3 %}
 
-{% block breadcrumbs_l1 %}
+{% block breadcrumbs %}
+    {{ block.super }}
     <li><a href='{% url 'item_index' company.id %}'>Artículos</a></li>
 {% endblock %}
 

@@ -1,7 +1,8 @@
 {% extends 'billing/l1_company_selected.html' %}
 
-{% block breadcrumbs_l1 %}
-    &gt; <a href='{#% FIXME url 'report_index' company.id %#}'>Items</a>
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{#% FIXME url 'report_index' company.id %#}'>Items</a></li>
 {% endblock %}
 
 {% block body_l1 %}

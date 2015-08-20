@@ -112,7 +112,7 @@ def my_populate():
         sku='t1-123', name='Item T11', unit_cost=5.0,
         unit_price=6.0, description='Item 1 en Tienda 1', proforma_bill=b1,
         qty=4)
-    b1i1 = add_ProformaBillItem(
+    b1i2 = add_ProformaBillItem(
         sku='t1-146', name='Item T12', unit_cost=9.0,
         unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b1,
         qty=8)
@@ -124,13 +124,15 @@ def my_populate():
         sku='t1-123', name='Item T11', unit_cost=4.0,
         unit_price=8.0, description='Item 1 en Tienda 1', proforma_bill=b2,
         qty=4)
-    b2i1 = add_ProformaBillItem(
+    b2i2 = add_ProformaBillItem(
         sku='t1-146', name='Item T12', unit_cost=9.0,
         unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b2,
         qty=8)
     b3 = add_ProformaBill(issued_to=c3, number='1453',
                           date=get_date(),
                           punto_emision=pe2)
+    for i in [b1i1, b1i2, b2i1, b2i2]:
+        i.tax_items.add(iva, ice)
     return locals()
 
 

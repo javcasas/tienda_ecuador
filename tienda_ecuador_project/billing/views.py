@@ -534,26 +534,26 @@ class ProformaBillAddItemView(ProformaBillSelected,
         form = super(self.__class__, self).get_form(*args, **kwargs)
         form.fields['copy_from'].queryset = Item.objects.filter(
             company=self.company)
-        if form.data.get('copy_from'):
-            form.data = form.data.copy()
-            form.data['proforma_bill'] = self.proformabill.id
-            copy_from = Item.objects.get(pk=form.data['copy_from'])
-            for field in form.Meta.fields:
-                if field in ['qty']:
-                    continue
-                fieldval = getattr(copy_from, field)
-                try:
-                    form.data[field] = fieldval.id
-                except AttributeError:
-                    form.data[field] = fieldval
         return form
 
     def form_valid(self, form):
+        copy_from = form.cleaned_data["copy_from"]
+        copy_from = Item.objects.filter(company=self.company).get(id=copy_from.id)
         form.instance.proforma_bill = self.proformabill
-        to_search = form.cleaned_data.copy()
-        to_search.pop("copy_from")
-        to_search.pop('qty')
-        current_item = ProformaBillItem.objects.filter(**to_search)
+
+        item_vals = {}
+        for field in copy_from.__dict__.keys():
+            if field.startswith("_"):
+                continue
+            if field.endswith("_id"):
+                continue
+            if field in ['qty', 'id']:
+                continue
+            item_vals[field] = getattr(copy_from, field)
+
+        current_item = ProformaBillItem.objects.filter(**item_vals)
+        for k, v in item_vals.iteritems():
+            setattr(form.instance, k, v)
         if current_item:
             form.instance.id = current_item[0].id
             form.instance.qty = current_item[0].qty + form.instance.qty
@@ -568,7 +568,8 @@ class ProformaBillItemUpdateView(ProformaBillItemView,
 
     def form_valid(self, form):
         form.instance.proforma_bill = self.proformabill
-        return super(self.__class__, self).form_valid(form)
+        res = super(self.__class__, self).form_valid(form)
+        return res
 
 
 class ProformaBillItemDeleteView(ProformaBillItemView,

@@ -1,6 +1,7 @@
 from datetime import datetime
 import base64
 import pytz
+import xml.etree.ElementTree as ET
 
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
@@ -60,6 +61,47 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         for field in fields:
             value = getattr(item, field)
             self.assertContains(response, str(value), html=False)
+
+    def simulate_post(self, url, data_to_post, client=None):
+        """
+        Simulates a post
+            Only commits data that is not in hidden fields
+        """
+        client = client or self.c
+        source_html = client.get(url).content
+        root = ET.fromstring(source_html)
+        data_to_post = make_post(data_to_post)
+        data_to_use = {}
+
+        # input fields, including hidden inputs
+        inputs = root.findall(".//form//input")
+        for i in inputs:
+            key = i.get('name')
+            pre_value = i.get('value')
+            type_ = i.get('type')
+            # Pre-filled in values
+            data_to_use[key] = pre_value or ""
+            # Added values
+            if type_ != "hidden" and data_to_post.get(key):
+                data_to_use[key] = data_to_post[key]
+
+        # textarea fields
+        textareas = root.findall(".//form//textarea")
+        for ta in textareas:
+            key = ta.get('name')
+            data_to_use[key] = data_to_post.get(key, ta.text)
+
+        # select fields
+        selects = root.findall(".//form//select")
+        for s in selects:
+            key = s.get('name')
+            selected_option_xpath = ".//form//select[@name='{}']/option[@selected]".format(key)
+            selected_option = root.findall(selected_option_xpath)
+            default = selected_option[0].get("value") if selected_option else ""
+            data_to_use[key] = data_to_post.get(key, default)
+
+        return client.post(url, data_to_use)
+
 
 
 class LoggedInWithCompanyTests(LoggedInTests):
@@ -210,9 +252,9 @@ class GenericObjectCRUDTest(object):
             The client is redirected to the object view
         """
         with self.new_item(self.cls) as new:
-            r = self.c.post(
+            r = self.simulate_post(
                 reverse(self.create_view, args=self.reverse_index_args),
-                make_post(self.data),
+                self.data,
             )
         self.assertRedirects(
             r, reverse(self.detail_view,
@@ -229,9 +271,9 @@ class GenericObjectCRUDTest(object):
             The client is redirected to the object view
         """
         with self.new_item(self.cls) as new:
-            r = self.c.post(
+            r = self.simulate_post(
                 reverse(self.create_view, args=self.reverse_index_args),
-                make_post(dict(self.data, company_id=self.company2.id)),
+                dict(self.data, company_id=self.company2.id),
             )
         self.assertRedirects(
             r, reverse(self.detail_view,
@@ -266,9 +308,9 @@ class GenericObjectCRUDTest(object):
             The object has the new data
             The client is redirected to the object view
         """
-        r = self.c.post(
+        r = self.simulate_post(
             reverse(self.update_view, args=self.reverse_object_args),
-            make_post(self.newdata),
+            self.newdata,
         )
         self.assertRedirects(
             r, reverse(self.detail_view, args=self.reverse_object_args))
@@ -282,7 +324,7 @@ class GenericObjectCRUDTest(object):
             The object is deleted
             The client is redirected to the object index
         """
-        r = self.c.post(
+        r = self.simulate_post(
             reverse(self.delete_view, args=self.reverse_object_args),
             {}
         )
@@ -633,9 +675,9 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             company=self.company,
             **self.customer_data)
         with self.new_item(self.cls) as new:
-            r = self.c.post(
+            r = self.simulate_post(
                 reverse('proformabill_create', args=(self.punto_emision.id,)),
-                make_post(dict(proformabill_data, issued_to=customer.id)),
+                dict(proformabill_data, issued_to=customer.id),
             )
         self.assertRedirects(
             r, reverse('proformabill_detail', args=(new.id,)))
@@ -658,10 +700,10 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         Check the proforma bill update view
         """
-        r = self.c.post(
+        r = self.simulate_post(
             reverse('proformabill_update',
                     args=(self.proformabill.id,)),
-            make_post(dict(self.new_data, issued_to=self.new_customer.id)))
+            dict(self.new_data, issued_to=self.new_customer.id))
         self.assertRedirects(
             r, reverse('proformabill_detail',
                        args=(self.proformabill.id,)))
@@ -688,7 +730,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             The object is deleted
             The client is redirected to the object index
         """
-        r = self.c.post(
+        r = self.simulate_post(
             reverse("proformabill_delete",
                     args=(self.proformabill.id,)),
             {}
@@ -767,7 +809,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
 
     def test_add_item_to_bill_submit(self):
         with self.new_item(models.ProformaBillItem) as new:
-            self.c.post(
+            self.simulate_post(
                 reverse('proformabill_add_item',
                         args=(self.proformabill.id,)),
                 {'copy_from': self.item.id,
@@ -776,7 +818,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
 
     def test_add_item_to_bill_repeated_submit(self):
         with self.new_item(models.ProformaBillItem) as new:
-            self.c.post(
+            self.simulate_post(
                 reverse('proformabill_add_item',
                         args=(self.proformabill.id,)),
                 {'copy_from': self.item.id,
@@ -799,21 +841,28 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             models.ProformaBillItem.objects.get(pk=self.proformabill_item.id),
             ['sku', 'name', 'description', 'qty'])
 
+    def test_simulate_post(self):
+        data = models.ProformaBillItem.objects.filter(pk=self.proformabill_item.id).values()[0]
+        data.update(qty=9)
+        self.simulate_post(
+            reverse('proformabillitem_update', args=(self.proformabill_item.id,)),
+            data)
+
     def test_edit_item_in_bill_submit(self):
         new_qty = 9
         pk = self.proformabill_item.id
         new_data = models.ProformaBillItem.objects.filter(pk=pk).values()[0]
         new_data.update(qty=new_qty)
-        self.c.post(
+        self.simulate_post(
             reverse('proformabillitem_update',
                     args=(pk,)),
-            make_post(new_data))
+            new_data)
         self.assertEquals(models.ProformaBillItem.objects.get(pk=pk).qty,
                           new_qty)
 
     def test_delete_item_from_bill_submit(self):
         pk = self.proformabill_item.id
-        self.c.post(
+        self.simulate_post(
             reverse('proformabillitem_delete',
                     args=(pk,)),
             {})

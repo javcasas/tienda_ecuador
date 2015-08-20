@@ -2,10 +2,9 @@
 {% load bootstrap3 %}
 {% block title_l1 %}Proformas - {% endblock %}
 
-{% block breadcrumbs_l1 %}
+{% block breadcrumbs %}
+    {{ block.super }}
     <li><a href='{% url 'proformabill_company_index' company.id %}'>Proformas</a></li>
-    {% block breadcrumbs_l2 %}
-    {% endblock %}
 {% endblock %}
 
 {% block body_l1 %}

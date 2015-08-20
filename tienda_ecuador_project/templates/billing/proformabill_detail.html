@@ -56,7 +56,7 @@
                 <td>{{ item.name }}</td>
                 <td>{{ item.qty }}</td>
                 <td>{{ item.unit_price|floatformat:4 }}</td>
-                <td>{{ item.subtotal|floatformat:2 }}</td>
+                <td>{{ item.total_sin_impuestos|floatformat:2 }}</td>
                 <td>{{ item.total_impuestos|floatformat:2 }}</td>
                 <td>
                     {% buttons %}

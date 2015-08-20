@@ -84,35 +84,35 @@ class CustomerForm(forms.ModelForm):
 
 
 class ProformaBillAddItemForm(forms.ModelForm):
-    sku = forms.CharField(
-        widget=forms.HiddenInput())
-    name = forms.CharField(
-        widget=forms.HiddenInput())
-    description = forms.CharField(
-        widget=forms.HiddenInput())
+    #sku = forms.CharField(
+    #    widget=forms.HiddenInput())
+    #name = forms.CharField(
+    #    widget=forms.HiddenInput())
+    #description = forms.CharField(
+    #    widget=forms.HiddenInput())
     qty = forms.IntegerField(
         label="Cantidad",
         initial=1,
         help_text='Por favor introduzca la cantidad.')
-    unit_cost = forms.DecimalField(
-        widget=forms.HiddenInput())
-    unit_price = forms.DecimalField(
-        widget=forms.HiddenInput())
-    proforma_bill = forms.ModelChoiceField(
-        queryset=models.ProformaBill.objects,
-        widget=forms.HiddenInput())
+    #unit_cost = forms.DecimalField(
+    #    widget=forms.HiddenInput())
+    #unit_price = forms.DecimalField(
+    #    widget=forms.HiddenInput())
+    #proforma_bill = forms.ModelChoiceField(
+    #    queryset=models.ProformaBill.objects,
+    #    widget=forms.HiddenInput())
     copy_from = forms.ModelChoiceField(
         label='Artículo',
         queryset=None,
-        required=False,
         help_text="Seleccione un artículo que añadir a la factura.")
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.ProformaBillItem
-        fields = ('sku', 'name', 'description', 'qty', 'unit_cost',
-                  'unit_price')
+        #fields = ('sku', 'name', 'description', 'qty', 'unit_cost',
+        #          'unit_price')
+        fields = ('qty', 'copy_from')
 
 
 class ProformaBillItemForm(forms.ModelForm):
@@ -146,4 +146,4 @@ class ProformaBillItemForm(forms.ModelForm):
         # Provide an association between the ModelForm and a model
         model = models.ProformaBillItem
         fields = ('sku', 'name', 'qty', 'unit_price', 'description',
-                  'unit_cost')
+                  'unit_cost', 'proforma_bill')

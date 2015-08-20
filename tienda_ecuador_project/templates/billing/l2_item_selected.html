@@ -1,11 +1,10 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% block title_l1 %}{% block title_l2 %}{% endblock %}{{ item.sku }} - {% endblock %}
 
-{% block breadcrumbs_l1 %}
+{% block breadcrumbs %}
+    {{ block.super }}
     <li><a href='{% url 'item_index' company.id %}'>Artículos</a></li>
     <li><a href='{% url 'item_detail' item.id %}'>{{ item.sku }}</a></li>
-    {% block breadcrumbs_l2 %}
-    {% endblock %}
 {% endblock %}
 
 {% block body_l1 %}
