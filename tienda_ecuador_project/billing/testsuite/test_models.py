@@ -433,14 +433,18 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         self.assertEquals(self.proforma.subtotal,
                           {12: (1 + 2 + 3 + 4) * (10 + 5),
                            0: 0})
+        for k, v in self.proforma.subtotal.iteritems():
+            self.assertEquals(type(v), Decimal)
 
     def test_total_sin_impuestos(self):
         self.assertEquals(self.proforma.total_sin_impuestos,
                           (1 + 2 + 3 + 4) * 10)
+        self.assertEquals(type(self.proforma.total_sin_impuestos), Decimal)
 
     def test_total_con_impuestos(self):
         self.assertEquals(self.proforma.total_con_impuestos,
                           (1 + 2 + 3 + 4) * (10 + 5) * Decimal("1.12"))
+        self.assertEquals(type(self.proforma.total_con_impuestos), Decimal)
 
     def test_impuestos(self):
         expected = [
@@ -470,8 +474,11 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         self.assertEquals(
             self.proforma.iva,
             {
-                Decimal(12): Decimal(total)
+                Decimal(0): Decimal(0),
+                Decimal(12): Decimal(total),
             })
+        self.assertEquals(type(self.proforma.iva[0]), Decimal)
+        self.assertEquals(type(self.proforma.iva[12]), Decimal)
 
     def test_clave_acceso_encode(self):
         c = ClaveAcceso()

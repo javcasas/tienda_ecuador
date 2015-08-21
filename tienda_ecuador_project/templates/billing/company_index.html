@@ -1,6 +1,7 @@
 {% extends 'billing/l1_company_selected.html' %}
 
 {% load bootstrap3 %}
+{% load decimal_format %}
 
 {% block title_l1 %}Menú General - {% endblock %}
 
@@ -19,7 +20,7 @@
                 <tr>
                     <td>{{ proformabill.number }}</td>
                     <td>{{ proformabill.issued_to }}</td>
-                    <td>&dollar;{{ proformabill.total }}</td>
+                    <td>&dollar;{{ proformabill.total|decimals:2 }}</td>
                     <td>
                         <a href="{% url 'proformabill_detail' proformabill.id %}" class='btn btn-default'>Detalle</a>
                     </td>
@@ -95,7 +96,7 @@
                 <tr>
                     <td>{{ item.sku }}</td>
                     <td>{{ item.name }}</td>
-                    <td>{{ item.unit_price }}</td>
+                    <td>&dollar;{{ item.unit_price|decimals:2 }}</td>
                     <td><a href="{% url 'item_detail' item.id %}" class='btn btn-default'>Detalle</a></td>
                 </tr>
             {% empty %}

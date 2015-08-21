@@ -15,11 +15,13 @@
     <tr>
         <th>Descripción</th> <td>{{ item.description }}</td>
     </tr>
+    {% if item.ice %}
     <tr>
-        <th>Iva</th> <td>{{ item.iva }}</td>
+        <th>ICE</th> <td>{{ item.ice }}</td>
     </tr>
+    {% endif %}
     <tr>
-        <th>Ice</th> <td>{{ item.ice }}</td>
+        <th>IVA</th> <td>{{ item.iva }}</td>
     </tr>
     <tr>
         <th>Coste Unitario</th> <td>{{ item.unit_cost }}</td>

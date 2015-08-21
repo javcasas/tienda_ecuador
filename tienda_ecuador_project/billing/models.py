@@ -245,8 +245,8 @@ class ProformaBill(BaseBill):
 
     @property
     def subtotal(self):
-        res = {0: 0,
-               12: 0}
+        res = {0: Decimal(0),
+               12: Decimal(0)}
         for i in self.items:
             res[i.iva.porcentaje] = (res.get(i.iva.porcentaje, 0) +
                                      i.total_sin_impuestos + i.valor_ice)
@@ -254,10 +254,13 @@ class ProformaBill(BaseBill):
 
     @property
     def iva(self):
-        res = {}
+        res = {
+            Decimal(12): Decimal(0),
+            Decimal(0): Decimal(0),
+        }
         for item in self.items:
             iva = item.iva.porcentaje
-            res[iva] = res.get(iva, 0) + item.valor_iva
+            res[iva] = res[iva] + item.valor_iva
         return res
 
     @property
@@ -377,6 +380,19 @@ class BaseItem(models.Model):
                     pass
         return map(typecast, self.tax_items.all())
 
+    @property
+    def ice(self):
+        for i in self.taxes:
+            if type(i) == Ice:
+                return i
+
+    @property
+    def iva(self):
+        for i in self.taxes:
+            if type(i) == Iva:
+                return i
+
+
 
 class Item(BaseItem):
     """
@@ -402,17 +418,7 @@ class ItemInBill(BaseItem):
     def total_sin_impuestos(self):
         return self.qty * self.unit_price
 
-    @property
-    def ice(self):
-        for i in self.taxes:
-            if type(i) == Ice:
-                return i
 
-    @property
-    def iva(self):
-        for i in self.taxes:
-            if type(i) == Iva:
-                return i
     @property
     def valor_ice(self):
         return (self.total_sin_impuestos *
