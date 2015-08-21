@@ -679,7 +679,6 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         proformabill_data = {
             'number': '6666',
-            'date': get_date(),
         }
         customer, created = models.Customer.objects.get_or_create(
             company=self.company,
