@@ -234,6 +234,13 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
 class ItemUpdateView(ItemView, CompanySelected, UpdateView):
     form_class = ItemForm
 
+    def get_form(self, *args, **kwargs):
+        form = super(ItemUpdateView, self).get_form(*args, **kwargs)
+        item = Item.objects.get(pk=self.kwargs['pk'])
+        form.fields['iva'].initial = item.iva
+        form.fields['ice'].initial = item.ice
+        return form
+
     def form_valid(self, form):
         item = models.Item.objects.get(id=form.instance.id)
         for ti in item.tax_items.all():
