@@ -53,6 +53,10 @@ def my_populate():
     u3.is_superuser = True
     u3.save()
 
+    u4, created = User.objects.get_or_create(username='test')
+    u4.set_password("test")
+    u4.save()
+
     t1 = add_Company(nombre_comercial="Tienda 1", ruc='1234567890',
                      razon_social='Tienda1', direccion_matriz='C del pipino')
     t2 = add_Company(nombre_comercial="Tienda 2", ruc='1234567891',
@@ -104,6 +108,7 @@ def my_populate():
     u2 = add_User(username='luis', password='qwerty', email='')
     ut2 = add_CompanyUser(user=u2, company=t2)
     ut3 = add_CompanyUser(user=u3, company=t1)
+    ut4 = add_CompanyUser(user=u4, company=t1)
 
     b1 = add_ProformaBill(issued_to=c1, number='145',
                           punto_emision=pe1,

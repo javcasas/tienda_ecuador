@@ -1,9 +1,14 @@
 {% extends 'billing/l2_customer_selected.html' %}
+{% load bootstrap3 %}
+
 {% block title %}Eliminar cliente {{ customer.name }} - {% endblock %}
 {% block body_l2 %}
-    <form action="" method="post">{% csrf_token %}
-        <p>Are you sure you want to delete "{{ customer }}"?</p>
-        <input type="submit" value="Confirm" />
+    <form action="" method="post" class='form'>
+        {% csrf_token %}
+        <p>¿Está seguro de querer eliminar "{{ customer }}"?</p>
+        {% buttons %}
+            <input type="submit" value="Eliminar" class='btn btn-danger' />
+            <a href='{% url 'customer_detail' customer.id %}' class='btn btn-default'>No Eliminar</a>
+        {% endbuttons %}
     </form>
-    <a href='{% url 'customer_detail' customer.id %}'>Cancel</a>
 {% endblock %}

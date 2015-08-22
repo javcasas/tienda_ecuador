@@ -1,9 +1,14 @@
 {% extends 'billing/l2_item_selected.html' %}
+{% load bootstrap3 %}
+
 {% block title %}Eliminar item {{ item.sku }} - {% endblock %}
 {% block body_l2 %}
-    <form action="" method="post">{% csrf_token %}
-        <p>Are you sure you want to delete "{{ item }}"?</p>
-        <input type="submit" value="Confirm" />
+    <form action="" method="post" class='form'>
+        {% csrf_token %}
+        <p>¿Está seguro de querer eliminar "{{ item }}"?</p>
+        {% buttons %}
+            <input type="submit" value="Eliminar" class='btn btn-danger' />
+            <a href='{% url 'item_detail' item.id %}' class='btn btn-default'>No Eliminar</a>
+        {% endbuttons %}
     </form>
-    <a href='{% url 'item_detail' item.id %}'>Cancel</a>
 {% endblock %}

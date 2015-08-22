@@ -263,7 +263,6 @@ class GenericObjectCRUDTest(object):
                 reverse(self.create_view, args=self.reverse_index_args),
                 self.data,
             )
-            print r
         self.assertRedirects(
             r, reverse(self.detail_view,
                        args=(new.id,)))
