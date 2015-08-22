@@ -25,12 +25,22 @@ class ItemForm(forms.ModelForm):
         decimal_places=4,
         label="Precio por unidad",
         help_text='Por favor introduzca el precio por unidad.')
+    iva = forms.ModelChoiceField(
+        label='IVA',
+        queryset=models.Iva.objects,
+        help_text='Por favor, seleccione el IVA del producto')
+    ice = forms.ModelChoiceField(
+        label='ICE',
+        queryset=models.Ice.objects,
+        required=False,
+        empty_label='Sin ICE',
+        help_text='Por favor, seleccione el ICE del producto')
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.Item
-        fields = ('sku', 'name', 'unit_price', 'unit_cost', 'description')
+        fields = ('sku', 'name', 'unit_price', 'unit_cost', 'description',)
 
 
 class ProformaBillForm(forms.ModelForm):

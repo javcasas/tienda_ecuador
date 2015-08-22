@@ -14,6 +14,7 @@ from django.core.urlresolvers import reverse
 from django.http import JsonResponse
 from django.forms.models import model_to_dict
 
+import models
 from models import (Item,
                     Bill,
                     CompanyUser,
@@ -216,14 +217,31 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
     """
     template_name_suffix = '_create_form'
     form_class = ItemForm
+    def get_form(self, *args):
+        res = super(ItemCreateView, self).get_form(*args)
+        return res
 
     def form_valid(self, form):
         form.instance.company = self.company
+        form.instance.save()
+        item = models.Item.objects.get(id=form.instance.id)
+        if form.data['ice']:
+            item.tax_items.add(models.Ice.objects.get(pk=form.data['ice']))
+        item.tax_items.add(models.Iva.objects.get(pk=form.data['iva']))
         return super(ItemCreateView, self).form_valid(form)
 
 
 class ItemUpdateView(ItemView, CompanySelected, UpdateView):
     form_class = ItemForm
+
+    def form_valid(self, form):
+        item = models.Item.objects.get(id=form.instance.id)
+        for ti in item.tax_items.all():
+            item.tax_items.remove(ti)
+        if form.data['ice']:
+            item.tax_items.add(models.Ice.objects.get(pk=form.data['ice']))
+        item.tax_items.add(models.Iva.objects.get(pk=form.data['iva']))
+        return super(ItemUpdateView, self).form_valid(form)
 
 
 class ItemDeleteView(ItemView, CompanySelected, DeleteView):

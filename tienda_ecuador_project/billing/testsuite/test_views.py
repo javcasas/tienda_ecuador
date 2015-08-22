@@ -83,7 +83,7 @@ class LoggedInTests(TestCase, TestHelpersMixin):
             data_to_use[key] = pre_value or ""
             # Added values
             if type_ != "hidden" and data_to_post.get(key):
-                data_to_use[key] = data_to_post[key]
+                data_to_use[key] = data_to_post.pop(key)
             if type_ == 'hidden' and data_to_post.get(key):
                 self.fail(
                     "Test error: Attempt to post custom"
@@ -94,7 +94,7 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         textareas = root.findall(".//form//textarea")
         for ta in textareas:
             key = ta.get('name')
-            data_to_use[key] = data_to_post.get(key, ta.text)
+            data_to_use[key] = data_to_post.pop(key, ta.text)
 
         # select fields
         selects = root.findall(".//form//select")
@@ -104,8 +104,9 @@ class LoggedInTests(TestCase, TestHelpersMixin):
                 ".//form//select[@name='{}']"
                 "/option[@selected]".format(key))
             default = selected_option[0].get("value") if selected_option else ""
-            data_to_use[key] = data_to_post.get(key, default)
+            data_to_use[key] = data_to_post.pop(key, default)
 
+        self.assertFalse(data_to_post, "Items left in data to post: {}".format(data_to_post))
         return client.post(url, data_to_use)
 
 
@@ -262,6 +263,7 @@ class GenericObjectCRUDTest(object):
                 reverse(self.create_view, args=self.reverse_index_args),
                 self.data,
             )
+            print r
         self.assertRedirects(
             r, reverse(self.detail_view,
                        args=(new.id,)))
@@ -271,21 +273,13 @@ class GenericObjectCRUDTest(object):
         """
         Tests creating a new object using a crossed request
         that pretends to create a new object under a different company
-        The test passes if:
-            The object is created with the specified data
-            The company of the object is the one specified in the URL
-            The client is redirected to the object view
         """
-        with self.new_item(self.cls) as new:
-            r = self.simulate_post(
-                reverse(self.create_view, args=self.reverse_index_args),
-                dict(self.data, company_id=self.company2.id),
-            )
-        self.assertRedirects(
-            r, reverse(self.detail_view,
-                       args=(new.id,)))
-        self.assertObjectMatchesData(new, self.data)
-        self.assertEquals(new.company, self.company)
+        with self.assertRaises(AssertionError):
+            with self.new_item(self.cls) as new:
+                r = self.c.post(
+                    reverse(self.create_view, args=(self.company2.id,)),
+                    make_post(self.data),
+                )
 
     def test_update_show_form(self):
         """
@@ -488,15 +482,55 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
 
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
-        iva = add_instance(models.Iva,
+        self.iva = add_instance(models.Iva,
                            descripcion="12%", codigo='12', porcentaje=12.0)
-        ice = add_instance(models.Ice,
+        self.ice = add_instance(models.Ice,
                            descripcion="Bebidas gaseosas", grupo=1,
                            codigo='3051', porcentaje=50.0)
         self.make_object()
-        self.ob.tax_items.add(iva, ice)
+        self.ob.tax_items.add(self.iva, self.ice)
         self.index_keys = ['sku', 'name']
         self.fields_in_view = ['sku', 'name', 'unit_price', 'description']
+
+    def test_create(self):
+        self.iva2 = add_instance(models.Iva,
+                            descripcion="0%", codigo='2', porcentaje=0.0)
+        self.ice2 = add_instance(models.Ice,
+                            descripcion="Otro", grupo=1,
+                            codigo='3052', porcentaje=150.0)
+        with self.new_item(self.cls) as new:
+            r = self.simulate_post(
+                reverse(self.create_view, args=self.reverse_index_args),
+                dict(self.data, iva=self.iva2.id, ice=self.ice2.id),
+            )
+        self.assertRedirects(
+            r, reverse(self.detail_view,
+                       args=(new.id,)))
+        self.assertObjectMatchesData(new, self.data)
+
+    def test_update(self):
+        """
+        Tests updating an object with self.newdata
+        The test passes if:
+            The object has the new data
+            The client is redirected to the object view
+        """
+        self.iva2 = add_instance(models.Iva,
+                            descripcion="0%", codigo='2', porcentaje=0.0)
+        self.ice2 = add_instance(models.Ice,
+                            descripcion="Otro", grupo=1,
+                            codigo='3052', porcentaje=150.0)
+        r = self.simulate_post(
+            reverse(self.update_view, args=self.reverse_object_args),
+            dict(self.newdata, iva=self.iva2.id, ice=self.ice2.id),
+        )
+        self.assertRedirects(
+            r, reverse(self.detail_view, args=self.reverse_object_args))
+        self.assertObjectMatchesData(
+            self.cls.objects.get(id=self.ob.id), self.newdata)
+        ob = self.cls.objects.get(id=self.ob.id)
+        self.assertEquals(ob.iva, self.iva2)
+        self.assertEquals(ob.ice, self.ice2)
 
 
 class ProformaBillTests(LoggedInWithCompanyTests):
@@ -525,11 +559,9 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         }
         self.data = {
             'number': '001-002-1234567890',
-            'date': get_date(),
         }
         self.new_data = {
             'number': '002-004-0987654321',
-            'date': get_date(),
         }
         self.customer = add_instance(models.Customer,
                                      company=self.company,
@@ -548,6 +580,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             models.ProformaBill,
             issued_to=self.customer,
             punto_emision=self.punto_emision,
+            date=get_date(),
             **self.data)
 
         iva = add_instance(models.Iva,
@@ -599,6 +632,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             models.ProformaBill,
             issued_to=self.customer,
             punto_emision=punto_emision2,
+            date=get_date(),
             **self.data)
         r = self.c.get(reverse('proformabill_establecimiento_index',
                                args=(establecimiento2.id,)))
@@ -623,6 +657,7 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             models.ProformaBill,
             issued_to=self.customer,
             punto_emision=punto_emision2,
+            date=get_date(),
             **self.data)
 
         r = self.c.get(reverse('proformabill_punto_emision_index',
