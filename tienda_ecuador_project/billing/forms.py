@@ -90,7 +90,8 @@ class CustomerForm(forms.ModelForm):
 
 
 class ProformaBillAddItemForm(forms.ModelForm):
-    qty = forms.IntegerField(
+    qty = forms.DecimalField(
+        decimal_places=4,
         label="Cantidad",
         initial=1,
         help_text='Por favor introduzca la cantidad.')
@@ -118,7 +119,8 @@ class ProformaBillItemForm(forms.ModelForm):
     unit_price = forms.DecimalField(
         label="Precio por unidad",
         help_text='Por favor introduzca el precio por unidad.')
-    qty = forms.IntegerField(
+    qty = forms.DecimalField(
+        decimal_places=4,
         label="Cantidad",
         help_text='Por favor introduzca la cantidad.')
     description = forms.CharField(

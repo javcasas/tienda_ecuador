@@ -32,3 +32,15 @@ def price4d(value):
     Price with four decimals
     """
     return "$" + decimals(value, 4)
+
+@register.filter
+def qty(value):
+    """
+    Quantity with no digits (integer) or 4 digits (non-integer)
+    """
+    if value.to_integral_value() == value:
+        # Is an integer
+        return decimals(value, 0)
+    else:
+        # Not an integer
+        return decimals(value, 4)

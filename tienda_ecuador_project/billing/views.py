@@ -286,7 +286,6 @@ class CustomerDetailView(CustomerView, CompanySelected, DetailView):
 
 
 class CustomerCreateView(CompanySelected, CustomerView, CreateView):
-    fields = ['name', ]
     template_name_suffix = '_create_form'
     form_class = CustomerForm
 
@@ -296,7 +295,6 @@ class CustomerCreateView(CompanySelected, CustomerView, CreateView):
 
 
 class CustomerUpdateView(CustomerView, CompanySelected, UpdateView):
-    fields = ['name', ]
     form_class = CustomerForm
 
 
@@ -375,7 +373,6 @@ class ProformaBillCreateView(PuntoEmisionSelected,
 
 
 class ProformaBillUpdateView(ProformaBillView, PuntoEmisionSelected, UpdateView):
-    fields = ['number', ]
     form_class = ProformaBillForm
 
     def get_form(self, *args, **kwargs):
@@ -553,7 +550,6 @@ class ProformaBillItemView(object):
 
 class ProformaBillAddItemView(ProformaBillSelected,
                               CreateView):
-    fields = ['sku', 'name', 'description', ]
     template_name_suffix = '_create_form'
     form_class = ProformaBillAddItemForm
 
