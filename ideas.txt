@@ -14,6 +14,8 @@ Informes:
         * Listado de productos vendidos
 Generador y escaner de codigos de barras para items
 Facturas recurrentes (mensuales)
+Items:
+    * qty de dos tipos: unidades, y 4 decimales
 
 Tienda online acoplada
     * Usa la misma lista de productos

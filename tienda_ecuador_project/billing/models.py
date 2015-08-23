@@ -353,6 +353,10 @@ class Ice(Tax):
 ###########################
 # Items
 ##########################
+Item_tipo_OPTIONS = (
+            ('producto', 'Producto'),
+            ('servicio', 'Servicio'),
+        )
 class BaseItem(models.Model):
     """
     Represents an abstract stock item
@@ -365,7 +369,7 @@ class BaseItem(models.Model):
     tax_items = models.ManyToManyField(Tax)
     tipo = models.CharField(
         max_length=10,
-        validators=[OneOf("producto", "servicio")])
+        choices=Item_tipo_OPTIONS)
 
     @property
     def taxes(self):
