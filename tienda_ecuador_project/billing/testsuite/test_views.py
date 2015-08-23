@@ -472,11 +472,13 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
             'name': 'Item 1',
             'unit_cost': 5,
             'unit_price': 6.5,
+            'tipo': 'producto',
             'description': 'Item 1 description'}
     newdata = {'sku': 'P12345',
                'name': 'Item 2',
                'unit_cost': 3,
                'unit_price': 6,
+               'tipo': 'servicio',
                'description': 'Item 2 description'}
 
     def setUp(self):
