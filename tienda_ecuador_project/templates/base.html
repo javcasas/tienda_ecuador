@@ -3,47 +3,54 @@
 <html>
     <head>
         <title>{% block title %}{% endblock %}Facturación</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {% bootstrap_css %}</link>
         {% bootstrap_javascript %}
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%:
+            }
+            #container {
+                width: 100%;
+                
+            }
+            #base_header {
+                background-color: #005;
+                color: #aaa;
+                margin: 0;
+                padding: 10px;
+                font-size: 100%;
+            }
+            #base_content {
+                margin: 5px;
+            }
+            #company_bar {
+                background-color: #009;
+                color: #888;
+                margin: 0;
+                padding: 20px;
+            }
+            #company_bar h1, #company_bar h3 {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+        </style>
     </head>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-        #base_header {
-            background-color: #005;
-            color: #aaa;
-            margin: 0;
-            padding: 20px;
-            font-size: 130%;
-        }
-        #base_content {
-            margin: 20px;
-        }
-        #company_bar {
-            background-color: #009;
-            color: #888;
-            margin: 0;
-            padding: 20px;
-        }
-        #company_bar h1, #company_bar h3 {
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-    </style>
-
     <body>
 {# Display django.contrib.messages as Bootstrap alerts #}
 {% bootstrap_messages %}
-        <div id='base_header'>
-            <h1>
-                Sistema de Facturación DSSTI
-            </h1>
-        </div>
+        <div id='container'>
+            <div id='base_header'>
+                <h1>
+                    Sistema de Facturación DSSTI
+                </h1>
+            </div>
 
-        <div id='base_content'>
-        {% block body_block %}{% endblock %}
+            <div id='base_content'>
+            {% block body_block %}{% endblock %}
+            </div>
         </div>
     </body>
 

@@ -52,6 +52,10 @@ class LoggedInTests(TestCase, TestHelpersMixin):
                         {'username': username, 'password': password})
         self.assertRedirects(r, reverse('index'))
 
+    def tearDown(self):
+        self.assert_no_broken_urls()
+        super(LoggedInTests, self).tearDown()
+
     def assertContainsObject(self, response, item, fields, msg=None):
         """
         Checks all the fields in a general object
@@ -108,6 +112,14 @@ class LoggedInTests(TestCase, TestHelpersMixin):
 
         self.assertFalse(data_to_post, "Items left in data to post: {}".format(data_to_post))
         return client.post(url, data_to_use)
+
+    def assert_no_broken_urls(self):
+        for model in [models.Item, models.Customer, models.ProformaBill]:
+            obs = model.objects.all()
+            for ob in obs:
+                r = self.c.get(ob.get_absolute_url())
+                self.assertIn(r.status_code, [200, 404, 405])
+
 
 
 class LoggedInWithCompanyTests(LoggedInTests):
@@ -834,6 +846,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             models.Item,
             company=self.company,
             **self.item_data)
+        self.item.tax_items.add(self.iva)
         self.proformabill_item_data = dict(
             sku="SKU001",
             name='Item 1',
@@ -845,6 +858,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
             proforma_bill=self.proformabill,
             unit_cost=9.1,
             **self.proformabill_item_data)
+        self.proformabill_item.tax_items.add(self.iva)
 
     def test_add_item_to_bill_show_form(self):
         r = self.c.get(
@@ -956,6 +970,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             models.Item,
             company=self.company,
             **self.item_data)
+        self.item.tax_items.add(self.iva)
         self.proformabill_item_data = dict(
             sku="SKU001",
             name='Item 1',

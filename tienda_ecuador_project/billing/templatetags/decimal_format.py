@@ -1,15 +1,26 @@
+import functools
 from django import template
 from decimal import Decimal
 
 register = template.Library()
 
-@register.filter
+def exn_to_str(fn):
+    #@functools.wraps(fn)
+    def wrapped_fn(*args):
+        try:
+            return fn(*args)
+        except Exception as e:
+            return str(e)
+    return wrapped_fn
+
+@register.filter(name='decimals')
 def decimals(value, arg):
     """
     Formats with arg decimal digits
     """
     if type(value) is not Decimal:
-        raise Exception("The type of '{}' is {}, not {}".format(value, type(value), Decimal)) 
+        #raise Exception("The type of '{}' is {}, not {}".format(value, type(value), Decimal)) 
+        return ("The type of '{}' is {}, not {}".format(value, type(value), Decimal)) 
         
     if type(arg) is not int:
         raise Exception("The type of '{}' is {}, not {}".format(arg, type(arg), int)) 

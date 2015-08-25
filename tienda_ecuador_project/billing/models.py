@@ -395,6 +395,8 @@ class BaseItem(models.Model):
         for i in self.taxes:
             if type(i) == Iva:
                 return i
+        else:
+            raise Exception("Error: No IVA")
 
 
 

@@ -580,7 +580,11 @@ class ProformaBillAddItemView(ProformaBillSelected,
         if current_item:
             form.instance.id = current_item[0].id
             form.instance.qty = current_item[0].qty + form.instance.qty
-        return super(self.__class__, self).form_valid(form)
+        res = super(self.__class__, self).form_valid(form)
+        form.instance.tax_items.add(copy_from.iva)
+        if copy_from.ice:
+            form.instance.tax_items.add(copy_from.ice)
+        return res
 
 
 class ProformaBillItemUpdateView(ProformaBillItemView,
