@@ -13,6 +13,6 @@ deploy_to_dir = os.path.abspath("./deploy")
 if not os.path.exists(deploy_to_dir):
     os.mkdir(deploy_to_dir)
 
-os.system('GIT_WORK_TREE="{deploy_to_dir}" git checkout -f master'.format(deploy_to_dir=deploy_to_dir))
+os.system('GIT_WORK_TREE="{deploy_to_dir}" git checkout -f {branch}'.format(deploy_to_dir=deploy_to_dir, branch=to))
 django_dir = os.path.join(deploy_to_dir, "tienda_ecuador_project")
 os.system('rsync -v -r {} javcasas_dssti-facturacion@ssh.phx.nearlyfreespeech.net:/home/protected/django/'.format(django_dir))

@@ -1,10 +1,17 @@
-<h1>Login</h1>
-        <form method="post" action=".">
-                {% csrf_token %}
-                {{ form.as_p }}
+{% extends 'base.html' %}
+{% load bootstrap3 %}
 
-                <input type="submit" value="Log in" />
-                <input type="hidden" name="next" value="{{ next }}" />
-                </form>
+{% block title %} DSSTI - {% endblock %}
 
-        <p>Not  a member? <a href="{% url 'registration_register' %}">Register</a>!</p>
+{% block body_block %}
+<h2>Login</h2>
+    <form method="post" action="." class='form'>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+
+        <input type="hidden" name="next" value="{{ next }}" />
+        {% buttons %}
+            <input type="submit" value="Entrar" class='btn btn-primary'/>
+        {% endbuttons %}
+    </form>
+{% endblock %}
