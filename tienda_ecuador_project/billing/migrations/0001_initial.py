@@ -51,7 +51,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=500)),
                 ('unit_cost', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('unit_price', models.DecimalField(max_digits=20, decimal_places=8)),
-                ('tipo', models.CharField(max_length=10, validators=[billing.validators.OneOf(b'producto', b'servicio')])),
+                ('tipo', models.CharField(max_length=10, choices=[(b'producto', b'Producto'), (b'servicio', b'Servicio')])),
             ],
             options={
             },
@@ -121,6 +121,17 @@ class Migration(migrations.Migration):
             bases=(models.Model,),
         ),
         migrations.CreateModel(
+            name='FormaPago',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('codigo', models.CharField(max_length=2)),
+                ('descripcion', models.CharField(max_length=50)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
             name='Item',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
@@ -139,6 +150,18 @@ class Migration(migrations.Migration):
             options={
             },
             bases=('billing.baseitem',),
+        ),
+        migrations.CreateModel(
+            name='Plazo',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('description', models.CharField(max_length=50)),
+                ('unidad_tiempo', models.CharField(max_length=20)),
+                ('cantidad', models.IntegerField()),
+            ],
+            options={
+            },
+            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='ProformaBill',

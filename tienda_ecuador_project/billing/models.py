@@ -146,6 +146,20 @@ class Customer(BaseCustomer):
         return reverse('customer_detail',
                        kwargs={'pk': self.pk})
 
+class FormaPago(models.Model):
+    """
+    The available payment options
+    """
+    codigo = models.CharField(max_length=2)
+    descripcion = models.CharField(max_length=50)
+
+class Plazo(models.Model):
+    """
+    Plazos de pago
+    """
+    description = models.CharField(max_length=50)
+    unidad_tiempo = models.CharField(max_length=20)
+    cantidad = models.IntegerField()
 
 #####################################
 # Bill
