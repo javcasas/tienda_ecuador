@@ -47,6 +47,7 @@ def index(request):
         return redirect("company_index", c_user[0].company.id)
     param_dict = {
         'companies': Company.objects.filter(id__in=[cu.id for cu in c_user]),
+        'user': request.user,
     }
     return render(request, "billing/index.html", param_dict)
 
@@ -164,14 +165,16 @@ class CompanyIndex(CompanySelected, View):
             single_punto_emision = single_punto_emision[0]
         else:
             single_punto_emision = None
-        context = {
+        context = {}
+        context.update({
             'item_list': Item.objects.filter(company=company),
             'bill_list': Bill.objects.filter(company=company),
             'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company),
             'customer_list': Customer.objects.filter(company=company),
             'company': company,
             'single_punto_emision': single_punto_emision,
-        }
+            'user': self.request.user,
+        })
         return render(request, "billing/company_index.html", context)
 
 

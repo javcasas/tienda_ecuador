@@ -5,53 +5,72 @@
         <title>{% block title %}{% endblock %}Facturación</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {% bootstrap_css %}</link>
+        <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet" />
         {% bootstrap_javascript %}
         <style>
-            body {
-                margin: 0;
-                padding: 0;
-                width: 100%:
-            }
-            #container {
-                width: 100%;
-                
-            }
             #base_header {
                 background-color: #005;
                 color: #aaa;
-                margin: 0;
-                padding: 10px;
-                font-size: 100%;
-            }
-            #base_content {
-                margin: 5px;
+                padding: 20px;
             }
             #company_bar {
                 background-color: #009;
                 color: #888;
-                margin: 0;
-                padding: 20px;
-            }
-            #company_bar h1, #company_bar h3 {
-                margin-top: 0;
-                margin-bottom: 0;
+                margin: 10px;
+                padding: 10px;
             }
         </style>
     </head>
     <body>
 {# Display django.contrib.messages as Bootstrap alerts #}
 {% bootstrap_messages %}
-        <div id='container'>
-            <div id='base_header'>
-                <h1>
-                    Sistema de Facturación DSSTI
-                </h1>
-            </div>
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">DSSTI Facturación</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            {% block menu_bar %}
+              <li><a href="{% url 'index' %}">Entrada</a></li>
+            {% endblock %}
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'auth_logout' %}">Salir</a></li>
+            {% else %}
+              <li><a href="{% url 'auth_login' %}">Entrar</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
 
-            <div id='base_content'>
-            {% block body_block %}{% endblock %}
+
+
+        <div id='container' class='container-fluid'>
+            <div class='row'>
+                <div class='col-md-12 main'>
+                    <div id='base_header'>
+                        <h1>
+                            Sistema de Facturación DSSTI
+                        </h1>
+                    </div>
+
+                    <div id='base_content'>
+                    {% block body_block %}{% endblock %}
+                    </div>
+                </div>
             </div>
         </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://getbootstrap.com/dist/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="http://getbootstrap.com/assets/js/ie10-viewport-bug-workaround.js"></script>
     </body>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
