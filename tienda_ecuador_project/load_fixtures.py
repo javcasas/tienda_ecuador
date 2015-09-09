@@ -8,8 +8,10 @@ django.setup()
 import yaml
 
 
-
 def try_load(module, class_):
+    """
+    Gets the model class from the specified module, named class_
+    """
     m = __import__(module)
     m = m.models
     try:
@@ -21,6 +23,11 @@ def try_load(module, class_):
 
 
 def load_fixture(fn):
+    """
+    Reads fn (yaml format),
+    loads all the objects from it,
+    and copies them into the django DB
+    """
     res = []
     docs = yaml.load_all(open(fn, "r"))
     for doc in docs:
@@ -31,7 +38,7 @@ def load_fixture(fn):
             module, class_ = class_.split(".")
             model = try_load(module, class_)
             m = model(pk=pk, **params)
-            print m
+            print "    ", m
             m.save()
             res.append(m)
     return res
