@@ -120,8 +120,8 @@ class BaseCustomer(models.Model):
 
     def __unicode__(self):
         return u"({}){} - {}".format(self.tipo_identificacion,
-                                    self.identificacion,
-                                    self.razon_social)
+                                     self.identificacion,
+                                     self.razon_social)
 
     def clean(self):
         if self.tipo_identificacion == "ruc":
@@ -146,12 +146,14 @@ class Customer(BaseCustomer):
         return reverse('customer_detail',
                        kwargs={'pk': self.pk})
 
+
 class FormaPago(models.Model):
     """
     The available payment options
     """
     codigo = models.CharField(max_length=2)
     descripcion = models.CharField(max_length=50)
+
 
 class Plazo(models.Model):
     """
@@ -160,6 +162,7 @@ class Plazo(models.Model):
     description = models.CharField(max_length=50)
     unidad_tiempo = models.CharField(max_length=20)
     cantidad = models.IntegerField()
+
 
 #####################################
 # Bill
@@ -194,10 +197,6 @@ class Bill(ReadOnlyMixin, BaseBill):
         new = Bill(**data)
         new.secret_save()
         return new
-
-    @property
-    def items(self):
-        return BillItem.objects.filter(bill=self)
 
 
 class ClaveAcceso(object):
@@ -340,7 +339,8 @@ class Tax(models.Model):
     descripcion = models.CharField(max_length=100)
     codigo = models.CharField(max_length=10)
     porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
-    valor_fijo = models.DecimalField(decimal_places=2, max_digits=6, default=Decimal('0.00'))
+    valor_fijo = models.DecimalField(
+        decimal_places=2, max_digits=6, default=Decimal('0.00'))
 
 
 class Iva(Tax):
@@ -368,9 +368,11 @@ class Ice(Tax):
 # Items
 ##########################
 Item_tipo_OPTIONS = (
-            ('producto', 'Producto'),
-            ('servicio', 'Servicio'),
-        )
+    ('producto', 'Producto'),
+    ('servicio', 'Servicio'),
+)
+
+
 class BaseItem(models.Model):
     """
     Represents an abstract stock item
@@ -413,7 +415,6 @@ class BaseItem(models.Model):
             raise Exception("Error: No IVA")
 
 
-
 class Item(BaseItem):
     """
     Represents an item that can be sold or bought
@@ -437,7 +438,6 @@ class ItemInBill(BaseItem):
     @property
     def total_sin_impuestos(self):
         return self.qty * self.unit_price
-
 
     @property
     def valor_ice(self):

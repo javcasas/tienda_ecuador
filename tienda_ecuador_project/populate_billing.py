@@ -75,8 +75,8 @@ def my_populate():
                        establecimiento=e2,
                        codigo='001')
 
-    iva = Iva.objects.get(descripcion="12%")
-    ice = Ice.objects.get(descripcion="Bebidas gaseosas.")
+    iva, created = Iva.objects.get_or_create(descripcion="12%", porcentaje=12)
+    ice, created = Ice.objects.get_or_create(descripcion="Bebidas gaseosas.", porcentaje=50, grupo=1)
     i11 = add_Item(sku='115674', name='Foco LED Blanco 5W',
                    unit_cost=10, unit_price=17,
                    description='Foco LED, luz blanca, potencia: 5W', company=t1,)
