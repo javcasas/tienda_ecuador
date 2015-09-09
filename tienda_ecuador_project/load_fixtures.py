@@ -7,6 +7,8 @@ django.setup()
 
 import yaml
 
+to_load = ['tax_rates.yaml', 'formas_pago.yaml', 'plazos_pago.yaml']
+
 
 def try_load(module, class_):
     """
@@ -45,6 +47,6 @@ def load_fixture(fn):
 
 
 if __name__ == '__main__':
-    for fn in ['tax_rates.yaml', 'formas_pago.yaml']:
+    for fn in to_load:
         print "Loading", fn
         load_fixture(fn)

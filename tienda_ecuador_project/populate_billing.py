@@ -20,9 +20,9 @@ def get_date():
 
 
 def print_instance(klass, kwargs):
-    params = ", ".join(["{}={}".format(k, v)
+    params = u", ".join([u"{}={}".format(k, v)
                         for (k, v) in kwargs.iteritems()])
-    print "Adding", klass.__name__, params
+    print u"Adding", klass.__name__, params
 
 
 def add_instance(klass, **kwargs):
@@ -58,10 +58,10 @@ def my_populate():
     u4.set_password("test")
     u4.save()
 
-    t1 = add_Company(nombre_comercial="Electro Tienda", ruc='1234567890',
-                     razon_social='Roberto Gutiérrez', direccion_matriz='C/ Rumiñahui')
-    t2 = add_Company(nombre_comercial="Mega Iluminación", ruc='1234567891',
-                     razon_social='Alberto Álvarez', direccion_matriz='C/ Orellana')
+    t1 = add_Company(nombre_comercial=u"Electro Tienda", ruc=u'1234567890',
+                     razon_social=u'Roberto Gutiérrez', direccion_matriz=u'C/ Rumiñahui')
+    t2 = add_Company(nombre_comercial=u"Mega Iluminación", ruc=u'1234567891',
+                     razon_social=u'Alberto Álvarez', direccion_matriz=u'C/ Orellana')
     e1 = add_instance(models.Establecimiento,
                       company=t1,
                       codigo='001')
@@ -95,12 +95,12 @@ def my_populate():
     for i in [i11, i12, i21, i22, i23]:
         i.tax_items.add(iva, ice)
 
-    c1 = add_Customer(razon_social='Alberto Gómez', tipo_identificacion='cedula',
+    c1 = add_Customer(razon_social=u'Alberto Gómez', tipo_identificacion='cedula',
                       identificacion="1756760292", email='alberto.gomez@yahoo.com',
                       company=t1)
-    c2 = add_Customer(razon_social='Román Correa', tipo_identificacion='ruc',
+    c2 = add_Customer(razon_social=u'Román Correa', tipo_identificacion='ruc',
                       identificacion="1756760292001", company=t1)
-    c3 = add_Customer(razon_social='María del Mar Orellana', tipo_identificacion='ruc',
+    c3 = add_Customer(razon_social=u'María del Mar Orellana', tipo_identificacion='ruc',
                       identificacion="1756760219001", company=t2)
 
     u1 = add_User(username='roberto', password='qwerty', email='')

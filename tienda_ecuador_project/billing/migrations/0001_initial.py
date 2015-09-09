@@ -152,12 +152,22 @@ class Migration(migrations.Migration):
             bases=('billing.baseitem',),
         ),
         migrations.CreateModel(
-            name='Plazo',
+            name='Pago',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('description', models.CharField(max_length=50)),
-                ('unidad_tiempo', models.CharField(max_length=20)),
                 ('cantidad', models.IntegerField()),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='PlazoPago',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('descripcion', models.CharField(max_length=50)),
+                ('unidad_tiempo', models.CharField(max_length=20)),
+                ('tiempo', models.IntegerField()),
             ],
             options={
             },
@@ -231,6 +241,24 @@ class Migration(migrations.Migration):
             model_name='proformabill',
             name='punto_emision',
             field=models.ForeignKey(to='billing.PuntoEmision'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='pago',
+            name='bill',
+            field=models.ForeignKey(to='billing.BaseBill'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='pago',
+            name='forma_pago',
+            field=models.ForeignKey(to='billing.FormaPago'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='pago',
+            name='plazo_pago',
+            field=models.ForeignKey(to='billing.PlazoPago'),
             preserve_default=True,
         ),
         migrations.AddField(

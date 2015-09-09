@@ -147,23 +147,6 @@ class Customer(BaseCustomer):
                        kwargs={'pk': self.pk})
 
 
-class FormaPago(models.Model):
-    """
-    The available payment options
-    """
-    codigo = models.CharField(max_length=2)
-    descripcion = models.CharField(max_length=50)
-
-
-class Plazo(models.Model):
-    """
-    Plazos de pago
-    """
-    description = models.CharField(max_length=50)
-    unidad_tiempo = models.CharField(max_length=20)
-    cantidad = models.IntegerField()
-
-
 #####################################
 # Bill
 #####################################
@@ -178,6 +161,14 @@ class BaseBill(models.Model):
 
     def __unicode__(self):
         return u"{} - {}".format(self.number, self.date)
+
+    def __eq__(self, other):
+        try:
+            if not isinstance(other, BaseBill):
+                return False
+            return other.id == self.id
+        except:
+            return False
 
 
 class Bill(ReadOnlyMixin, BaseBill):
@@ -467,3 +458,41 @@ class ProformaBillItem(ItemInBill):
     Represents an item in a proforma bill
     """
     proforma_bill = models.ForeignKey(ProformaBill)
+
+
+############################################
+# Pagos
+############################################
+class FormaPago(models.Model):
+    """
+    Formas de pago
+    """
+    codigo = models.CharField(max_length=2)
+    descripcion = models.CharField(max_length=50)
+
+    def __unicode__(self):
+        return u"{}".format(self.descripcion)
+
+
+class PlazoPago(models.Model):
+    """
+    Plazos de pago
+    """
+    descripcion = models.CharField(max_length=50)
+    unidad_tiempo = models.CharField(max_length=20)
+    tiempo = models.IntegerField()
+
+    def __unicode__(self):
+        return u"{} ({} {})".format(self.descripcion,
+                                    self.tiempo,
+                                    self.unidad_tiempo)
+
+
+class Pago(models.Model):
+    """
+    Pagos en una factura
+    """
+    cantidad = models.IntegerField()
+    forma_pago = models.ForeignKey(FormaPago)
+    plazo_pago = models.ForeignKey(PlazoPago)
+    bill = models.ForeignKey(BaseBill)

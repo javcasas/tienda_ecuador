@@ -92,6 +92,18 @@ base_data = {
         'codigo': '3051',
         'porcentaje': 50.0,
     },
+    'FormaPago': {
+        'codigo': '01',
+        'descripcion': 'efectivo',
+    },
+    'PlazoPago': {
+        'unidad_tiempo': 'dias',
+        'tiempo': 30,
+        'descripcion': '30 dias',
+    },
+    'Pago': {
+        'cantidad': 100,
+    },
 }
 
 
@@ -126,6 +138,10 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
         self.ice = add_instance(Ice, **dict(base_data['Ice']))
+        self.forma_pago = add_instance(
+            models.FormaPago, **base_data['FormaPago'])
+        self.plazo_pago = add_instance(
+            models.PlazoPago, **base_data['PlazoPago'])
 
         self.tests = [
             (Company, base_data['Company'],
@@ -145,14 +161,21 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'punto_emision': self.punto_emision,
                  'issued_to': self.customer}),
             (Bill, base_data['BaseBill'],
-                {'company': self.company,
-                }),
+                {'company': self.company}),
             (Item, base_data['BaseItem'],
                 {"company": self.company,
                  }),
             (ProformaBillItem, base_data['BaseItem'],
                 {"proforma_bill": self.proforma_bill,
                  'qty': 6}),
+            (models.FormaPago, base_data['FormaPago'],
+                {}),
+            (models.PlazoPago, base_data['PlazoPago'],
+                {}),
+            (models.Pago, base_data['Pago'],
+                {'forma_pago': self.forma_pago,
+                 'plazo_pago': self.plazo_pago,
+                 'bill': self.proforma_bill}),
         ]
 
     def test_all_clases(self):
@@ -173,6 +196,24 @@ class FieldsTests(TestCase, TestHelpersMixin):
         save()
         msg = str(cls)
         self.assertObjectMatchesData(cls.objects.get(id=ob.id), data, msg)
+
+
+class UnicodeTests(TestCase, TestHelpersMixin):
+    def test_forma_pago(self):
+        data = base_data['FormaPago']
+        ob = models.FormaPago(**data)
+        self.assertEquals(
+            unicode(ob),
+            data['descripcion'])
+
+    def test_plazo_pago(self):
+        data = base_data['PlazoPago']
+        ob = models.PlazoPago(**data)
+        self.assertEquals(
+            unicode(ob),
+            u'{} ({} {})'.format(data['descripcion'],
+                                 data['tiempo'],
+                                 data['unidad_tiempo']))
 
 
 class ReadOnlyTests(TestCase, TestHelpersMixin):
@@ -261,9 +302,11 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
             v2 = getattr(proforma, field)
             self.assertEquals(
                 v1, v2,
-                "Field '{}' is different: {} != {}".format(field, repr(v1), repr(v2)))
-        self.assertEquals(bill.company, proforma.punto_emision.establecimiento.company)
-
+                "Field '{}' is different: {} != {}".format(
+                    field, repr(v1), repr(v2)))
+        self.assertEquals(
+            bill.company,
+            proforma.punto_emision.establecimiento.company)
 
 
 class ItemTests(TestCase, TestHelpersMixin):
@@ -285,7 +328,8 @@ class ItemTests(TestCase, TestHelpersMixin):
         Prueba los calculos de iva e ice
         """
         iva = add_instance(Iva, descripcion="12%", codigo="12", porcentaje=12)
-        ice = add_instance(Ice, descripcion="Gaseosas", codigo="145", grupo=1, porcentaje=50)
+        ice = add_instance(Ice, descripcion="Gaseosas",
+                           codigo="145", grupo=1, porcentaje=50)
         proforma = ItemInBill(
             sku="1234", name="asdf", description="asdf", unit_cost=10,
             unit_price=10, qty=6)
@@ -427,7 +471,6 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                               unit_cost=5,
                               unit_price=10,)
             ob.tax_items.add(self.iva, self.ice)
-            
 
     def test_subtotal(self):
         self.assertEquals(self.proforma.subtotal,

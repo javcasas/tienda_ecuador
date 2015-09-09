@@ -1,0 +1,76 @@
+- model: billing.PlazoPago
+  fields:
+    descripcion: Pago inmediato
+    unidad_tiempo: dias
+    tiempo: 0
+  pk: 1
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 1 semana
+    unidad_tiempo: dias
+    tiempo: 7
+  pk: 11
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 2 semanas
+    unidad_tiempo: dias
+    tiempo: 14
+  pk: 12
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 3 semanas
+    unidad_tiempo: dias
+    tiempo: 21
+  pk: 13
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 4 semanas
+    unidad_tiempo: dias
+    tiempo: 28
+  pk: 14
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 1 mes
+    unidad_tiempo: dias
+    tiempo: 30
+  pk: 101
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 2 meses
+    unidad_tiempo: dias
+    tiempo: 60
+  pk: 102
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 3 meses
+    unidad_tiempo: dias
+    tiempo: 90
+  pk: 103
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 4 meses
+    unidad_tiempo: dias
+    tiempo: 120
+  pk: 104
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 5 meses
+    unidad_tiempo: dias
+    tiempo: 150
+  pk: 105
+
+- model: billing.PlazoPago
+  fields:
+    descripcion: 6 meses
+    unidad_tiempo: dias
+    tiempo: 180
+  pk: 106
