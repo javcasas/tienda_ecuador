@@ -24,6 +24,7 @@
     <body>
 {# Display django.contrib.messages as Bootstrap alerts #}
 {% bootstrap_messages %}
+
 <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -38,7 +39,7 @@
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
             {% block menu_bar %}
-              <li><a href="{% url 'index' %}">Entrada</a></li>
+              <li><a href="{% url 'index' %}">Home</a></li>
             {% endblock %}
             {% if user.is_authenticated %}
               <li><a href="{% url 'auth_logout' %}">Salir</a></li>

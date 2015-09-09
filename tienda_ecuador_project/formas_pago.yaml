@@ -1,0 +1,89 @@
+- model: billing.FormaPago
+  fields:
+    codigo: '01'
+    descripcion: Sin utilización del Sistema Financiero
+  pk: 1
+
+- model: billing.FormaPago
+  fields:
+    codigo: '02'
+    descripcion: Cheque propio
+  pk: 2
+
+- model: billing.FormaPago
+  fields:
+    codigo: '03'
+    descripcion: Cheque certificado
+  pk: 3
+
+- model: billing.FormaPago
+  fields:
+    codigo: '04'
+    descripcion: Cheque de gerencia
+  pk: 4
+
+- model: billing.FormaPago
+  fields:
+    codigo: '05'
+    descripcion: Cheque del exterior
+  pk: 5
+
+- model: billing.FormaPago
+  fields:
+    codigo: '06'
+    descripcion: Débito de cuenta
+  pk: 6
+
+- model: billing.FormaPago
+  fields:
+    codigo: '07'
+    descripcion: Transferencia propio banco
+  pk: 7
+
+- model: billing.FormaPago
+  fields:
+    codigo: '08'
+    descripcion: Transferencia otro banco nacional
+  pk: 8
+
+- model: billing.FormaPago
+  fields:
+    codigo: '09'
+    descripcion: Transferencia banco exterior
+  pk: 9
+
+- model: billing.FormaPago
+  fields:
+    codigo: '10'
+    descripcion: Tarjeta de crédito nacional
+  pk: 10
+
+- model: billing.FormaPago
+  fields:
+    codigo: '11'
+    descripcion: Tarjeta de crédito internacional
+  pk: 11
+
+- model: billing.FormaPago
+  fields:
+    codigo: '12'
+    descripcion: Giro
+  pk: 12
+
+- model: billing.FormaPago
+  fields:
+    codigo: '13'
+    descripcion: Deposito en cuenta (corriente/ahorros)
+  pk: 13
+
+- model: billing.FormaPago
+  fields:
+    codigo: '14'
+    descripcion: Endoso de inversiòn
+  pk: 14
+
+- model: billing.FormaPago
+  fields:
+    codigo: '15'
+    descripcion: Compensación de deudas
+  pk: 15

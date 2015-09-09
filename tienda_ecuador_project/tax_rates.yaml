@@ -3,28 +3,28 @@
   fields:
     codigo: '2'
     descripcion: 12%
-    porcentaje: '12'
+    porcentaje: 12
   pk: 1
 
 - model: billing.iva
   fields:
     codigo: '0'
     descripcion: 0%
-    porcentaje: '0'
+    porcentaje: 0
   pk: 2
 
 - model: billing.iva
   fields:
     codigo: '6'
     descripcion: No Objeto de Impuesto
-    porcentaje: '0'
+    porcentaje: 0
   pk: 3
 
 - model: billing.iva
   fields:
     codigo: '7'
     descripcion: Exento de IVA
-    porcentaje: '0'
+    porcentaje: 0
   pk: 4
 
 # ICE
@@ -34,7 +34,7 @@
     grupo: 1
     descripcion: Productos del tabaco y sucedáneos del tabaco (abarcan los productos preparados totalmente o en parte utilizando como materia prima hojas de tabaco y destinados a ser fumados, chupados, inhalados, mascados o utilizados como rapé).
     porcentaje: 0
-  pk: 1
+  pk: 101
 
 - model: billing.ice
   fields:
@@ -42,7 +42,7 @@
     grupo: 1
     descripcion: Bebidas gaseosas.
     porcentaje: 0
-  pk: 2
+  pk: 102
 
 - model: billing.ice
   fields:
@@ -50,7 +50,7 @@
     grupo: 1
     descripcion: Perfumes y aguas de tocador
     porcentaje: 0
-  pk: 3
+  pk: 103
 
 - model: billing.ice
   fields:
@@ -58,7 +58,7 @@
     grupo: 1
     descripcion: Videojuegos
     porcentaje: 0
-  pk: 4
+  pk: 104
 
 - model: billing.ice
   fields:
@@ -66,7 +66,7 @@
     grupo: 1
     descripcion: Armas de fuego, armas deportivas y municiones excepto aquellas adquiridas por la fuerza pública
     porcentaje: 0
-  pk: 5
+  pk: 105
 
 - model: billing.ice
   fields:
@@ -74,7 +74,7 @@
     grupo: 1
     descripcion: Focos incandescentes excepto aquellos utilizados como insumos automotrices
     porcentaje: 0
-  pk: 6
+  pk: 106
 
 - model: billing.ice
   fields:
@@ -82,7 +82,7 @@
     grupo: 1
     descripcion: Cocinas, calefones y otros de uso doméstico a gas SRI
     porcentaje: 0
-  pk: 7
+  pk: 107
 
 - model: billing.ice
   fields:
@@ -90,7 +90,7 @@
     grupo: 1
     descripcion: Cocinas, calefones y otros de uso doméstico a gas SENAE
     porcentaje: 0
-  pk: 8
+  pk: 108
 
 - model: billing.ice
   fields:
@@ -98,7 +98,7 @@
     grupo: 2
     descripcion: Vehículos motorizados cuyo precio de venta al público sea de hasta USD 20.000
     porcentaje: 0
-  pk: 9
+  pk: 109
 
 - model: billing.ice
   fields:
@@ -106,7 +106,7 @@
     grupo: 2
     descripcion: Camionetas, furgonetas, camiones, y vehículos de rescate cuyo precio de venta al público sea de hasta USD 30.000
     porcentaje: 0
-  pk: 10
+  pk: 110
 
 - model: billing.ice
   fields:
@@ -114,7 +114,7 @@
     grupo: 2
     descripcion: Vehículos motorizados, excepto camionetas, furgonetas, camiones y vehículos de rescate, cuyo precio de venta al público sea superior a USD 20.000 y de hasta USD 30.000
     porcentaje: 0
-  pk: 11
+  pk: 110
 
 - model: billing.ice
   fields:
@@ -122,7 +122,7 @@
     grupo: 2
     descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 30.000 y de hasta USD 40.000
     porcentaje: 0
-  pk: 12
+  pk: 111
 
 - model: billing.ice
   fields:
@@ -130,7 +130,7 @@
     grupo: 2
     descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 40.000 y de hasta USD 50.000
     porcentaje: 0
-  pk: 13
+  pk: 112
 
 - model: billing.ice
   fields:
@@ -138,7 +138,7 @@
     grupo: 2
     descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 50.000 y de hasta USD 60.000
     porcentaje: 0
-  pk: 14
+  pk: 113
 
 - model: billing.ice
   fields:
@@ -146,7 +146,7 @@
     grupo: 2
     descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 60.000 y de hasta  USD 70.000
     porcentaje: 0
-  pk: 15
+  pk: 114
 
 - model: billing.ice
   fields:
@@ -154,7 +154,7 @@
     grupo: 2
     descripcion: Vehículos motorizados, cuyo precio de venta al público sea superior a USD 70.000
     porcentaje: 0
-  pk: 16
+  pk: 115
 
 - model: billing.ice
   fields:
@@ -162,7 +162,7 @@
     grupo: 2
     descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea de hasta USD 35.000
     porcentaje: 0
-  pk: 17
+  pk: 116
 
 - model: billing.ice
   fields:
@@ -170,7 +170,7 @@
     grupo: 2
     descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 35.000 y de hasta USD 40.000
     porcentaje: 0
-  pk: 18
+  pk: 117
 
 - model: billing.ice
   fields:
@@ -178,7 +178,7 @@
     grupo: 2
     descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 40.000 y de hasta USD 50.000
     porcentaje: 0
-  pk: 19
+  pk: 118
 
 - model: billing.ice
   fields:
@@ -186,7 +186,7 @@
     grupo: 2
     descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 50.000 y de hasta USD 60.000
     porcentaje: 0
-  pk: 20
+  pk: 119
 
 - model: billing.ice
   fields:
@@ -194,7 +194,7 @@
     grupo: 2
     descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 60.000 y de hasta USD 70.000
     porcentaje: 0
-  pk: 21
+  pk: 120
 
 - model: billing.ice
   fields:
@@ -202,7 +202,7 @@
     grupo: 2
     descripcion: Vehículos híbridos o eléctricos cuyo precio de venta al público sea superior a USD 70.000
     porcentaje: 0
-  pk: 22
+  pk: 121
 
 - model: billing.ice
   fields:
@@ -210,7 +210,7 @@
     grupo: 2
     descripcion: 3. Aviones, avionetas y helicópteros excepto aquellas destinadas al transporte comercial de pasajeros, carga y servicios; motos acuáticas, tricares, cuadrones, yates y barcos de recreo
     porcentaje: 0
-  pk: 23
+  pk: 122
 
 - model: billing.ice
   fields:
@@ -218,7 +218,7 @@
     grupo: 3
     descripcion: Servicios de television pagada
     porcentaje: 0
-  pk: 24
+  pk: 123
 
 - model: billing.ice
   fields:
@@ -226,7 +226,7 @@
     grupo: 3
     descripcion: Servicios de casinos, salas de juego (bingo - mecanicos) y otros juegos de azar
     porcentaje: 0
-  pk: 25
+  pk: 124
 
 - model: billing.ice
   fields:
@@ -234,7 +234,7 @@
     grupo: 4
     descripcion: Las cuotas, membresías, afiliaciones, acciones y similares que cobren a sus miembros y usuarios los Clubes Sociales, para prestar sus servicios, cuyo monto en su conjunto supere los US $ 1.500 anuales
     porcentaje: 0
-  pk: 26
+  pk: 125
 
 - model: billing.ice
   fields:
@@ -242,7 +242,7 @@
     grupo: 5
     descripcion: Cigarrillos rubio
     porcentaje: 0
-  pk: 27
+  pk: 126
 
 - model: billing.ice
   fields:
@@ -250,7 +250,7 @@
     grupo: 5
     descripcion: Cigarrillos negros
     porcentaje: 0
-  pk: 28
+  pk: 127
 
 - model: billing.ice
   fields:
@@ -258,7 +258,7 @@
     grupo: 5
     descripcion: Bebidas alcohólicas, distintas a la cerveza
     porcentaje: 0
-  pk: 29
+  pk: 128
 
 - model: billing.ice
   fields:
@@ -266,5 +266,5 @@
     grupo: 5
     descripcion: Cerveza
     porcentaje: 0
-  pk: 30
+  pk: 129
 

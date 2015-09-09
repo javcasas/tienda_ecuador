@@ -1,3 +1,4 @@
+# * encoding: utf8 *
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE',
                       'tienda_ecuador_project.settings')
@@ -57,10 +58,10 @@ def my_populate():
     u4.set_password("test")
     u4.save()
 
-    t1 = add_Company(nombre_comercial="Tienda 1", ruc='1234567890',
-                     razon_social='Tienda1', direccion_matriz='C del pipino')
-    t2 = add_Company(nombre_comercial="Tienda 2", ruc='1234567891',
-                     razon_social='Tienda2', direccion_matriz='C del nabo')
+    t1 = add_Company(nombre_comercial="Electro Tienda", ruc='1234567890',
+                     razon_social='Roberto Gutiérrez', direccion_matriz='C/ Rumiñahui')
+    t2 = add_Company(nombre_comercial="Mega Iluminación", ruc='1234567891',
+                     razon_social='Alberto Álvarez', direccion_matriz='C/ Orellana')
     e1 = add_instance(models.Establecimiento,
                       company=t1,
                       codigo='001')
@@ -74,33 +75,32 @@ def my_populate():
                        establecimiento=e2,
                        codigo='001')
 
-    iva = add_instance(Iva, descripcion="12%", codigo="2", porcentaje=12.0)
-    ice = add_instance(Ice, descripcion="Bebidas gaseosas", grupo=1,
-                       codigo="3051", porcentaje=50.0)
-    i11 = add_Item(sku='t1-123', name='Item T11',
+    iva = Iva.objects.get(descripcion="12%")
+    ice = Ice.objects.get(descripcion="Bebidas gaseosas.")
+    i11 = add_Item(sku='115674', name='Foco LED Blanco 5W',
                    unit_cost=10, unit_price=17,
-                   description='Item 1 en Tienda 1', company=t1,)
-    i12 = add_Item(sku='t1-146', name='Item T12',
-                   unit_cost=1, unit_price=3,
-                   description='Item 2 en Tienda 1', company=t1)
-    i21 = add_Item(sku='t2-723', name='Item T21',
-                   unit_cost=10, unit_price=17,
-                   description='Item 1 en Tienda 2', company=t2)
-    i22 = add_Item(sku='t2-946', name='Item T22',
-                   unit_cost=33, unit_price=37,
-                   description='Item 2 en Tienda 2', company=t2)
-    i23 = add_Item(sku='t2-146', name='Item T23',
+                   description='Foco LED, luz blanca, potencia: 5W', company=t1,)
+    i12 = add_Item(sku='120443', name='Foco LED Amarillo 6W',
+                   unit_cost=8, unit_price=11,
+                   description='Foco LED, luz amarilla, potencia: 6W', company=t1)
+    i21 = add_Item(sku='F114', name='Panel LED Blanco 50W',
+                   unit_cost=30, unit_price=45,
+                   description='Panel de LED, de luz blanca, 50W', company=t2)
+    i22 = add_Item(sku='F116', name='Panel LED RGB 35W',
+                   unit_cost=33, unit_price=54,
+                   description='Panel de LED RGB, de 35W', company=t2)
+    i23 = add_Item(sku='F117', name='Foco LED verde 4W',
                    unit_cost=20, unit_price=27,
-                   description='Item 3 en Tienda 2', company=t2)
+                   description='Foco LED verde decorativo, 4W', company=t2)
     for i in [i11, i12, i21, i22, i23]:
         i.tax_items.add(iva, ice)
 
-    c1 = add_Customer(razon_social='Paco', tipo_identificacion='cedula',
-                      identificacion="1756760292", email='paco@paco.net',
+    c1 = add_Customer(razon_social='Alberto Gómez', tipo_identificacion='cedula',
+                      identificacion="1756760292", email='alberto.gomez@yahoo.com',
                       company=t1)
-    c2 = add_Customer(razon_social='Pepe', tipo_identificacion='ruc',
+    c2 = add_Customer(razon_social='Román Correa', tipo_identificacion='ruc',
                       identificacion="1756760292001", company=t1)
-    c3 = add_Customer(razon_social='Luis', tipo_identificacion='ruc',
+    c3 = add_Customer(razon_social='María del Mar Orellana', tipo_identificacion='ruc',
                       identificacion="1756760219001", company=t2)
 
     u1 = add_User(username='roberto', password='qwerty', email='')
@@ -114,25 +114,30 @@ def my_populate():
                           punto_emision=pe1,
                           date=get_date())
     b1i1 = add_ProformaBillItem(
-        sku='t1-123', name='Item T11', unit_cost=5.0,
-        unit_price=6.0, description='Item 1 en Tienda 1', proforma_bill=b1,
-        qty=4)
+        sku='115674', name='Foco LED Blanco 5W',
+        unit_cost=10, unit_price=17,
+        description='Foco LED, luz blanca, potencia: 5W',
+        proforma_bill=b1, qty=4)
     b1i2 = add_ProformaBillItem(
-        sku='t1-146', name='Item T12', unit_cost=9.0,
-        unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b1,
-        qty=8)
+        sku='120443', name='Foco LED Amarillo 6W',
+        unit_cost=8, unit_price=11,
+        description='Foco LED, luz amarilla, potencia: 6W',
+        proforma_bill=b1, qty=8)
 
     b2 = add_ProformaBill(issued_to=c1, number='1453',
                           date=get_date(),
                           punto_emision=pe1)
     b2i1 = add_ProformaBillItem(
-        sku='t1-123', name='Item T11', unit_cost=4.0,
-        unit_price=8.0, description='Item 1 en Tienda 1', proforma_bill=b2,
-        qty=4)
+        sku='115674', name='Foco LED Blanco 5W',
+        unit_cost=10, unit_price=17,
+        description='Foco LED, luz blanca, potencia: 5W',
+        proforma_bill=b2, qty=9)
     b2i2 = add_ProformaBillItem(
-        sku='t1-146', name='Item T12', unit_cost=9.0,
-        unit_price=12.0, description='Item 2 en Tienda 1', proforma_bill=b2,
-        qty=8)
+        sku='120443', name='Foco LED Amarillo 6W',
+        unit_cost=8, unit_price=11,
+        description='Foco LED, luz amarilla, potencia: 6W',
+        proforma_bill=b2, qty=11)
+
     b3 = add_ProformaBill(issued_to=c3, number='1453',
                           date=get_date(),
                           punto_emision=pe2)

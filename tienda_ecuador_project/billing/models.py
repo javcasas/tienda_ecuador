@@ -119,7 +119,7 @@ class BaseCustomer(models.Model):
     direccion = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
-        return "({}){} - {}".format(self.tipo_identificacion,
+        return u"({}){} - {}".format(self.tipo_identificacion,
                                     self.identificacion,
                                     self.razon_social)
 
@@ -174,7 +174,7 @@ class BaseBill(models.Model):
     ride_content = models.TextField()
 
     def __unicode__(self):
-        return "{} - {}".format(self.number, self.date)
+        return u"{} - {}".format(self.number, self.date)
 
 
 class Bill(ReadOnlyMixin, BaseBill):
@@ -328,9 +328,9 @@ class ProformaBill(BaseBill):
 
     def __unicode__(self):
         try:
-            return "{} - {}".format(self.number, self.issued_to)
+            return u"{} - {}".format(self.number, self.issued_to)
         except:
-            return "{} - {}".format(self.number, "<Not set>")
+            return u"{} - {}".format(self.number, "<Not set>")
 
 
 ##########################
@@ -348,7 +348,7 @@ class Iva(Tax):
     Representa el IVA
     """
     def __unicode__(self):
-        return "{:.0f}% - {}".format(self.porcentaje, self.descripcion)
+        return u"{:.0f}% - {}".format(self.porcentaje, self.descripcion)
 
 
 class Ice(Tax):
@@ -361,7 +361,7 @@ class Ice(Tax):
         return self.descripcion != "No ICE"
 
     def __unicode__(self):
-        return "{:.0f}% - {}".format(self.porcentaje, self.descripcion)
+        return u"{:.0f}% - {}".format(self.porcentaje, self.descripcion)
 
 
 ###########################
@@ -425,7 +425,7 @@ class Item(BaseItem):
                        kwargs={'pk': self.pk})
 
     def __unicode__(self):
-        return "{} - {}".format(self.sku, self.name)
+        return u"{} - {}".format(self.sku, self.name)
 
 
 class ItemInBill(BaseItem):
