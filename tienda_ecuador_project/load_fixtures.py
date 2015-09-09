@@ -8,9 +8,6 @@ django.setup()
 import yaml
 
 
-fn = 'tax_rates.yaml'
-
-docs = yaml.load_all(open(fn, "r"))
 
 def try_load(module, class_):
     m = __import__(module)
@@ -23,15 +20,24 @@ def try_load(module, class_):
     return getattr(m, class_.capitalize())
 
 
-for doc in docs:
-    for item in doc:
-        class_ = item['model']
-        params = item['fields']
-        pk = item['pk']
-        module, class_ = class_.split(".")
-        model = try_load(module, class_)
-        m = model(pk=pk, **params)
-        print m
-        m.save()
+def load_fixture(fn):
+    res = []
+    docs = yaml.load_all(open(fn, "r"))
+    for doc in docs:
+        for item in doc:
+            class_ = item['model']
+            params = item['fields']
+            pk = item['pk']
+            module, class_ = class_.split(".")
+            model = try_load(module, class_)
+            m = model(pk=pk, **params)
+            print m
+            m.save()
+            res.append(m)
+    return res
 
-        #print module, class_, params, pk
+
+if __name__ == '__main__':
+    for fn in ['tax_rates.yaml', 'formas_pago.yaml']:
+        print "Loading", fn
+        load_fixture(fn)
