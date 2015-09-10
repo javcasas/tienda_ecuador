@@ -60,6 +60,15 @@
         {% buttons %}
             <a href="{% url "proformabill_add_item" proformabill.id %}" class='btn btn-primary'>Añadir Artículo</a>
         {% endbuttons %}
+        <div class="btn-group" role="group">
+            <input id='search_item' type="text" class="dropdown-toggle"
+                placeholder='Add Item'
+                adata-toggle="dropdown"
+                value=''
+                autofocus />
+            <ul class="dropdown-menu">
+            </ul>
+        </div>
         <h2>Totales</h2>
         <table class='table table-hover'>
             <tr>
@@ -79,5 +88,25 @@
             <a href="{% url "proformabill_emit_to_bill" proformabill.id %}" class='btn btn-primary'>Emitir Proforma</a>
             <a href="{% url "proformabill_delete" proformabill.id %}" class='btn btn-danger'>Eliminar</a>
         {% endbuttons %}
+
+
+<script>
+function gen_name(item) {
+    return item.sku + " - " + item.name;
+}
+
+function click_callback(item) {
+    alert(item.sku);
+}
+
+prepare_search_box(
+    '#search_item',
+    gen_name,
+    click_callback,
+    '{% url 'item_index_json' company.id %}',
+    ['sku', 'name', 'description'],
+    "<span style='color: #777'>No se encontró ningún artículo</span>",
+    "Error cargando lista");
+</script>
 
 {% endblock %}

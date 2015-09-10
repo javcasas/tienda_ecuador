@@ -159,6 +159,9 @@ class BaseBill(models.Model):
     xml_content = models.TextField()
     ride_content = models.TextField()
 
+    def pagos(self):
+        return Pago.objects.filter(bill_id=self.id)
+
     def __unicode__(self):
         return u"{} - {}".format(self.number, self.date)
 

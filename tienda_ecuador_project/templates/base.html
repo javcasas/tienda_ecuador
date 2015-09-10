@@ -1,4 +1,5 @@
 {% load bootstrap3 %}
+{% load staticfiles %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -6,7 +7,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {% bootstrap_css %}</link>
         <link href="http://getbootstrap.com/examples/dashboard/dashboard.css" rel="stylesheet" />
+        <script language='javascript' src='https://code.jquery.com/jquery-2.1.4.min.js'></script>
         {% bootstrap_javascript %}
+        <script language='javascript' src='{% static 'js/json_search.js' %}'></script>
         <style>
             #base_header {
                 background-color: #005;
