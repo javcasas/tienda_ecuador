@@ -1,6 +1,6 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% load bootstrap3 %}
-{% block title_l1 %}Proformas - {% endblock %}
+{% block title %}Proformas - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}

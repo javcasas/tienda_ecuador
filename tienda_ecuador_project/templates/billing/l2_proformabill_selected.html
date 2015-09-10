@@ -1,5 +1,5 @@
 {% extends 'billing/l1_company_selected.html' %}
-{% block title_l1 %}{% block title_l2 %}{% endblock %}{{ proformabill }} - {% endblock %}
+{% block title %}{{ proformabill }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}

@@ -1,5 +1,5 @@
 {% extends 'billing/l2_proformabill_selected.html' %}
-{% block title_l1 %}Ver Proforma {{ proformabill }}- {% endblock %}
+{% block title %}Ver Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
 {% block body_l1 %}
         <h1>Proforma</h1>
         <style>

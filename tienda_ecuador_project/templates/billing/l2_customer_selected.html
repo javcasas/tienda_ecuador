@@ -1,5 +1,5 @@
 {% extends 'billing/l1_company_selected.html' %}
-{% block title_l1 %}{% block title_l2 %}{% endblock %}{{ customer.razon_social }} - {% endblock %}
+{% block title %}{{ customer.razon_social }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}

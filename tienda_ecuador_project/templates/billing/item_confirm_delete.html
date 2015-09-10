@@ -1,7 +1,7 @@
 {% extends 'billing/l2_item_selected.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Eliminar item {{ item.sku }} - {% endblock %}
+{% block title %}Eliminar item {{ item.sku }} - {{ block.super }}{% endblock %}
 {% block body_l2 %}
     <form action="" method="post" class='form'>
         {% csrf_token %}

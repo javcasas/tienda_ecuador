@@ -5,7 +5,7 @@
 
 {# Display django.contrib.messages as Bootstrap alerts #}
 {% bootstrap_messages %}
-{% block title %}Nuevo cliente - {% endblock %}
+{% block title %}Nuevo cliente - {{ block.super }} {% endblock %}
 {% block body_l1 %}
         <form method='post' action='.' class='form'>
             {% csrf_token %}

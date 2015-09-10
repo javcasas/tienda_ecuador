@@ -1,5 +1,5 @@
 {% extends 'billing/l2_bill_selected.html' %}
-{% block title_l2 %}Ver Factura{% endblock %}
+{% block title %}Ver Factura - {{ block.super }}{% endblock %}
 {% block body_l2 %}
         <h1>Bill</h1>
         Number: {{ bill.number }} <br />

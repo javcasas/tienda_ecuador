@@ -1,7 +1,7 @@
 {% extends 'billing/l2_proformabill_selected.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Editar Proforma {{ proformabill.number }} - {% endblock %}
+{% block title %}Editar Proforma {{ proformabill.number }} - {{ block.super }}{% endblock %}
 {% block body_l2 %}
     <form method='post' action='.' class='form'>
         {% csrf_token %}

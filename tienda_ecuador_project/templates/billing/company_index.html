@@ -3,7 +3,7 @@
 {% load bootstrap3 %}
 {% load decimal_format %}
 
-{% block title_l1 %}Menú General - {% endblock %}
+{% block title %}Menú General - {{ block.super }}{% endblock %}
 
 {% block body_l1 %}
     <div class='row'>

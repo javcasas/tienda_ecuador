@@ -2,7 +2,7 @@
 {% load bootstrap3 %}
 {% load decimal_format %}
 
-{% block title_l1 %}Ver Proforma {{ proformabill }}- {% endblock %}
+{% block title %}Ver Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
 {% block body_l1 %}
         <h1>Proforma</h1>
         <table class='table table-hover'>
