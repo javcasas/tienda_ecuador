@@ -355,6 +355,14 @@ class ProformaBillDetailView(ProformaBillView,
     Detail view for proforma bills
     """
 
+class ProformaBillDetailViewTable(ProformaBillView,
+                             PuntoEmisionSelected,
+                             DetailView):
+    """
+    Detail view for proforma bills
+    """
+    template_name_suffix = '_detail_item_table'
+
 
 class ProformaBillCreateView(PuntoEmisionSelected,
                              ProformaBillView,

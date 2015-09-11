@@ -28,34 +28,20 @@
         </table>
         <h2>Detalle</h2>
         <table class='table table-hover'>
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Cantidad</th>
-                <th>Precio unitario</th>
-                <th>Subtotal</th>
-                <th>Impuestos</th>
-                <th></th>
-            </tr>
-        {% for item in proformabill.items %}
-            <tr>
-                <td>{{ item.sku }}</td>
-                <td>{{ item.name }}</td>
-                <td>{{ item.qty|qty }}</td>
-                <td>{{ item.unit_price|price4d }}</td>
-                <td>{{ item.total_sin_impuestos|price2d }}</td>
-                <td>{{ item.total_impuestos|price2d }}</td>
-                <td>
-                    {% buttons %}
-                    <form action="{% url 'proformabillitem_delete' item.id %}" method='post'>
-                        {% csrf_token %}
-                        <a href="{% url 'proformabillitem_update' item.id %}" class='btn btn-default'>Editar</a>
-                        <button type='submit' class='btn btn-danger'>Eliminar</button>
-                    </form>
-                    {% endbuttons %}
-                </td>
-            <tr/>
-        {% endfor %}
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Precio unitario</th>
+                    <th>Subtotal</th>
+                    <th>Impuestos</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id='detail_table'>
+                {% include "billing/proformabill_detail_item_table.html" %}
+            </tbody>
         </table>
         {% buttons %}
             <a href="{% url "proformabill_add_item" proformabill.id %}" class='btn btn-primary'>Añadir Artículo</a>
@@ -71,18 +57,9 @@
         </div>
         <h2>Totales</h2>
         <table class='table table-hover'>
-            <tr>
-                <th>Subtotal IVA 12%</th><td>{{ proformabill.subtotal.12|price2d }}</td>
-            </tr>
-            <tr>
-                <th>Subtotal IVA 0%</th><td>{{ proformabill.subtotal.0|price2d }}</td>
-            </tr>
-            <tr>
-                <th>IVA 12%</th><td>{{ proformabill.iva.12|price2d }}</td>
-            </tr>
-            <tr>
-                <th>Total a pagar</th><td>{{ proformabill.total|price2d }}</td>
-            </tr>
+            <tbody id='totals_table'>
+                {% include "billing/proformabill_detail_totals_table.html" %}
+            </tbody>
         </table>
         {% buttons %}
             <a href="{% url "proformabill_emit_to_bill" proformabill.id %}" class='btn btn-primary'>Emitir Proforma</a>
@@ -95,8 +72,32 @@ function gen_name(item) {
     return item.sku + " - " + item.name;
 }
 
+function reload_content(selector, url) {
+    $(selector)
+        .hide(400, function() {
+            $(selector)
+            .load(url, function() {
+                $(selector).show(400);
+            });
+        });
+}
+
 function click_callback(item) {
-    alert(item.sku);
+    var token_data = $("{% csrf_token %}");
+    var data_to_post = {copy_from: item.id,
+                        qty: '1'};
+    data_to_post[token_data.attr("name")] = token_data.attr('value');
+
+    $.post('{% url "proformabill_add_item" proformabill.id %}', data_to_post)
+        .done(function () {
+            reload_content("#detail_table", 
+                           "{% url 'proformabill_detail_item_table' proformabill.id %}");
+            reload_content("#totals_table", 
+                           "{% url 'proformabill_detail_totals_table' proformabill.id %}");
+        })
+        .fail(function (data) {
+            console.log(data);
+        });
 }
 
 prepare_search_box(

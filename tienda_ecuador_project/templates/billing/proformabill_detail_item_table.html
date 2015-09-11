@@ -1,0 +1,21 @@
+{% load bootstrap3 %}
+{% load decimal_format %}
+{% for item in proformabill.items %}
+    <tr>
+        <td>{{ item.sku }}</td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.qty|qty }}</td>
+        <td>{{ item.unit_price|price4d }}</td>
+        <td>{{ item.total_sin_impuestos|price2d }}</td>
+        <td>{{ item.total_impuestos|price2d }}</td>
+        <td>
+            {% buttons %}
+            <form action="{% url 'proformabillitem_delete' item.id %}" method='post'>
+                {% csrf_token %}
+                <a href="{% url 'proformabillitem_update' item.id %}" class='btn btn-default'>Editar</a>
+                <button type='submit' class='btn btn-danger'>Eliminar</button>
+            </form>
+            {% endbuttons %}
+        </td>
+    <tr/>
+{% endfor %}

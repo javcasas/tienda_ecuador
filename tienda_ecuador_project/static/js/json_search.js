@@ -18,8 +18,8 @@ function prepare_search_box(selector, gen_name_fn, callback_fn, data_url, fields
         control.append(
             $("<li></li>").append(
                 $("<a></a>")
-                    .attr("href", "#")
-                    .click(function () {callback_fn(item);})
+                    .attr("href", "")
+                    .click(function () {callback_fn(item); return false;})
                     .html(name)));
     }
     function clear_all_links() {

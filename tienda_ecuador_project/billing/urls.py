@@ -54,6 +54,16 @@ urlpatterns = patterns(
     url(r'^proforma_bill/(?P<pk>[0-9]+)/delete/$',
         views.ProformaBillDeleteView.as_view(), name='proformabill_delete'),
 
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/item_table/$',
+        views.ProformaBillDetailView.as_view(
+            template_name_suffix='_detail_item_table'),
+        name='proformabill_detail_item_table'),
+
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/totals_table/$',
+        views.ProformaBillDetailView.as_view(
+            template_name_suffix='_detail_totals_table'),
+        name='proformabill_detail_totals_table'),
+
     # Proforma bill emitting views
     url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/$',
         views.ProformaBillEmitView.as_view(),
