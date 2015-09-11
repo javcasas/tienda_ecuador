@@ -27,6 +27,7 @@
             </tr>
         </table>
         <h2>Detalle</h2>
+        <a name='detalle_table'></a>
         <table class='table table-hover'>
             <thead>
                 <tr>
@@ -46,14 +47,15 @@
         {% buttons %}
             <a href="{% url "proformabill_add_item" proformabill.id %}" class='btn btn-primary'>Añadir Artículo</a>
         {% endbuttons %}
-        <div class="btn-group" role="group">
-            <input id='search_item' type="text" class="dropdown-toggle"
+        <div class='row'>
+        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12" role="group">
+            <input id='search_item' type="text" class="dropdown-toggle col-xs-12 col-sm-12 col-md-12 col-lg-12"
                 placeholder='Add Item'
-                adata-toggle="dropdown"
                 value=''
                 autofocus />
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu col-xs-12 col-sm-12 col-md-12 col-lg-12">
             </ul>
+        </div>
         </div>
         <h2>Totales</h2>
         <table class='table table-hover'>
@@ -74,10 +76,13 @@ function gen_name(item) {
 
 function reload_content(selector, url) {
     $(selector)
-        .hide(400, function() {
+        .animate(
+            {opacity: 0},
+            400, function() {
             $(selector)
             .load(url, function() {
-                $(selector).show(400);
+                $(selector).animate({opacity: 1}, 400);
+                location.href = "#detalle_table";
             });
         });
 }

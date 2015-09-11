@@ -97,5 +97,9 @@ function prepare_search_box(selector, gen_name_fn, callback_fn, data_url, fields
         }
         control.show();
     }
+    $(selector).focus(callback);
     $(selector).keyup(callback);
+    $(selector).blur(function() {
+        control.hide(400);
+    });
 }
