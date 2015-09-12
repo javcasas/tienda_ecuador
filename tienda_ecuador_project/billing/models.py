@@ -366,6 +366,13 @@ Item_tipo_OPTIONS = (
     ('servicio', 'Servicio'),
 )
 
+Item_decimales_OPTIONS = (
+    ('0', 'Unidades Enteras'),
+    ('1', '1 Decimal'),
+    ('2', '2 Decimales'),
+    ('3', '3 Decimales'),
+)
+
 
 class BaseItem(models.Model):
     """
@@ -380,6 +387,9 @@ class BaseItem(models.Model):
     tipo = models.CharField(
         max_length=10,
         choices=Item_tipo_OPTIONS)
+    decimales_qty = models.CharField(
+        max_length=1,
+        choices=Item_decimales_OPTIONS)
 
     @property
     def taxes(self):

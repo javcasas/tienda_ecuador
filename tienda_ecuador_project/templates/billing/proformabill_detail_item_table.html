@@ -4,7 +4,7 @@
     <tr>
         <td>{{ item.sku }}</td>
         <td>{{ item.name }}</td>
-        <td>{{ item.qty|qty }}</td>
+        <td class='item_qty' data-id='{{ item.id }}' data-check-fun='Number.isInteger'>{{ item.qty|qty }}</td>
         <td>{{ item.unit_price|price4d }}</td>
         <td>{{ item.total_sin_impuestos|price2d }}</td>
         <td>{{ item.total_impuestos|price2d }}</td>

@@ -1,8 +1,225 @@
 {% extends 'base.html' %}
+{% load bootstrap3 %}
 {% block title %} DSSTI - {% endblock %}
 
-
 {% block body_block %}
-<h2>Bienvenido al Sistema de Facturación DSSTI</h2>
+
+<style>
+.main-page {
+    min-height: 400px;
+    background-color: #ccf;
+}
+body {
+    background-color: #ccf;
+}
+.main-page .slogan {
+    margin-top: 50px;
+    margin-bottom: 30px;
+}
+.main-page form {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+.desc-page {
+    min-height: 300px;
+    background-color: #005;
+    color: #bbb;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.features-page {
+    min-height: 500px;
+    background-color: #ccf;
+}
+.support-page {
+    min-height: 500px;
+    background-color: #005;
+    color: #bbb;
+}
+.request-form {
+    padding: 20px;
+    background-color: rgba(0,0,0,0.2);
+    display: inline-block;
+    margin: 10px;
+    border-radius: 5px;
+}
+.request-form form {
+    background-color: #043;
+    padding: 20px;
+    display: block;
+    margin: 0px;
+    border-radius: 5px;
+}
+.request-form .request-form-subtext {
+    margin-top: 20px;
+    font-size: 130%;
+}
+.request-form .request-form-subtext a {
+    color: #005;
+}
+.call-to-action {
+    padding-top: 100px;
+    padding-bottom: 100px;
+}
+.call-to-action h1{
+    font-size: 400%;
+}
+hr {
+    display: block;
+    height: 1px;
+    background-color: #333;
+    margin: 1em 0;
+    padding: 0; 
+}
+.no-circle li {
+    list-style-type: none;
+}
+.support-link {
+    padding: 10px;
+    background-color: rgba(0,0,0,0.4);
+    display: inline-block;
+}
+</style>
+<div class='row main-page'>
+    <div class='col-xs-12 col-sm-12 col-md-12 col-xl-12 text-center'>
+        <div class='slogan'>
+            <h2>El Programa de Factura Electrónica</h2>
+            <h2>para Todos los Ecuatorianos</h2>
+        </div>
+        <div class='subslogan'>
+            <h4>DSSTI Facturas le ayuda a facturar de una manera fácil, rápida y segura.</h4>
+            <h4>Comience a enviar facturas y a atender clientes en minutos.</h4>
+            <h4>Así usted sólo se tiene que preocupar de hacer crecer su negocio.</h4>
+        </div>
+        {% include 'request_form.html' %}
+    </div>
+</div>
+<div class='desc-page'>
+    <div class='row'>
+        <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+            <h2>Factura Electrónica SRI</h2>
+            <p class='description'>
+            Emita Facturas Electrónicas de una manera fácil y sencilla. 
+            Con DSSTI Facturas, cumpla con los requisitos del SRI sin esfuerzo.
+            </p>
+        </div>
+        <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+            <h2>Todo en su SmartPhone</h2>
+            <p class='description'>
+            Todo el programa está disponible en su Teléfono Celular.
+            Con DSSTI Facturas, nunca más lleve su laptop para poder dar un precio a sus clientes.
+            </p>
+        </div>
+    </div>
+    <div class='row'>
+        <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+            <h2>Sin instalación, sin dolores de cabeza</h2>
+            <p class='description'>
+            Sabemos que las instalaciones son engorrosas y difíciles, y sólo dan dolores de cabeza.
+            Con DSSTI Facturas, nunca más tendrá que preocuparse de actualizaciones, compatibilidad, ni problemas informáticos.
+            </p>
+        </div>
+        <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+            <h2>Fácil y Sencillo</h2>
+            <p class='description'>
+            DSSTI Facturas está diseñado para ser sencillo de utilizar, tanto en su laptop como en su celular.
+            Con buscadores optimizados y botones grandes para que su tarea sea sencilla.
+            </p>
+        </div>
+    </div>
+</div>
+<div class='row features-page'>
+    <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6 col-md-offset-6 col-xl-offset-6'>
+        <h2>Características</h2>
+        <div class='row'>
+            <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+                <h4>Crear y Enviar Facturas</h4>
+                <ul class='no-circle'>
+                    <li>Envía Facturas Proforma</li>
+                    <li>Pon tu Marca en la Factura</li>
+                    <li>Establece Plazos y Formas de Pago</li>
+                </ul>
+            </div>
+            <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+                <h4>Preparado para el SRI</h4>
+                <ul class='no-circle'>
+                    <li>Informes de Ventas</li>
+                    <li>Informes de Clientes</li>
+                    <li>Anexos</li>
+                </ul>
+            </div>
+        </div>
+        <div class='row'>
+            <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+                <h4>Listas de Artículos y Precios</h4>
+                <ul class='no-circle'>
+                    <li>Lista de Precios para su Mercaderías</li>
+                    <li>Precios Mayoristas y Descuentos</li>
+                    <li>Ficha Única para cada Artículo</li>
+                </ul>
+            </div>
+            <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6'>
+                <h4>Cuentas Claras</h4>
+                <ul class='no-circle'>
+                    <li>Cuentas por Cobrar</li>
+                    <li>Informes de Facturación y Ganancias</li>
+                    <li>Informes para su Contador</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class='text-center'>
+            {% include 'request_form.html' %}
+        </div>
+    </div>
+</div>
+
+<div class='row support-page'>
+    <div class='col-xs-12 col-sm-12 col-md-6 col-xl-6 text-center'>
+        <h2>Con el Mejor Soporte</h2>
+        <h4>Nuestros Ingenieros de Soporte están siempre para ayudarle</h4> 
+        <h4 class='support-link'>
+            <span class='glyphicon glyphicon-envelope'></span>
+            <a href='soporte@dssti.com'>soporte@dssti.com</a>
+        </h4>
+    </div>
+</div>
+
+<div class='row call-to-action-page'>
+    <div class='col-xs-12 col-sm-12 col-md-12 col-xl-12 text-center call-to-action'>
+        <h1>Pruebe Hoy <span class='text-uppercase'>Gratis<span></h1>
+        <h3>La configuración sólo lleva un minuto</h3>
+        {% include 'request_form.html' %}
+    </div>
+</div>
+<hr />
+<div class='row'>
+    <div class='col-xs-6 col-sm-4 col-sm-offset-2 col-md-2 col-md-offset-2 col-xl-2 col-xl-offset-2'>
+        <h4>Acerca de</h4>
+        <ul class='no-circle'>
+            <li><a href='#'>DSSTI Facturas</a>
+            <li><a href='http://www.dssti.com/'>DSSTI</a>
+            <li><a href='http://www.dssti.com/blog/'>DSSTI Blog</a>
+        </ul>
+    </div>
+    <div class='col-xs-6 col-sm-4 col-md-2 col-xl-2'>
+        <h4>Producto</h4>
+        <ul class='no-circle'>
+            <li><a href='#'>DSSTI Facturas</a>
+        </ul>
+    </div>
+    <div class='col-xs-6 col-sm-4 col-sm-offset-2 col-md-2 col-md-offset-0 col-xl-2'>
+        <h4>Enlaces de ayuda</h4>
+        <ul class='no-circle'>
+            <li><a href='{% url 'auth_login' %}'>Entrar al sistema</a>
+        </ul>
+    </div>
+    <div class='col-xs-6 col-sm-4 col-md-2 col-xl-2'>
+        <h4>Contactar</h4>
+        <ul class='no-circle'>
+            <li><a href='#'>Soporte</a>
+        </ul>
+    </div>
+</div>
 <a href='/accounts/login'>Entrar al sistema</a>
 {% endblock %}

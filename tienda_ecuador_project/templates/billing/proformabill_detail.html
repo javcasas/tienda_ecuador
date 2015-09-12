@@ -44,18 +44,21 @@
                 {% include "billing/proformabill_detail_item_table.html" %}
             </tbody>
         </table>
-        {% buttons %}
-            <a href="{% url "proformabill_add_item" proformabill.id %}" class='btn btn-primary'>Añadir Artículo</a>
-        {% endbuttons %}
-        <div class='row'>
-        <div class="btn-group col-xs-12 col-sm-12 col-md-12 col-lg-12" role="group">
-            <input id='search_item' type="text" class="dropdown-toggle col-xs-12 col-sm-12 col-md-12 col-lg-12"
-                placeholder='Add Item'
-                value=''
-                autofocus />
-            <ul class="dropdown-menu col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            </ul>
-        </div>
+        <div class='container-fluid'>
+            <div class='row'>
+                <div class="input-group col-xs-12 col-sm-12 col-md-12 col-lg-12" role="group">
+                    <span class="input-group-addon" id="basic-addon1"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></span>
+                    <input id='search_item' type="text" class="dropdown-toggle form-control col-xs-12 col-sm-12 col-md-12 col-lg-12"
+                        placeholder='Añadir Artículo'
+                        value=''
+                        autofocus />
+                    <ul class="dropdown-menu col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    </ul>
+                    <noscript>
+                    <a href="{% url "proformabill_add_item" proformabill.id %}" class='btn btn-primary col-xs-12 col-sm-12 col-md-4 col-lg-4'>Añadir Artículo</a>
+                    </noscript>
+                </div>
+            </div>
         </div>
         <h2>Totales</h2>
         <table class='table table-hover'>
@@ -113,6 +116,52 @@ prepare_search_box(
     ['sku', 'name', 'description'],
     "<span style='color: #777'>No se encontró ningún artículo</span>",
     "Error cargando lista");
+
+function handle_qty(ev) {
+    var current_value = $(this).html();
+    var current_id = $(this).attr('data-id');
+    var td = $(this);
+    $(this)
+        .html("");
+
+    function try_accept(ob) {
+        var new_value = $(ob).val();
+        var test_str = td.attr('data-check-fun') + "(" + new_value + ")";
+        var test = eval(test_str);
+        if(test) {
+            //alert(current_value); FIXME: submit and reload
+            td.html(new_value);
+            td.one("click", handle_qty);
+        } else {
+            td.html(current_value);
+            td.one("click", handle_qty);
+        }
+    }
+
+    $(this)
+        .append(
+            $("<input>").attr("type", "text")
+                        .attr("value", current_value)
+                        .blur(function (ev) {
+                            try_accept(this);
+                        })
+                        .on("keypress", function(ev) {
+                            if(ev.which == 13) {
+                                try_accept(this);
+                            }
+                        })
+        );
+    var input = td.find("input");
+    input.focus();
+    input.val("");
+    input.val(current_value);
+    
+
+    $("h2").on("click", function () {
+        $(".item_qty[data-id=" + current_id + "]").one("click", handle_qty);
+    });
+}
+$(".item_qty").one("click", handle_qty);
 </script>
 
 {% endblock %}
