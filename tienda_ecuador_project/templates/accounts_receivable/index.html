@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Accounts Receivable</title>
+    </head>
+
+    <body>
+        <h1>Available Companies</h1>
+        {% if companies %}
+            <ul>
+            {% for company in companies %}
+                <li><a href='{% url 'company_index' company.id %}'>{{ company.nombre_comercial }} ({{ company.razon_social }})</li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            No companies available
+        {% endif %}
+    </body>
+
+</html>

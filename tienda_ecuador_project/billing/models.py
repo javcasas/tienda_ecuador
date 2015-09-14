@@ -48,6 +48,10 @@ class ReadOnlyMixin(object):
         """
         return models.Model.delete(self, *args, **kwargs)
 
+Company_ambiente_sri_OPTIONS = (
+    ('pruebas', 'Pruebas'),
+    ('produccion', 'Producción')
+)
 
 class Company(models.Model):
     """
@@ -61,7 +65,7 @@ class Company(models.Model):
     obligado_contabilidad = models.BooleanField(default=False)
     ambiente_sri = models.CharField(
         max_length=20,
-        validators=[OneOf("pruebas", "produccion")],
+        choices=Company_ambiente_sri_OPTIONS,
         default="pruebas")
     siguiente_comprobante_pruebas = models.IntegerField(default=1)
     siguiente_comprobante_produccion = models.IntegerField(default=1)
@@ -106,6 +110,12 @@ class PuntoEmision(models.Model):
 ##################################
 # Customers
 ##################################
+BaseCustomer_tipo_identificacion_OPTIONS = (
+    ('cedula', 'Cédula'),
+    ('ruc', 'RUC'),
+    ('pasaporte', 'Pasaporte'),
+)
+
 class BaseCustomer(models.Model):
     """
     Represents a generic customer
@@ -113,7 +123,7 @@ class BaseCustomer(models.Model):
     razon_social = models.CharField(max_length=100)
     tipo_identificacion = models.CharField(
         max_length=100,
-        validators=[OneOf('cedula', 'ruc', 'pasaporte')])
+        choices=BaseCustomer_tipo_identificacion_OPTIONS)
     identificacion = models.CharField(max_length=100)
     email = models.CharField(max_length=100, blank=True)
     direccion = models.CharField(max_length=100, blank=True)
@@ -156,8 +166,8 @@ class BaseBill(models.Model):
     """
     number = models.CharField(max_length=20, blank=True)
     date = models.DateTimeField()
-    xml_content = models.TextField()
-    ride_content = models.TextField()
+    xml_content = models.TextField(blank=True)
+    ride_content = models.TextField(blank=True)
 
     def pagos(self):
         return Pago.objects.filter(bill_id=self.id)
@@ -367,10 +377,10 @@ Item_tipo_OPTIONS = (
 )
 
 Item_decimales_OPTIONS = (
-    ('0', 'Unidades Enteras'),
-    ('1', '1 Decimal'),
-    ('2', '2 Decimales'),
-    ('3', '3 Decimales'),
+    (0, 'Unidades Enteras'),
+    (1, '1 Decimal'),
+    (2, '2 Decimales'),
+    (3, '3 Decimales'),
 )
 
 
@@ -387,9 +397,10 @@ class BaseItem(models.Model):
     tipo = models.CharField(
         max_length=10,
         choices=Item_tipo_OPTIONS)
-    decimales_qty = models.CharField(
+    decimales_qty = models.IntegerField(
         max_length=1,
-        choices=Item_decimales_OPTIONS)
+        choices=Item_decimales_OPTIONS,
+        default=0)
 
     @property
     def taxes(self):

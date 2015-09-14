@@ -16,6 +16,9 @@ class ItemForm(forms.ModelForm):
         label='Tipo',
         choices=models.Item_tipo_OPTIONS,
         help_text="Por favor seleccione el tipo del artículo.")
+    decimales_qty = forms.ChoiceField(
+        label='Decimales en cantidad',
+        choices=models.Item_decimales_OPTIONS)
     description = forms.CharField(
         label="Descripción",
         max_length=500,
@@ -44,7 +47,7 @@ class ItemForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.Item
-        fields = ('sku', 'name', 'tipo', 'unit_price', 'unit_cost', 'description',)
+        fields = ('sku', 'name', 'tipo', 'unit_price', 'unit_cost', 'description', 'decimales_qty')
 
 
 class ProformaBillForm(forms.ModelForm):

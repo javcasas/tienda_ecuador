@@ -2,9 +2,8 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-from decimal import Decimal
-import billing.validators
 from django.conf import settings
+from decimal import Decimal
 import billing.models
 
 
@@ -21,8 +20,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('number', models.CharField(max_length=20, blank=True)),
                 ('date', models.DateTimeField()),
-                ('xml_content', models.TextField()),
-                ('ride_content', models.TextField()),
+                ('xml_content', models.TextField(blank=True)),
+                ('ride_content', models.TextField(blank=True)),
             ],
             options={
             },
@@ -33,7 +32,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('razon_social', models.CharField(max_length=100)),
-                ('tipo_identificacion', models.CharField(max_length=100, validators=[billing.validators.OneOf(b'cedula', b'ruc', b'pasaporte')])),
+                ('tipo_identificacion', models.CharField(max_length=100, choices=[(b'cedula', b'C\xc3\xa9dula'), (b'ruc', b'RUC'), (b'pasaporte', b'Pasaporte')])),
                 ('identificacion', models.CharField(max_length=100)),
                 ('email', models.CharField(max_length=100, blank=True)),
                 ('direccion', models.CharField(max_length=100, blank=True)),
@@ -52,6 +51,7 @@ class Migration(migrations.Migration):
                 ('unit_cost', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('unit_price', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('tipo', models.CharField(max_length=10, choices=[(b'producto', b'Producto'), (b'servicio', b'Servicio')])),
+                ('decimales_qty', models.IntegerField(default=0, max_length=1, choices=[(0, b'Unidades Enteras'), (1, b'1 Decimal'), (2, b'2 Decimales'), (3, b'3 Decimales')])),
             ],
             options={
             },
@@ -76,7 +76,7 @@ class Migration(migrations.Migration):
                 ('direccion_matriz', models.CharField(max_length=100)),
                 ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
                 ('obligado_contabilidad', models.BooleanField(default=False)),
-                ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, validators=[billing.validators.OneOf(b'pruebas', b'produccion')])),
+                ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
                 ('siguiente_comprobante_pruebas', models.IntegerField(default=1)),
                 ('siguiente_comprobante_produccion', models.IntegerField(default=1)),
                 ('cert', models.CharField(max_length=20000, blank=True)),

@@ -11,5 +11,6 @@ urlpatterns = [
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^billing/', include('billing.urls')),
+    url(r'^accounts_receivable/', include('accounts_receivable.urls')),
     url(r'^accounts/', include('registration.backends.simple.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

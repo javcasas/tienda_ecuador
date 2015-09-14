@@ -54,11 +54,11 @@ base_data = {
     "Establecimiento": {
         "codigo": "001",
         "direccion": "C del pepino",
-        "descripcion": "",
+        "descripcion": "Madre",
     },
     "PuntoEmision": {
         "codigo": "001",
-        "descripcion": "",
+        "descripcion": "Caja principal",
     },
     "BaseCustomer": {
         "razon_social": "Pepe",
@@ -74,6 +74,7 @@ base_data = {
         'unit_cost': 11.5,
         'unit_price': 15.5,
         'tipo': 'producto',
+        'decimales_qty': 0,
     },
     "BaseBill": {
         'number': '3',
@@ -189,6 +190,10 @@ class FieldsTests(TestCase, TestHelpersMixin):
         Actually tests if all the required fields are there
         """
         ob = cls(**data)
+        try:
+            ob.full_clean()
+        except ValidationError as e:
+            self.fail("Error testing {}: {}".format(cls, e))
         try:
             save = ob.secret_save
         except AttributeError:

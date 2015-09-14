@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'billing',
+    'accounts_receivable',
     'registration',
     'bootstrap3',
 )

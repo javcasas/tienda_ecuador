@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 import base64
 import pytz
 import xml.etree.ElementTree as ET
@@ -485,13 +486,15 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
             'unit_cost': 5,
             'unit_price': 6.5,
             'tipo': 'producto',
-            'description': 'Item 1 description'}
+            'description': 'Item 1 description',
+            'decimales_qty': 0,}
     newdata = {'sku': 'P12345',
                'name': 'Item 2',
                'unit_cost': 3,
                'unit_price': 6,
                'tipo': 'servicio',
-               'description': 'Item 2 description'}
+               'description': 'Item 2 description',
+               'decimales_qty': 1,}
 
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
@@ -839,8 +842,9 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         self.item_data = dict(
             sku='SKU222',
             name='Item 3',
-            unit_cost=5.3,
+            unit_cost=Decimal("5.3"),
             unit_price=8,
+            decimales_qty=2,
             description='Item3 description')
         self.item = add_instance(
             models.Item,
@@ -874,6 +878,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
                 {'copy_from': self.item.id,
                  'qty': 1})
         self.assertEquals(new.qty, 1)
+        self.assertObjectMatchesData(new, self.item_data)
 
     def test_add_item_to_bill_repeated_submit(self):
         with self.new_item(models.ProformaBillItem) as new:

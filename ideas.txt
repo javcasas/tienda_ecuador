@@ -20,3 +20,10 @@ Items:
 Tienda online acoplada
     * Usa la misma lista de productos
     * Usa uno de los precios de los productos
+
+Cuentas por cobrar:
+    * Convertir pagos en el futuro automaticamente a cuentas por cobrar
+    * Cada cuenta por cobrar:
+        * Cliente, fecha de creacion, factura asociada, cantidad a pagar, fecha a pagar
+        * Cancelable por deuda, varios pagos por deuda
+            * Pagos por deuda: fecha, cantidad, referencia
