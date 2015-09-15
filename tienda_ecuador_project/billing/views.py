@@ -3,6 +3,7 @@ import os
 import base64
 import pytz
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -614,11 +615,16 @@ class ProformaBillItemUpdateViewJS(ProformaBillItemView,
                                    View):
     def post(self, request, pk):
         proformabill_item = get_object_or_404(self.model, proforma_bill=self.proformabill, pk=pk)
-        for field in ['qty']:
+        def accept_qty(val):
+            val = Decimal(val)
+            if val < 0:
+                raise Exception("Invalid QTY")
+            return val
+        for field, fun in [('qty', accept_qty)]:
             val = request.POST[field]
-            setattr(proformabill_item, field, val)
+            setattr(proformabill_item, field, fun(val))
         proformabill_item.full_clean()
-        if proformabill_item.qty == '0':
+        if proformabill_item.qty == 0:
             proformabill_item.delete()
         else:
             proformabill_item.save()
