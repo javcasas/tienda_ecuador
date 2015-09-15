@@ -169,7 +169,9 @@ class BaseBill(models.Model):
     xml_content = models.TextField(blank=True)
     ride_content = models.TextField(blank=True)
 
-    def pagos(self):
+    @property
+    def payment(self):
+        #//raise Exception("Blah")
         return Pago.objects.filter(bill_id=self.id)
 
     def __unicode__(self):
@@ -429,6 +431,10 @@ class BaseItem(models.Model):
         else:
             raise Exception("Error: No IVA")
 
+    @property
+    def increment_qty(self):
+        return "{}".format(1 / (Decimal("10") ** self.decimales_qty))
+
 
 class Item(BaseItem):
     """
@@ -516,7 +522,7 @@ class Pago(models.Model):
     """
     Pagos en una factura
     """
-    cantidad = models.IntegerField()
+    cantidad = models.DecimalField(max_digits=20, decimal_places=8)
     forma_pago = models.ForeignKey(FormaPago)
     plazo_pago = models.ForeignKey(PlazoPago)
     bill = models.ForeignKey(BaseBill)

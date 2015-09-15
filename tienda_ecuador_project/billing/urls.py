@@ -83,6 +83,15 @@ urlpatterns = patterns(
         views.ProformaBillItemDeleteView.as_view(),
         name='proformabillitem_delete'),
 
+    url(r'^proforma_bill/item/(?P<pk>[0-9]+)/update_js/$',
+        views.ProformaBillItemUpdateViewJS.as_view(),
+        name='proformabillitem_update_js'),
+
+    # Proforma bill payment views
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/payment/$',
+        views.ProformaBillDetailView.as_view(),  # FIXME
+        name='proformabill_payment_details'),
+
     # Report views
     url(r'^report/(?P<company_id>[0-9]+)/bills/day/(?P<year>[0-9]+)/(?P<month>[0-9]+)/(?P<day>[0-9]+)/$',
         views.BillDayListReport.as_view(),

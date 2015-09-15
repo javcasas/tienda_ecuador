@@ -11,7 +11,7 @@ from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.forms.models import model_to_dict
 
 import models
@@ -608,6 +608,21 @@ class ProformaBillItemUpdateView(ProformaBillItemView,
         form.instance.proforma_bill = self.proformabill
         res = super(self.__class__, self).form_valid(form)
         return res
+
+class ProformaBillItemUpdateViewJS(ProformaBillItemView,
+                                   ProformaBillSelected,
+                                   View):
+    def post(self, request, pk):
+        proformabill_item = get_object_or_404(self.model, proforma_bill=self.proformabill, pk=pk)
+        for field in ['qty']:
+            val = request.POST[field]
+            setattr(proformabill_item, field, val)
+        proformabill_item.full_clean()
+        if proformabill_item.qty == '0':
+            proformabill_item.delete()
+        else:
+            proformabill_item.save()
+        return HttpResponse("Ok")
 
 
 class ProformaBillItemDeleteView(ProformaBillItemView,

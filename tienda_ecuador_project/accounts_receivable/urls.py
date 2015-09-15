@@ -5,5 +5,5 @@ urlpatterns = patterns(
     '',
     # Index views
     url(r'^$',
-        views.index, name='index'),
+        views.index, name='accounts_receivable_index'),
 )

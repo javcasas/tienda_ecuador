@@ -362,6 +362,22 @@ class ItemTests(TestCase, TestHelpersMixin):
                   unit_cost=10, unit_price=10)
         self.assertEquals(str(ob), "1234 - asdf")
 
+    def test_increment(self):
+        """
+        Prueba str() y unicode()
+        """
+        ob = Item(sku="1234", name="asdf", description="asdf",
+                  unit_cost=10, unit_price=10, decimales_qty=2)
+        self.assertEquals(ob.increment_qty, "0.01")
+
+    def test_increment_no_decimals(self):
+        """
+        Prueba str() y unicode()
+        """
+        ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
+                  unit_cost=10, unit_price=10, decimales_qty=0)
+        self.assertEquals(ob.increment_qty, "1")
+
 
 class IdentificacionTests(TestCase):
     def setUp(self):
@@ -476,6 +492,19 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                               unit_cost=5,
                               unit_price=10,)
             ob.tax_items.add(self.iva, self.ice)
+        self.payment = add_instance(
+            models.Pago,
+            cantidad=Decimal(50),
+            bill=self.proforma,
+            forma_pago=add_instance(
+                models.FormaPago,
+                codigo='01',
+                descripcion='Efectivo'),
+            plazo_pago=add_instance(
+                models.PlazoPago,
+                descripcion='30 dias',
+                unidad_tiempo='dias',
+                tiempo=30))
 
     def test_subtotal(self):
         self.assertEquals(self.proforma.subtotal,
@@ -556,6 +585,10 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         c = ClaveAcceso()
         with self.assertRaises(ValueError):
             c.fecha_emision = (2015, 17, 3)
+
+    def test_attached_payments(self):
+        self.assertEquals(list(self.proforma.payment),
+                          [self.payment])
 
 
 class IceTests(TestCase, TestHelpersMixin):

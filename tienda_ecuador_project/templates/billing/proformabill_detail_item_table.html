@@ -1,21 +1,55 @@
 {% load bootstrap3 %}
 {% load decimal_format %}
+
+<thead>
+  <tr>
+    <th class='visible-xs-block visible-sm-block'>&nbsp;</th>
+    <th><span class='visible-lg-block visible-xl-block'>Código</span></th>
+    <th></th>
+    <th class='visible-lg-block visible-xl-block'>Cantidad</th>
+    <th>Precio</th>
+    <th>Subtotal</th>
+    <th class='visible-lg-block visible-xl-block'>Impuestos</th>
+    <th></th>
+  </tr>
+</thead>
+
+<tbody>
 {% for item in proformabill.items %}
     <tr>
+        <td class='visible-xs-block visible-sm-block item-qty-popup-edit'
+            data-id='{{ item.id }}' data-step='{{ item.increment_qty }}'>
+            <span class='qty-value'>{{ item.qty|qty }}</span>
+            <span class='glyphicon glyphicon-pencil'></span>
+        </td>
         <td>{{ item.sku }}</td>
         <td>{{ item.name }}</td>
-        <td class='item_qty' data-id='{{ item.id }}' data-check-fun='Number.isInteger'>{{ item.qty|qty }}</td>
+        <td class='visible-lg-block visible-xl-block item-qty-inline-edit'
+            data-id='{{ item.id }}' data-step='{{ item.increment_qty }}'>
+            <span class='qty-value'>{{ item.qty|qty }}</span>
+            <span class='glyphicon glyphicon-pencil'></span>
+        </td>
         <td>{{ item.unit_price|price4d }}</td>
         <td>{{ item.total_sin_impuestos|price2d }}</td>
-        <td>{{ item.total_impuestos|price2d }}</td>
+        <td class='visible-lg-block visible-xl-block'>{{ item.total_impuestos|price2d }}</td>
         <td>
             {% buttons %}
             <form action="{% url 'proformabillitem_delete' item.id %}" method='post'>
                 {% csrf_token %}
-                <a href="{% url 'proformabillitem_update' item.id %}" class='btn btn-default'>Editar</a>
-                <button type='submit' class='btn btn-danger'>Eliminar</button>
+                <a href="{% url 'proformabillitem_update' item.id %}"
+                   class='btn btn-default'>
+                    <span class='glyphicon glyphicon-pencil'></span>
+                </a>
+                <button type='submit' class='btn btn-danger'>
+                    <span class='glyphicon glyphicon-remove'></span>
+                </button>
             </form>
             {% endbuttons %}
         </td>
     <tr/>
+{% empty %}
+    <tr>
+        <td colspan='6'>No hay artículos</td>
+    <tr/>
 {% endfor %}
+</tbody>

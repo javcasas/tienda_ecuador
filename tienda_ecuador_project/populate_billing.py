@@ -28,6 +28,7 @@ def print_instance(klass, kwargs):
 def add_instance(klass, **kwargs):
     print_instance(klass, kwargs)
     s = klass.objects.update_or_create(**kwargs)[0]
+    s.full_clean()
     s.save()
     return s
 
@@ -40,9 +41,8 @@ add_ProformaBillItem = partial(add_instance, ProformaBillItem)
 
 
 def add_User(**kwargs):
-    pw = kwargs.pop("password")
     u = add_instance(User, **kwargs)
-    u.set_password(pw)
+    u.set_password(kwargs['password'])
     u.save()
     return u
 
@@ -64,33 +64,39 @@ def my_populate():
                      razon_social=u'Alberto Álvarez', direccion_matriz=u'C/ Orellana')
     e1 = add_instance(models.Establecimiento,
                       company=t1,
+                      direccion='C/ Ruminahui',
+                      descripcion='Matriz',
                       codigo='001')
     e2 = add_instance(models.Establecimiento,
                       company=t2,
+                      direccion='C/ Orellana',
+                      descripcion='Matriz',
                       codigo='001')
     pe1 = add_instance(models.PuntoEmision,
                        establecimiento=e1,
+                       descripcion='Caja principal',
                        codigo='001')
     pe2 = add_instance(models.PuntoEmision,
                        establecimiento=e2,
+                       descripcion='Caja principal',
                        codigo='001')
 
     iva, created = Iva.objects.get_or_create(descripcion="12%", porcentaje=12)
     ice, created = Ice.objects.get_or_create(descripcion="Bebidas gaseosas.", porcentaje=50, grupo=1)
     i11 = add_Item(sku='115674', name='Foco LED Blanco 5W',
-                   unit_cost=10, unit_price=17,
+                   unit_cost=10, unit_price=17, tipo='producto',
                    description='Foco LED, luz blanca, potencia: 5W', company=t1,)
     i12 = add_Item(sku='120443', name='Foco LED Amarillo 6W',
-                   unit_cost=8, unit_price=11,
+                   unit_cost=8, unit_price=11, tipo='producto',
                    description='Foco LED, luz amarilla, potencia: 6W', company=t1)
     i21 = add_Item(sku='F114', name='Panel LED Blanco 50W',
-                   unit_cost=30, unit_price=45,
+                   unit_cost=30, unit_price=45, tipo='producto',
                    description='Panel de LED, de luz blanca, 50W', company=t2)
     i22 = add_Item(sku='F116', name='Panel LED RGB 35W',
-                   unit_cost=33, unit_price=54,
+                   unit_cost=33, unit_price=54, tipo='producto',
                    description='Panel de LED RGB, de 35W', company=t2)
     i23 = add_Item(sku='F117', name='Foco LED verde 4W',
-                   unit_cost=20, unit_price=27,
+                   unit_cost=20, unit_price=27, tipo='producto',
                    description='Foco LED verde decorativo, 4W', company=t2)
     for i in [i11, i12, i21, i22, i23]:
         i.tax_items.add(iva, ice)
@@ -115,12 +121,12 @@ def my_populate():
                           date=get_date())
     b1i1 = add_ProformaBillItem(
         sku='115674', name='Foco LED Blanco 5W',
-        unit_cost=10, unit_price=17,
+        unit_cost=10, unit_price=17, tipo='producto',
         description='Foco LED, luz blanca, potencia: 5W',
         proforma_bill=b1, qty=4)
     b1i2 = add_ProformaBillItem(
         sku='120443', name='Foco LED Amarillo 6W',
-        unit_cost=8, unit_price=11,
+        unit_cost=8, unit_price=11, tipo='producto',
         description='Foco LED, luz amarilla, potencia: 6W',
         proforma_bill=b1, qty=8)
 
@@ -129,12 +135,12 @@ def my_populate():
                           punto_emision=pe1)
     b2i1 = add_ProformaBillItem(
         sku='115674', name='Foco LED Blanco 5W',
-        unit_cost=10, unit_price=17,
+        unit_cost=10, unit_price=17, tipo='producto',
         description='Foco LED, luz blanca, potencia: 5W',
         proforma_bill=b2, qty=9)
     b2i2 = add_ProformaBillItem(
         sku='120443', name='Foco LED Amarillo 6W',
-        unit_cost=8, unit_price=11,
+        unit_cost=8, unit_price=11, tipo='producto',
         description='Foco LED, luz amarilla, potencia: 6W',
         proforma_bill=b2, qty=11)
 
