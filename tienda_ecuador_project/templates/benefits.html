@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %} DSSTI - {% endblock %}
+
+{% block body_block %}
+
+<style>
+.main-page {
+    min-height: 400px;
+    background-color: #ccf;
+}
+body {
+    background-color: #ccf;
+}
+.main-page .slogan {
+    margin-top: 50px;
+    margin-bottom: 30px;
+}
+.main-page form {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+.desc-page {
+    min-height: 300px;
+    background-color: #005;
+    color: #bbb;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.features-page {
+    min-height: 500px;
+    background-color: #ccf;
+}
+.support-page {
+    min-height: 500px;
+    background-color: #005;
+    color: #bbb;
+}
+.request-form {
+    padding: 20px;
+    background-color: rgba(0,0,0,0.2);
+    display: inline-block;
+    margin: 10px;
+    border-radius: 5px;
+}
+.request-form form {
+    background-color: #043;
+    padding: 20px;
+    display: block;
+    margin: 0px;
+    border-radius: 5px;
+}
+.request-form .request-form-subtext {
+    margin-top: 20px;
+    font-size: 130%;
+}
+.request-form .request-form-subtext a {
+    color: #005;
+}
+.call-to-action {
+    padding-top: 100px;
+    padding-bottom: 100px;
+}
+.call-to-action h1{
+    font-size: 400%;
+}
+hr {
+    display: block;
+    height: 1px;
+    background-color: #333;
+    margin: 1em 0;
+    padding: 0; 
+}
+.no-circle li {
+    list-style-type: none;
+}
+.support-link {
+    padding: 10px;
+    background-color: rgba(0,0,0,0.4);
+    display: inline-block;
+}
+</style>
+<div class='row main-page'>
+    <div class='col-xs-12 col-sm-12 col-md-12 col-xl-12 text-center'>
+        <h1>Beneficios de DSSTI Facturas</h1>
+    </div>
+    <div class='row'>
+        <div class='col-xs-12 col-md-6'>
+            <h3>Disponible desde cualquier sitio</h3>
+            <p>
+DSSTI Facturas es una aplicación web. Está disponible para laptops y celulares en cualquier lugar donde
+haya conexión a Internet. Así, usted puede trabajar desde su oficina, desde su casa, en el tren,
+o autobús. Desde su Smartphone, usted puede preparar proformas, atender clientes, enviar presupuestos
+y mucho más.
+            </p><p>
+DSSTI Facturas tiene un sencillo e intuitivo interfaz, para que usted pueda utilizarlo desde su Smartphone
+con facilidad y sin problemas.
+            </p>
+        </div>
+        <div class='col-xs-12 col-md-6'>
+            <h3>Factura Electrónica del SRI</h3>
+            <p>
+El SRI está impulsando el uso de facturas electrónicas, lo cual es una bendición para los bosques
+y para las empresas preparadas. Evite el problema de continuar consiguiendo tacos de facturas y
+anular facturas caducadas con DSSTI Facturas. 
+            </p><p>
+Cada factura electrónica es generada por el sistema, y autorizada al momento por el SRI. La factura es
+enviada inmediatamente al cliente por correo electrónico, o está disponible para su descarga
+en la página web de DSSTI Facturación.
+            </p>
+        </div>
+    </div>
+    <div class='row'>
+        <div class='col-xs-12 col-md-6'>
+            <h3>Trabajo sencillo y cómodo con Facturas Proforma</h3>
+            <p>
+Usted sabe mejor que nadie el problema que tiene con las facturas de algunos de sus clientes.
+Usted le envía a su cliente la factura, y siempre algo está mal. La cantidad de un producto,
+las condiciones de pago... incluso algunos clientes no aceptan facturas porque el número de
+factura no tiene todos los ceros que se presuponen. Y siempre toca hacer lo mismo: anular
+la factura, archivarla anulada por siete años, y recordar en la siguiente declaración
+que la factura fue anulada. Y aún peor es si la factura fue del mes pasado: en ese caso
+usted tiene que abonar el IVA e ICE de la factura, hacer aún más papeleo, pedirle al
+SRI que le devuelva los impuestos porque al final la factura fue anulada.
+            </p><p>
+Con DSSTI Facturas, el trabajo es más sencillo. En lugar de enviar a su cliente la factura
+oficial, usted envía una factura proforma. La proforma es similar a la oficial, pero no es
+oficial. Y, puesto que no es oficial, no es necesario anularla si hay algún detalle erróneo.
+Así usted puede discutir tranquilamente todos los detalles con su cliente,
+intercambiando facturas proforma hasta que todo esté correcto. Y, cuando por fín
+todo esté correcto, usted emite la factura como factura final. Así no es necesario anular nada.
+            </p>
+        </div>
+        <div class='col-xs-12 col-md-6'>
+            <h3>Listas de Artículos, Precios y Clientes</h3>
+            <p>
+Todos sabemos lo complicado que es recordar los precios de todas las mercaderías de su negocio.
+Por ello, DSSTI Facturas tiene soporte para listas de Artículos y Precios. Cuando su cliente
+le pregunte por algún detalle, Usted puede buscar un artículo por nombre, descripción y código.
+Así es más sencillo servir a sus clientes.
+            </p><p>
+DSSTI Facturas también incluye un control de precios, para que nunca venda su mercadería por
+debajo de precio de coste. Así usted puede hacer rebajas sin arriesgar su empresa.
+            </p>
+        </div>
+    </div>
+    <div class='row'>
+        <div class='col-xs-12 col-md-6'>
+            <h3>Informes de Ventas, Facturas y Anexos</h3>
+            <p>
+DSSTI Facturas incluye informes de ventas, tanto diarias, como semanales, como mensuales, para
+que usted siempre sepa qué ocurre en su empresa. Con el Informe de Facturas diario, usted
+siempre tiene a mano la lista de ventas del día, y así cumple con el requisito del SRI.
+            </p><p>
+DSSTI Facturas es el paraíso de su Contador, con muchos informes que sin duda
+harán más sencillo su trabajo. Con DSSTI Facturas, su Contador tendrá siempre al día
+las Cuentas de su Empresa.
+            </p>
+        </div>
+        <div class='col-xs-12 col-md-6'>
+            <h3>Sus Datos  Protegidos en la Nube</h3>
+            <p>
+Todas las personas que hemos trabajado con computadores hemos sufrido algún tipo de pérdida de datos.
+A veces un disco se estropea, o se pierde un CD de datos, o un virus informático borra todo, 
+o se cae una taza de café sobre el computador. El caso, es que los datos se pierden.
+Con DSSTI Facturas usted no tendrá ese problema. Sus datos están protegidos y seguros
+en la Nube, a prueba de virus y desastres.
+            </p><p>
+Gracias a que el sistema completo está en la Nube, usted tiene disponibilidad al mismo en
+cualquier lugar, simplemente con una conexión a Internet. No es necesario instalar el
+programa para usarlo, y así usted no tiene que preocuparse de todos esos detalles
+que dificultan el uso de otros programas.
+            </p>
+        </div>
+    </div>
+    <div class='row'>
+        <div class='col-xs-12 col-md-6'>
+            <h3>Mejoras Constantes, Actualizaciones Automáticas</h3>
+            <p>
+En DSSTI mejoramos nuestros programas todos los días. ¿Y sabe qué es lo mejor? Que usted
+no tiene que preocuparse de actualizar sus sistemas. Cuando nosotros añadamos nuevas
+características y mejoras a DSSTI Facturas, usted las recibirá automáticamente, sin
+tener que actualizar su sistema.
+            </p>
+        </div>
+        <div class='col-xs-12 col-md-6'>
+            <h3>El Mejor Soporte</h3>
+            <p>
+En DSSTI sabemos que la tecnología no siempre funciona como queremos. Por eso,
+DSSTI Facturas tiene un soporte técnico de máxima calidad, para ayudarle cuando las cosas no salgan bien.
+            </p>
+        </div>
+    </div>
+
+<div class='row call-to-action-page'>
+    <div class='col-xs-12 col-sm-12 col-md-12 col-xl-12 text-center call-to-action'>
+        <h1>Pruebe Hoy <span class='text-uppercase'>Gratis<span></h1>
+        <h3>La configuración sólo lleva un minuto</h3>
+        {% include 'request_form.html' %}
+    </div>
+</div>
+
+{% include 'footer.html' %}
+{% endblock %}

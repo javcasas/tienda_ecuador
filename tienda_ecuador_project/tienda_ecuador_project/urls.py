@@ -7,7 +7,11 @@ from django.conf import settings
 urlpatterns = [
     # Examples:
     url(r'^$', TemplateView.as_view(template_name='index.html'), name='home'),
-    # url(r'^blog/', include('blog.urls')),
+    url(r'^form/$', TemplateView.as_view(template_name='request_form.html'), name='form'),  # FIXME:remove
+    url(r'^request_info/$', TemplateView.as_view(template_name='request_info.html'), name='request_info'),
+    url(r'^about/$', TemplateView.as_view(template_name='request_form.html'), name='about'),  # FIXME: use proper template
+    url(r'^benefits/$', TemplateView.as_view(template_name='benefits.html'), name='benefits'),
+    url(r'^support/$', TemplateView.as_view(template_name='request_form.html'), name='support'),  # FIXME: use proper template
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^billing/', include('billing.urls')),

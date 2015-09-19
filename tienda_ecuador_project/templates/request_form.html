@@ -1,5 +1,5 @@
         <div class='request-form text-center jumbotron'>
-            <form class='form-inline' role='form'>
+            <form class='form-inline' role='form' action="{%url 'request_info'%}">
                 <div class='form-group'>
                     <input type='text' class='form-control' placeholder='Nombre de la Empresa'/>
                     <input type='text' class='form-control' placeholder='Correo Electronico'/>
@@ -7,6 +7,6 @@
                 </div>
             </form>
             <div class='request-form-subtext'>
-                <a href='#'>Descubre más ventajas de DSSTI Facturas</a>
+                <a href='{% url 'benefits' %}'>Descubre más ventajas de DSSTI Facturas</a>
             </div>
         </div>
