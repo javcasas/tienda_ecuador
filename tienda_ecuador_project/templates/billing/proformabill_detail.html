@@ -97,17 +97,7 @@
           </tr>
         </thead>
         <tbody id='payment_table'>
-          {% for payment in proforma.payment %}
-            <tr>
-              <td>{{ payment.plazo_pago.descripcion }}</td>
-              <td>{{ payment.cantidad }}</td>
-              <td>{{ payment.forma_pago.descripcion }}</td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan='3'>No hay condiciones de pago especificadas</td>
-            </tr>
-          {% endfor %}
+            {% include "billing/proformabill_detail_payment_table.html" %}
         </tbody>
       </table>
       {% buttons %}
@@ -220,10 +210,12 @@ function reload_tables() {
                 });
             });
     }
-    reload_content("#detail_table", 
+    reload_content("#detail_table",
                    "{% url 'proformabill_detail_item_table' proformabill.id %}");
-    reload_content("#totals_table", 
+    reload_content("#totals_table",
                    "{% url 'proformabill_detail_totals_table' proformabill.id %}");
+    reload_content("#payment_table",
+                   "{% url 'proformabill_detail_payment_table' proformabill.id %}");
 }
 
 function get_base_dict_for_post() {

@@ -122,7 +122,6 @@ class LoggedInTests(TestCase, TestHelpersMixin):
                 self.assertIn(r.status_code, [200, 404, 405])
 
 
-
 class LoggedInWithCompanyTests(LoggedInTests):
     """
     Logged in user that is associated with a company
@@ -287,8 +286,8 @@ class GenericObjectCRUDTest(object):
         that pretends to create a new object under a different company
         """
         with self.assertRaises(AssertionError):
-            with self.new_item(self.cls) as new:
-                r = self.c.post(
+            with self.new_item(self.cls):
+                self.c.post(
                     reverse(self.create_view, args=(self.company2.id,)),
                     make_post(self.data),
                 )
@@ -487,22 +486,22 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
             'unit_price': 6.5,
             'tipo': 'producto',
             'description': 'Item 1 description',
-            'decimales_qty': 0,}
+            'decimales_qty': 0}
     newdata = {'sku': 'P12345',
                'name': 'Item 2',
                'unit_cost': 3,
                'unit_price': 6,
                'tipo': 'servicio',
                'description': 'Item 2 description',
-               'decimales_qty': 1,}
+               'decimales_qty': 1}
 
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
         self.iva = add_instance(models.Iva,
-                           descripcion="12%", codigo='12', porcentaje=12.0)
+                                descripcion="12%", codigo='12', porcentaje=12.0)
         self.ice = add_instance(models.Ice,
-                           descripcion="Bebidas gaseosas", grupo=1,
-                           codigo='3051', porcentaje=50.0)
+                                descripcion="Bebidas gaseosas", grupo=1,
+                                codigo='3051', porcentaje=50.0)
         self.make_object()
         self.ob.tax_items.add(self.iva, self.ice)
         self.index_keys = ['sku', 'name']
@@ -510,10 +509,10 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
 
     def test_create(self):
         self.iva2 = add_instance(models.Iva,
-                            descripcion="0%", codigo='2', porcentaje=0.0)
+                                 descripcion="0%", codigo='2', porcentaje=0.0)
         self.ice2 = add_instance(models.Ice,
-                            descripcion="Otro", grupo=1,
-                            codigo='3052', porcentaje=150.0)
+                                 descripcion="Otro", grupo=1,
+                                 codigo='3052', porcentaje=150.0)
         with self.new_item(self.cls) as new:
             r = self.simulate_post(
                 reverse(self.create_view, args=self.reverse_index_args),
@@ -532,10 +531,10 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
             The client is redirected to the object view
         """
         self.iva2 = add_instance(models.Iva,
-                            descripcion="0%", codigo='2', porcentaje=0.0)
+                                 descripcion="0%", codigo='2', porcentaje=0.0)
         self.ice2 = add_instance(models.Ice,
-                            descripcion="Otro", grupo=1,
-                            codigo='3052', porcentaje=150.0)
+                                 descripcion="Otro", grupo=1,
+                                 codigo='3052', porcentaje=150.0)
         r = self.simulate_post(
             reverse(self.update_view, args=self.reverse_object_args),
             dict(self.newdata, iva=self.iva2.id, ice=self.ice2.id),
@@ -952,7 +951,9 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                                             codigo='001')
         self.punto_emision = add_instance(models.PuntoEmision,
                                           establecimiento=self.establecimiento,
-                                          codigo='001')
+                                          codigo='001',
+                                          siguiente_secuencial_pruebas=10,
+                                          siguiente_secuencial_produccion=14)
         self.proformabill = add_instance(
             models.ProformaBill,
             punto_emision=self.punto_emision,
@@ -1005,11 +1006,24 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             r,
             reverse('proformabill_emit_to_bill',
                     args=(self.proformabill.id,)))
+        # Ok, emitir
+        r = self.c.post(
+            reverse('proformabill_emit_to_bill',
+                    args=(self.proformabill.id,)))
 
         # Generar XML
         #   Generar claves para el XML
+        #       Guardar secuencial para el XML
+        #       Incrementar secuencial de punto emision
         #   Firmar XML
         #   Guardar XML en proforma
+        proforma = models.ProformaBill.objects.get(id=self.proformabill.id)
+        self.assertEquals(
+            proforma.secuencial_pruebas,
+            10)
+        self.assertEquals(
+            models.PuntoEmision.objects.get(id=self.punto_emision.id).siguiente_secuencial_pruebas,
+            11)
         r = self.c.get(
             reverse('proformabill_emit_gen_xml',
                     args=(self.proformabill.id,)))
@@ -1032,7 +1046,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 self.company.ruc,
                 '1',
                 "023013",
-                "{:09}".format(self.company.siguiente_comprobante_pruebas),
+                "{:09}".format(proforma.secuencial_pruebas),
                 "17907461",
                 "1",
                 "8"]),
@@ -1040,7 +1054,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             "./infoTributaria/estab": "001",
             "./infoTributaria/ptoEmi": "001",
             "./infoTributaria/secuencial":
-                z9(self.company.siguiente_comprobante_pruebas),
+                z9(proforma.secuencial_pruebas),
             "./infoTributaria/dirMatriz": self.company.direccion_matriz,
 
             # Info Factura
@@ -1117,10 +1131,15 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             node = tree.find(k)
             self.assertNotEquals(node, None,
                                  "Node {} does not exist".format(k))
-            self.assertEquals(
-                node.text, v,
-                "Bad value for node {}: \n'{}' (should be \n'{}')".format(
-                    k, node.text, v))
+            differences = []
+            msg = "Bad value for node {}: \n'{}' (should be \n'{}')".format(
+                k, node.text, v)
+            if "claveAcceso" in k:
+                for i, (a, b) in enumerate(zip(node.text, v)):
+                    if a != b:
+                        differences.append("Difference at char {}: '{}' != '{}'".format(i, a, b))
+                msg = msg + "\n" + "\n".join(differences)
+            self.assertEquals(node.text, v, msg)
 
         # Enviar XML al SRI
         #   Esperar respuesta

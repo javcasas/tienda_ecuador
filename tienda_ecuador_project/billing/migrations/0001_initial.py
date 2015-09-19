@@ -77,8 +77,7 @@ class Migration(migrations.Migration):
                 ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
                 ('obligado_contabilidad', models.BooleanField(default=False)),
                 ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
-                ('siguiente_comprobante_pruebas', models.IntegerField(default=1)),
-                ('siguiente_comprobante_produccion', models.IntegerField(default=1)),
+                ('siguiente_numero_proforma', models.IntegerField(default=1)),
                 ('cert', models.CharField(max_length=20000, blank=True)),
                 ('key', models.CharField(max_length=100, blank=True)),
             ],
@@ -155,7 +154,8 @@ class Migration(migrations.Migration):
             name='Pago',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('cantidad', models.IntegerField()),
+                ('porcentaje', models.DecimalField(max_digits=20, decimal_places=8)),
+                ('forma_pago', models.ForeignKey(to='billing.FormaPago')),
             ],
             options={
             },
@@ -177,6 +177,8 @@ class Migration(migrations.Migration):
             name='ProformaBill',
             fields=[
                 ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
+                ('secuencial_pruebas', models.IntegerField(default=0, blank=True)),
+                ('secuencial_produccion', models.IntegerField(default=0, blank=True)),
                 ('issued_to', models.ForeignKey(to='billing.Customer')),
             ],
             options={
@@ -199,6 +201,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('descripcion', models.CharField(max_length=50)),
                 ('codigo', models.CharField(max_length=3)),
+                ('siguiente_secuencial_pruebas', models.IntegerField(default=1)),
+                ('siguiente_secuencial_produccion', models.IntegerField(default=1)),
                 ('establecimiento', models.ForeignKey(to='billing.Establecimiento')),
             ],
             options={
@@ -245,20 +249,14 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='pago',
-            name='bill',
-            field=models.ForeignKey(to='billing.BaseBill'),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='pago',
-            name='forma_pago',
-            field=models.ForeignKey(to='billing.FormaPago'),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='pago',
             name='plazo_pago',
             field=models.ForeignKey(to='billing.PlazoPago'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='pago',
+            name='proforma_bill',
+            field=models.ForeignKey(to='billing.ProformaBill'),
             preserve_default=True,
         ),
         migrations.AddField(

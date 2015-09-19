@@ -1,0 +1,14 @@
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+  {% for payment in proformabill.payment %}
+    <tr>
+      <td>{{ payment.plazo_pago.descripcion }}</td>
+      <td>{{ payment.cantidad|price2d }} ({{ payment.porcentaje }}%)</td>
+      <td>{{ payment.forma_pago.descripcion }}</td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan='3'>No hay condiciones de pago especificadas</td>
+    </tr>
+  {% endfor %}

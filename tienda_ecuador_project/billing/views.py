@@ -221,6 +221,7 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
     """
     template_name_suffix = '_create_form'
     form_class = ItemForm
+
     def get_form(self, *args):
         res = super(ItemCreateView, self).get_form(*args)
         return res
@@ -365,6 +366,52 @@ class ProformaBillDetailViewTable(ProformaBillView,
     template_name_suffix = '_detail_item_table'
 
 
+class ProformaBillPaymentView(ProformaBillView,
+                              PuntoEmisionSelected,
+                              DetailView):
+    """
+    Payment view for proforma bills
+    """
+    template_name_suffix = '_payment_form'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProformaBillPaymentView, self).get_context_data(**kwargs)
+        context['payment_kinds'] = models.FormaPago.objects.all()
+        context['deferred'] = {}
+        context['deferred']['payment_terms'] = models.PlazoPago.objects.exclude(tiempo=0)
+        context['dues'] = {}
+        context['dues']['payment_number_terms'] = range(2, 10)
+        context['dues']['payment_terms'] = models.PlazoPago.objects.exclude(tiempo=0)
+        return context
+
+    def post(self, request, pk):
+        proforma = self.get_queryset().get(pk=pk)
+        # Delete previous payment terms
+        payment_items = models.Pago.objects.filter(proforma_bill_id=proforma.id)
+        for payment in payment_items:
+            payment.delete()
+
+        # Add new payment terms
+        payment_method = models.FormaPago.objects.get(id=request.POST['payment_method'])
+        if request.POST['payment_mode'] == 'immediate':
+            installment = models.PlazoPago.objects.get(tiempo=0)
+            models.Pago(porcentaje=Decimal(100),
+                        forma_pago=payment_method,
+                        plazo_pago=installment,
+                        proforma_bill=proforma).save()
+            return redirect("proformabill_detail", proforma.id)
+        elif request.POST['payment_mode'] == 'deferred':
+            installment = models.PlazoPago.objects.get(pk=request.POST['payment_time_to_pay'])
+            models.Pago(porcentaje=Decimal(100),
+                        forma_pago=payment_method,
+                        plazo_pago=installment,
+                        proforma_bill=proforma).save()
+            return redirect("proformabill_detail", proforma.id)
+        #elif request.POST['payment_mode'] == 'installments':
+            #return HttpResponse(str(("Cuotitas", request.POST['payment_method'], request.POST['payment_installments'], request.POST['payment_time_between_installments'])))
+        return HttpResponse("Ok")
+
+
 class ProformaBillCreateView(PuntoEmisionSelected,
                              ProformaBillView,
                              CreateView):
@@ -409,6 +456,15 @@ class ProformaBillDeleteView(ProformaBillView,
 class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_emit'
 
+    def post(self, request, pk):
+        proforma = self.get_object()
+        if proforma.secuencial == 0:
+            proforma.secuencial = proforma.punto_emision.siguiente_secuencial
+            proforma.punto_emision.siguiente_secuencial += 1
+        proforma.save()
+        proforma.punto_emision.save()
+        return HttpResponse("ok")
+
 
 class ProformaBillEmitGenXMLView(ProformaBillView,
                                  PuntoEmisionSelected,
@@ -431,11 +487,6 @@ class ProformaBillEmitGenXMLView(ProformaBillView,
                                             # 05: nota de debito
                                             # 06: guia de remision
                                             # 07: comprobante de retencion
-        info_tributaria['secuencial'] = {
-            'pruebas': self.company.siguiente_comprobante_pruebas,
-            'produccion': self.company.siguiente_comprobante_produccion,
-        }[self.company.ambiente_sri]
-
         proformabill = context['proformabill']
 
         c = ClaveAcceso()
@@ -448,7 +499,7 @@ class ProformaBillEmitGenXMLView(ProformaBillView,
         c.ruc = str(self.company.ruc)
         c.ambiente = self.company.ambiente_sri
         c.serie = 23013   # FIXME
-        c.numero = info_tributaria['secuencial']
+        c.numero = proformabill.secuencial
         c.codigo = 17907461  # FIXME
         c.tipo_emision = "normal"
         info_tributaria['clave_acceso'] = unicode(c)
@@ -610,11 +661,13 @@ class ProformaBillItemUpdateView(ProformaBillItemView,
         res = super(self.__class__, self).form_valid(form)
         return res
 
+
 class ProformaBillItemUpdateViewJS(ProformaBillItemView,
                                    ProformaBillSelected,
                                    View):
     def post(self, request, pk):
         proformabill_item = get_object_or_404(self.model, proforma_bill=self.proformabill, pk=pk)
+
         def accept_qty(val):
             val = Decimal(val)
             if val < 0:
@@ -637,6 +690,7 @@ class ProformaBillItemDeleteView(ProformaBillItemView,
     """
     Delete view for proformabill items
     """
+
 
 ################
 # Bill Reports #

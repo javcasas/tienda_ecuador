@@ -1,7 +1,7 @@
 - model: billing.FormaPago
   fields:
     codigo: '01'
-    descripcion: Sin utilización del Sistema Financiero
+    descripcion: Efectivo
   pk: 1
 
 - model: billing.FormaPago

@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 from utils import Property, ConvertedProperty
-from validators import OneOf, IsCedula, IsRuc
+from validators import IsCedula, IsRuc
 
 
 class ReadOnlyObject(Exception):
@@ -53,6 +53,7 @@ Company_ambiente_sri_OPTIONS = (
     ('produccion', 'Producción')
 )
 
+
 class Company(models.Model):
     """
     Represents a company
@@ -67,8 +68,7 @@ class Company(models.Model):
         max_length=20,
         choices=Company_ambiente_sri_OPTIONS,
         default="pruebas")
-    siguiente_comprobante_pruebas = models.IntegerField(default=1)
-    siguiente_comprobante_produccion = models.IntegerField(default=1)
+    siguiente_numero_proforma = models.IntegerField(default=1)
     cert = models.CharField(max_length=20000, blank=True)
     key = models.CharField(max_length=100, blank=True)
 
@@ -105,6 +105,28 @@ class PuntoEmision(models.Model):
     establecimiento = models.ForeignKey(Establecimiento)
     descripcion = models.CharField(max_length=50)
     codigo = models.CharField(max_length=3)
+    siguiente_secuencial_pruebas = models.IntegerField(default=1)
+    siguiente_secuencial_produccion = models.IntegerField(default=1)
+
+    @property
+    def siguiente_secuencial(self):
+        ambiente = self.establecimiento.company.ambiente_sri
+        if ambiente == 'pruebas':
+            return self.siguiente_secuencial_pruebas
+        elif ambiente == 'produccion':
+            return self.siguiente_secuencial_produccion
+        else:
+            raise Exception("Unknown ambiente_sri: {}".format(ambiente))
+
+    @siguiente_secuencial.setter
+    def siguiente_secuencial(self, newval):
+        ambiente = self.establecimiento.company.ambiente_sri
+        if ambiente == 'pruebas':
+            self.siguiente_secuencial_pruebas = newval
+        elif ambiente == 'produccion':
+            self.siguiente_secuencial_produccion = newval
+        else:
+            raise Exception("Unknown ambiente_sri: {}".format(ambiente))
 
 
 ##################################
@@ -115,6 +137,7 @@ BaseCustomer_tipo_identificacion_OPTIONS = (
     ('ruc', 'RUC'),
     ('pasaporte', 'Pasaporte'),
 )
+
 
 class BaseCustomer(models.Model):
     """
@@ -168,11 +191,6 @@ class BaseBill(models.Model):
     date = models.DateTimeField()
     xml_content = models.TextField(blank=True)
     ride_content = models.TextField(blank=True)
-
-    @property
-    def payment(self):
-        #//raise Exception("Blah")
-        return Pago.objects.filter(bill_id=self.id)
 
     def __unicode__(self):
         return u"{} - {}".format(self.number, self.date)
@@ -257,6 +275,8 @@ class ProformaBill(BaseBill):
     """
     issued_to = models.ForeignKey(Customer)
     punto_emision = models.ForeignKey(PuntoEmision)
+    secuencial_pruebas = models.IntegerField(default=0, blank=True)
+    secuencial_produccion = models.IntegerField(default=0, blank=True)
 
     @property
     def items(self):
@@ -326,6 +346,30 @@ class ProformaBill(BaseBill):
         subtotal = self.subtotal
         total_subtotales = sum([subtotal[k] for k in self.subtotal])
         return total_subtotales + total_impuestos
+
+    @property
+    def payment(self):
+        return Pago.objects.filter(proforma_bill_id=self.id)
+
+    @property
+    def secuencial(self):
+        ambiente = self.punto_emision.establecimiento.company.ambiente_sri
+        if ambiente == 'pruebas':
+            return self.secuencial_pruebas
+        elif ambiente == 'produccion':
+            return self.secuencial_produccion
+        else:
+            raise Exception("Unknown ambiente_sri: {}".format(ambiente))
+
+    @secuencial.setter
+    def secuencial(self, newval):
+        ambiente = self.punto_emision.establecimiento.company.ambiente_sri
+        if ambiente == 'pruebas':
+            self.secuencial_pruebas = newval
+        elif ambiente == 'produccion':
+            self.secuencial_produccion = newval
+        else:
+            raise Exception("Unknown ambiente_sri: {}".format(ambiente))
 
     def get_absolute_url(self):
         return reverse('proformabill_detail',
@@ -522,7 +566,11 @@ class Pago(models.Model):
     """
     Pagos en una factura
     """
-    cantidad = models.DecimalField(max_digits=20, decimal_places=8)
+    porcentaje = models.DecimalField(max_digits=20, decimal_places=8)
     forma_pago = models.ForeignKey(FormaPago)
     plazo_pago = models.ForeignKey(PlazoPago)
-    bill = models.ForeignKey(BaseBill)
+    proforma_bill = models.ForeignKey(ProformaBill)
+
+    @property
+    def cantidad(self):
+        return (self.porcentaje * self.proforma_bill.total_con_impuestos) / Decimal(100)

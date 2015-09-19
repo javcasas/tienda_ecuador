@@ -64,6 +64,11 @@ urlpatterns = patterns(
             template_name_suffix='_detail_totals_table'),
         name='proformabill_detail_totals_table'),
 
+    url(r'^proforma_bill/(?P<pk>[0-9]+)/payment_table/$',
+        views.ProformaBillDetailView.as_view(
+            template_name_suffix='_detail_payment_table'),
+        name='proformabill_detail_payment_table'),
+
     # Proforma bill emitting views
     url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/$',
         views.ProformaBillEmitView.as_view(),
@@ -89,7 +94,7 @@ urlpatterns = patterns(
 
     # Proforma bill payment views
     url(r'^proforma_bill/(?P<pk>[0-9]+)/payment/$',
-        views.ProformaBillDetailView.as_view(),  # FIXME
+        views.ProformaBillPaymentView.as_view(),  # FIXME
         name='proformabill_payment_details'),
 
     # Report views

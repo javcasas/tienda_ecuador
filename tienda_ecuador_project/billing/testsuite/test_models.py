@@ -46,8 +46,7 @@ base_data = {
         "direccion_matriz": "C del pepino",
         "contribuyente_especial": "",
         "ambiente_sri": "pruebas",
-        'siguiente_comprobante_pruebas': 1,
-        'siguiente_comprobante_produccion': 1,
+        'siguiente_numero_proforma': 4,
         'cert': '',
         'key': '',
     },
@@ -59,6 +58,8 @@ base_data = {
     "PuntoEmision": {
         "codigo": "001",
         "descripcion": "Caja principal",
+        'siguiente_secuencial_pruebas': 1,
+        'siguiente_secuencial_produccion': 1,
     },
     "BaseCustomer": {
         "razon_social": "Pepe",
@@ -103,7 +104,7 @@ base_data = {
         'descripcion': '30 dias',
     },
     'Pago': {
-        'cantidad': 100,
+        'porcentaje': 100,
     },
 }
 
@@ -176,7 +177,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
             (models.Pago, base_data['Pago'],
                 {'forma_pago': self.forma_pago,
                  'plazo_pago': self.plazo_pago,
-                 'bill': self.proforma_bill}),
+                 'proforma_bill': self.proforma_bill}),
         ]
 
     def test_all_clases(self):
@@ -494,8 +495,8 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
             ob.tax_items.add(self.iva, self.ice)
         self.payment = add_instance(
             models.Pago,
-            cantidad=Decimal(50),
-            bill=self.proforma,
+            porcentaje=Decimal(100),
+            proforma_bill=self.proforma,
             forma_pago=add_instance(
                 models.FormaPago,
                 codigo='01',
@@ -589,6 +590,10 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
     def test_attached_payments(self):
         self.assertEquals(list(self.proforma.payment),
                           [self.payment])
+
+    def test_payment_qty(self):
+        self.assertEquals(self.proforma.payment[0].cantidad,
+                          self.proforma.total_con_impuestos)
 
 
 class IceTests(TestCase, TestHelpersMixin):
