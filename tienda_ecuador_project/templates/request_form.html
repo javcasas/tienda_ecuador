@@ -1,8 +1,9 @@
         <div class='request-form text-center jumbotron'>
-            <form class='form-inline' role='form' action="{%url 'request_info'%}">
+            <form class='form-inline' role='form' action="{%url 'request_info'%}" method='post'>
+                {% csrf_token %}
                 <div class='form-group'>
-                    <input type='text' class='form-control' placeholder='Nombre de la Empresa'/>
-                    <input type='text' class='form-control' placeholder='Correo Electronico'/>
+                    <input type='text' class='form-control' name='company' placeholder='Nombre de la Empresa'/>
+                    <input type='text' class='form-control' name='email' placeholder='Correo Electronico'/>
                     <button class='btn btn-primary' type='submit'>Probar Gratis</button>
                 </div>
             </form>
