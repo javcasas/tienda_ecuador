@@ -21,7 +21,7 @@ class RequestInfoView(View):
         msg["From"] = "ventas@dssti.com"
         msg["To"] = "ventas@dssti.com"
         msg["Subject"] = "Interesado en DSSTI Facturas"
-        p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
+        p = Popen(["/usr/bin/sendmail", "-t", "-oi"], stdin=PIPE)
         p.communicate(msg.as_string())
         return render(request, self.template_name, {})
 
@@ -53,6 +53,6 @@ Email: {email}
         msg["From"] = "soporte@dssti.com"
         msg["To"] = "soporte@dssti.com"
         msg["Subject"] = "Peticion de Soporte"
-        p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
+        p = Popen(["/usr/bin/sendmail", "-t", "-oi"], stdin=PIPE)
         p.communicate(msg.as_string())
         return render(request, 'support_submitted.html', {})
