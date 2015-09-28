@@ -7,8 +7,9 @@
     <li><a href='{% url 'proformabill_detail' proformabill.id %}'>{{ proformabill.number }} - {{ proformabill.issued_to.razon_social }}</a></li>
 {% endblock %}
 
-{% block body_l1 %}
-    <h1>{{ proformabill }}</h1>
-    {% block body_l2 %}
-    {% endblock %}
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>{{ proformabill }}</h1>
+    </div>
 {% endblock %}

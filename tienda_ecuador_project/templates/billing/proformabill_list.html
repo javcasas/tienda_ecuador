@@ -7,7 +7,8 @@
     <li><a href='{% url 'proformabill_company_index' company.id %}'>Proformas</a></li>
 {% endblock %}
 
-{% block body_l1 %}
+{% block body %}
+    {{ block.super }}
     <h1>Proformas</h1>
     <table class='table table-hover'>
         <tr>

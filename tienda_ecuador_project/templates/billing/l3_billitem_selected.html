@@ -1,7 +1,8 @@
 {% extends 'billing/l2_bill_selected.html' %}
 {% block title %}Item {{ item.sku }} - {{ block.super }}{% endblock %}
-{% block body_l2 %}
-    <h1>{{ item.sku }} - {{ item.name }}</h1>
-    {% block body_l3 %}
-    {% endblock %}
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>{{ item.sku }} - {{ item.name }}</h1>
+    </div>
 {% endblock %}

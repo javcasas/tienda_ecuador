@@ -43,7 +43,7 @@ INSTALLED_APPS = (
     'bootstrap3',
 )
 
-REGISTRATION_OPEN = False       # If True, users can register
+REGISTRATION_OPEN = True       # If True, users can register
 ACCOUNT_ACTIVATION_DAYS = 7     # One-week activation window; you may, of course, use a different value.
 REGISTRATION_AUTO_LOGIN = True  # If True, the user will be automatically logged in.
 LOGIN_REDIRECT_URL = '/billing/'  # The page you want users to arrive at after they successful log in

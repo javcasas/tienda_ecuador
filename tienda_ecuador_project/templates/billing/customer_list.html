@@ -6,7 +6,8 @@
     <li><a href='{% url 'customer_index' company.id %}'>Clientes</a></li>
 {% endblock %}
 
-{% block body_l1 %}
+{% block body %}
+    {{ block.super }}
     <table class='table table-hover'>
         <tr>
             <th>Razón Social</th>

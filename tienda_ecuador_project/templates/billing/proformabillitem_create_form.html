@@ -1,6 +1,7 @@
 {% extends 'billing/l2_proformabill_selected.html' %}
 {% block title %}Añadir Item a Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
-{% block body_l2 %}
+{% block body %}
+    {{ block.super }}
     <form method='post' action='.'>
         {% csrf_token %}
         {{ form.as_p }}

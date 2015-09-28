@@ -1,7 +1,8 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% block title %}Factura {{ bill.number }} - {{ block.super }}{% endblock %}
-{% block body_l1 %}
-    <h1>{{ bill.number }} - {{ bill.issued_to }}</h1>
-    {% block body_l2 %}
-    {% endblock %}
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>{{ bill.number }} - {{ bill.issued_to }}</h1>
+    </div>
 {% endblock %}

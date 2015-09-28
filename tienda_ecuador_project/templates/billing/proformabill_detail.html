@@ -3,7 +3,8 @@
 {% load decimal_format %}
 
 {% block title %}Ver Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
-{% block body_l1 %}
+
+{% block body %}
 
 <style>
 .spacer {
@@ -11,7 +12,9 @@
 }
 </style>
 
-<div class='container'>
+{{ block.super }}
+
+<div class='col-xs-12'>
   <div class='panel panel-default'>
     <div class='panel-heading'>
       <h2 class='panel-title'>Factura</h2>

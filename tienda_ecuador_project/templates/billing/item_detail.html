@@ -2,7 +2,8 @@
 {% load bootstrap3 %}
 {% load decimal_format %}
 
-{% block body_l2 %}
+{% block body %}
+{{ block.super }}
 <table class='table table-hover'>
     <tr>
         <th>SKU</th> <td>{{ item.sku }}</td>

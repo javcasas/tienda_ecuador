@@ -14,6 +14,8 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 from django.http import JsonResponse, HttpResponse
 from django.forms.models import model_to_dict
+from django.utils.decorators import method_decorator
+
 
 import models
 from models import (Item,
@@ -51,6 +53,35 @@ def index(request):
         'user': request.user,
     }
     return render(request, "billing/index.html", param_dict)
+
+
+def valid_licence(user, valid_licences):
+    cu = get_object_or_404(models.CompanyUser, user=user)
+    return cu.company.licencia in valid_licences
+
+
+class licence_required(object):
+    def __init__(self, *args):
+        self.licences = args
+
+    def __call__(self, f):
+        orig_dispatch = f.dispatch
+        def wrapper(otherself, request, *args, **kwargs):
+            if not valid_licence(request.user, self.licences):
+                return redirect("pricing")
+            return orig_dispatch(otherself, request, *args, **kwargs)
+        f.dispatch = wrapper
+        return f
+
+
+class LicenceControlMixin(object):
+    def valid_licence(self, valid_licences):
+        return valid_licence(self.user, valid_licences)
+    def get_context_data(self, **kwargs):
+        context = super(CompanySelected, self).get_context_data(**kwargs)
+        licence = get_object_or_404(models.CompanyUser, user=user).company.licencia
+        context['licence'] = {licence: True}
+        return context
 
 
 class CompanySelected(object):
@@ -453,6 +484,7 @@ class ProformaBillDeleteView(ProformaBillView,
 #############################################################
 #   Proforma Bill Emit Bill views
 #############################################################
+@licence_required('basic', 'professional', 'enterprise')
 class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_emit'
 
@@ -466,6 +498,7 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
         return HttpResponse("ok")
 
 
+@licence_required('basic', 'professional', 'enterprise')
 class ProformaBillEmitGenXMLView(ProformaBillView,
                                  PuntoEmisionSelected,
                                  DetailView):

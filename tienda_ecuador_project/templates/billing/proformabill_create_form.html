@@ -3,7 +3,9 @@
 {% load bootstrap3 %}
 
 {% block title %}Nueva Proforma - {{ block.super }}{% endblock %}
-{% block body_l1 %}
+
+{% block body %}
+    {{ block.super }}
         <form method='post' action='.' class='form'>
             {% csrf_token %}
             {% bootstrap_form form %}

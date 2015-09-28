@@ -1,6 +1,8 @@
 {% extends 'billing/l2_customer_selected.html' %}
 {% load bootstrap3 %}
-{% block body_l2 %}
+{% block body %}
+{{ block.super }}
+<div class='col-xs-12'>
     <table class='table table-hover'>
         <tr>
             <th>Razón social</th><td>{{ customer.razon_social }}</td>
@@ -24,4 +26,5 @@
         <a href='{% url "customer_index" company.id %}' class='btn btn-default'>Clientes</a>
         <a href='{% url "company_index" company.id %}' class='btn btn-default'>Menú General</a>
     {% endbuttons %}
+</div>
 {% endblock %}

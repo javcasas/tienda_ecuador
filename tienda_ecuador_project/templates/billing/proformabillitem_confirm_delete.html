@@ -1,9 +1,10 @@
 {% extends 'billing/l2_proformabill_selected.html' %}
 {% block title %}Eliminar Item {{ item }} de Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
-{% block body_l2 %}
+{% block body %}
+    {{ block.super }}
     <form action="" method="post">{% csrf_token %}
-        <p>Are you sure you want to delete "{{ item }}"?</p>
-        <input type="submit" value="Confirm" />
+        <p>¿Está seguro de querer eliminar "{{ item }}"?</p>
+        <input type="submit" value="Eliminar" />
     </form>
     <a href='{% url 'proformabill_detail' proformabill.id %}'>Cancel</a>
 {% endblock %}

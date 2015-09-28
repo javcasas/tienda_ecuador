@@ -6,7 +6,8 @@
     <li><a href='{% url 'item_index' company.id %}'>Artículos</a></li>
 {% endblock %}
 
-{% block body_l1 %}
+{% block body %}
+    {{ block.super }}
     <table class='table table-hover'>
         <tr>
             <th>SKU</th>

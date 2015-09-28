@@ -1,0 +1,154 @@
+#base_header {
+    background-color: #005;
+    color: #aaa;
+    padding: 20px;
+}
+
+/* App style */
+.company-bar {
+    background-color: #009;
+    color: #888;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-radius: 5px;
+}
+
+
+body {
+    background-color: #ccf;
+}
+.even-section {
+    min-height: 350px;
+    background-color: rgba(255,255,255,0.6);
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.odd-section {
+    min-height: 350px;
+    background-color: #005;
+    color: #bbb;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.vmargin-15 {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+/* index page */
+.background-laptop-tablet {
+    background: url("/static/img/laptop.png") no-repeat right bottom, url('/static/img/app_on_tablet.png') no-repeat left bottom ;
+    background-size: contain;
+    background-origin: content-box;
+}
+.background-sri {
+    background-image: url("/static/img/features.png");
+    background-size: contain;
+    background-position: left bottom;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+}
+.background-support {
+    background-image: url("/static/img/SupportGuy-1.png");
+    background-size: contain;
+    background-position: right bottom;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+}
+.call-to-action {
+    margin-top: 70px;
+    margin-bottom: 70px;
+}
+.call-to-action h1{
+    font-size: 400%;
+}
+.support-link {
+    padding: 10px;
+    background-color: rgba(0,0,0,0.4);
+    display: inline-block;
+}
+
+.main-page > div {
+    background-color: rgba(255,255,255,0.6);
+}
+.main-page .slogan {
+    margin-top: 50px;
+    margin-bottom: 30px;
+}
+.main-page form {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+.desc-page {
+    min-height: 300px;
+    background-color: #005;
+    color: #bbb;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.whiter-background {
+    background-color: rgba(255,255,255,0.6);
+}
+.blacker-background {
+    background-color: rgba(0,0,0,0.6);
+}
+/* Request form */
+.request-form {
+    padding: 20px;
+    background-color: rgba(0,0,0,0.3);
+    display: inline-block;
+    margin: 10px;
+    border-radius: 5px;
+}
+.request-form form {
+    background-color: #043;
+    padding: 20px;
+    display: block;
+    margin: 0px;
+    border-radius: 5px;
+}
+.request-form .request-form-subtext {
+    margin-top: 20px;
+    font-size: 130%;
+}
+.request-form .request-form-subtext a {
+    color: #005;
+}
+
+/* Footer */
+div.footer {
+    clear: both;
+    background-color: #aaf;
+}
+div.footer hr {
+    display: block;
+    height: 1px;
+    background-color: #333;
+    margin: 1em 0;
+    padding: 0; 
+}
+.no-circle li {
+    list-style-type: none;
+}
+
+/* Pricing page */
+.text-green {
+    color: green;
+}
+.text-red {
+    color: red;
+}
+.table-pricing td, .table-pricing th {
+    text-align: center;
+}
+.table-pricing th {
+    font-size: 25px;
+}
+.table-pricing .prices td {
+    font-size: 30px;
+}
+.table-pricing .descriptions td {
+    font-size: 16px;
+    font-weight: bold;
+}

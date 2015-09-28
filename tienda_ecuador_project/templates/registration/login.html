@@ -4,14 +4,44 @@
 {% block title %} DSSTI - {% endblock %}
 
 {% block body_block %}
-<h2>Login</h2>
-    <form method="post" action="." class='form'>
-        {% csrf_token %}
-        {% bootstrap_form form %}
+<div class='col-xs-12 col-lg-10 col-lg-offset-1'>
+    <h1>Entrar a DSSTI Facturas</h1>
+    <div class='col-xs-12 col-lg-6'>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <h4>Tengo cuenta en DSSTI Facturas</h4>
+            </div>
+            <div class='panel-body'>
+                <div style='height:200px; width:100%; position:relative'>
+                    <form method="post" action="." class='form'>
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
 
-        <input type="hidden" name="next" value="{{ next }}" />
-        {% buttons %}
-            <input type="submit" value="Entrar" class='btn btn-primary'/>
-        {% endbuttons %}
-    </form>
+                    <input type="hidden" name="next" value="{{ next }}" />
+                    
+                    {% buttons %}
+                        <input type="submit" value="Entrar" class='btn btn-primary form-control'
+                               style='position: absolute; bottom: 0'/>
+                    {% endbuttons %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='col-xs-12 col-lg-6'>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <h4>No tengo cuenta en DSSTI Facturas</h4>
+            </div>
+            <div class='panel-body'>
+                <div style='height:200px; width:100%; position:relative'>
+                    <p style='font-size: 130%'>Crear una cuenta para su negocio es muy sencillo, sólo lleva unos minutos.</p>
+                    <a href="{% url 'registration_register' %}"
+                       class='btn btn-primary form-control'
+                       style='position:absolute; bottom:0'>¡Obtenga su cuenta ahora!</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

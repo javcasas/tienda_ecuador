@@ -5,7 +5,8 @@
     <li><a href='{#% FIXME url 'report_index' company.id %#}'>Items</a></li>
 {% endblock %}
 
-{% block body_l1 %}
+{% block body %}
+    {{ block.super }}
     <h1>Facturas emitidas: {{day}}/{{month}}/{{year}}</h1>
     {% for bill in bill_list %}
         Número: {{ bill.number }} <br />

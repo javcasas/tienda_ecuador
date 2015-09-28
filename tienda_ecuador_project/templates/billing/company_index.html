@@ -5,8 +5,9 @@
 
 {% block title %}Menú General - {{ block.super }}{% endblock %}
 
-{% block body_l1 %}
-    <div class='row'>
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12 even-section'>
         <div class='col-xs-12 col-sm-8 col-md-6'>
             <h1>Proformas</h1>
             <table class='table table-hover'>
@@ -60,9 +61,6 @@
                 <a href="{% url 'customer_create' company.id %}" class='btn btn-primary'>Nuevo cliente</a>
             {% endbuttons %}
         </div>
-    </div>
-
-    <div class='row'>
         <div class='col-md-6'>
             <h1>Facturas</h1>
             <table class='table table-hover'>

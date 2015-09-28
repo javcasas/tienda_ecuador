@@ -1,24 +1,24 @@
 {% extends 'base.html' %}
 {% block title %}{{ company.nombre_comercial }} - {{ block.super }}{% endblock %}
 
-{% block menu_bar %}
-{{ block.super }}
+{% block left_nav_bar %}
 <li><a href="{% url 'customer_create' company.id %}">Nuevo cliente</a></li>
 <li><a href="{% url 'item_create' company.id %}">Nuevo Artículo</a></li>
 {% endblock %}
 
 {% block body_block %}
-    <div id='company_bar'>
-        <h1>{{ company.nombre_comercial }}</h1>
-        <h3>({{ company.razon_social }})</h3>
+    <div class='row even-section'>
+        <div class='col-xs-12 company-bar'>
+            <h1>{{ company.nombre_comercial }}</h1>
+            <h3>({{ company.razon_social }})</h3>
+        </div>
+        <div class='col-xs-12'>
+            <ol class='breadcrumb'>
+                <li><a href='{% url 'company_index' company.id %}'>{{ company.nombre_comercial }}</a></li>
+                {% block breadcrumbs %}
+                {% endblock %}
+            </ol>
+        </div>
+        {% block body %}{% endblock %}
     </div>
-    <div id='breadcrumbs'>
-        <ol class='breadcrumb'>
-            <li><a href='{% url 'company_index' company.id %}'>{{ company.nombre_comercial }}</a></li>
-            {% block breadcrumbs %}
-            {% endblock %}
-        </ol>
-    </div>
-    {% block body_l1 %}
-    {% endblock %}
 {% endblock %}

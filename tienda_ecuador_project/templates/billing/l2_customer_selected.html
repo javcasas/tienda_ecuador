@@ -7,8 +7,8 @@
     <li><a href='{% url 'customer_detail' customer.id %}'>{{ customer.razon_social }}</a></li>
 {% endblock %}
 
-{% block body_l1 %}
-    <h1>{{ customer.razon_social }}</h1>
-    {% block body_l2 %}
-    {% endblock %}
+{% block body %}
+    <div class='col-xs-12'>
+        <h1>{{ customer.razon_social }}</h1>
+    </div>
 {% endblock %}

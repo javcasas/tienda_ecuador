@@ -74,7 +74,11 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         """
         client = client or self.c
         source_html = client.get(url).content
-        root = ET.fromstring(source_html)
+        try:
+            root = ET.fromstring(source_html)
+        except:
+            open("test.xml", "w").write(source_html)
+            raise
         data_to_post = make_post(data_to_post)
         data_to_use = {}
 

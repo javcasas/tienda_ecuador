@@ -1,12 +1,10 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% load bootstrap3 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
 
-{# Display django.contrib.messages as Bootstrap alerts #}
-{% bootstrap_messages %}
 {% block title %}Nuevo cliente - {{ block.super }} {% endblock %}
-{% block body_l1 %}
+
+{% block body %}
+    {{ block.super }}
         <form method='post' action='.' class='form'>
             {% csrf_token %}
             {% bootstrap_form form %}

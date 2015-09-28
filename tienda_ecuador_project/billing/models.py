@@ -53,6 +53,13 @@ Company_ambiente_sri_OPTIONS = (
     ('produccion', 'Producción')
 )
 
+Company_licencia_OPTIONS = (
+    ('demo', 'Demo'),
+    ('basic', 'Basic'),
+    ('professional', 'Professional'),
+    ('enterprise', 'Enterprise'),
+)
+
 
 class Company(models.Model):
     """
@@ -68,7 +75,12 @@ class Company(models.Model):
         max_length=20,
         choices=Company_ambiente_sri_OPTIONS,
         default="pruebas")
+    licencia = models.CharField(
+        max_length=20,
+        choices=Company_licencia_OPTIONS,
+        default="demo")
     siguiente_numero_proforma = models.IntegerField(default=1)
+    logo = models.ImageField(upload_to='company_logos', blank=True)
     cert = models.CharField(max_length=20000, blank=True)
     key = models.CharField(max_length=100, blank=True)
 
