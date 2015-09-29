@@ -181,7 +181,7 @@ class Migration(migrations.Migration):
                 ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
                 ('secuencial_pruebas', models.IntegerField(default=0, blank=True)),
                 ('secuencial_produccion', models.IntegerField(default=0, blank=True)),
-                ('issued_to', models.ForeignKey(to='billing.Customer')),
+                ('issued_to', models.ForeignKey(blank=True, to='billing.Customer', null=True)),
             ],
             options={
             },

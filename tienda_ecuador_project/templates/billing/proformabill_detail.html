@@ -4,6 +4,12 @@
 
 {% block title %}Ver Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
 
+{% block left_nav_bar %}
+    <li><a href="{% url 'proformabill_create' punto_emision.id %}">Nueva Proforma</a></li>
+    <li><a href="{% url 'proformabill_delete' proformabill.id %}" class='btn-danger' >Eliminar Proforma</a></li>
+
+{% endblock %}
+
 {% block body %}
 
 <style>
@@ -25,14 +31,21 @@
           <th>Numero</th>
           <td>{{ proformabill.number }}</td>
         </tr>
-        <tr>
-          <th>Cliente</th>
-          <td>({{ proformabill.issued_to.tipo_identificacion }}) {{ proformabill.issued_to.identificacion }}</td>
-        </tr>
-        <tr>
-          <th></th>
-          <td>{{ proformabill.issued_to.razon_social }}</td>
-        </tr>
+        {% if proformabill.issued_to %}
+          <tr>
+            <th>Cliente</th>
+            <td>({{ proformabill.issued_to.tipo_identificacion }}) {{ proformabill.issued_to.identificacion }}</td>
+          </tr>
+          <tr>
+            <th></th>
+            <td>{{ proformabill.issued_to.razon_social }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <th>Cliente</th>
+            <td class='text-danger'>No hay cliente seleccionado</td>
+          </tr>
+        {% endif %}
         <tr>
           <th>Fecha</th>
           <td>{{ proformabill.date }}</td>

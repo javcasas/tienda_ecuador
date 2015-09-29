@@ -4,12 +4,20 @@
 {% block title %}Eliminar cliente {{ customer.name }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
+    <div class='col-xs-12'>
     <form action="" method="post" class='form'>
         {% csrf_token %}
-        <p>¿Está seguro de querer eliminar "{{ customer }}"?</p>
+        <p>¿Está seguro de querer eliminar el cliente "{{ customer }}"?</p>
         {% buttons %}
-            <input type="submit" value="Eliminar" class='btn btn-danger' />
-            <a href='{% url 'customer_detail' customer.id %}' class='btn btn-default'>No Eliminar</a>
+            <div class='btn-group-justified'>
+                <div class='btn-group'>
+                    <input type="submit" value="Eliminar" class='btn btn-danger' />
+                </div>
+                <div class='btn-group'>
+                    <a href='{% url 'customer_detail' customer.id %}' class='btn btn-default'>No Eliminar</a>
+                </div>
+            </div>
         {% endbuttons %}
     </form>
+    </div>
 {% endblock %}

@@ -112,7 +112,20 @@ class CompanySelected(object):
     def get_context_data(self, **kwargs):
         context = super(CompanySelected, self).get_context_data(**kwargs)
         context['company'] = self.company
+        context['single_punto_emision'] = self.single_punto_emision
         return context
+
+    @property
+    def single_punto_emision(self):
+        """
+        Returns a PuntoEmision object if it's the only one
+        for the current company
+        """
+        single_punto_emision = PuntoEmision.objects.filter(establecimiento__company=self.company)
+        if len(single_punto_emision) == 1:
+            return single_punto_emision[0]
+        else:
+            return None
 
 
 class EstablecimientoSelected(CompanySelected):
@@ -192,11 +205,6 @@ class CompanyIndex(CompanySelected, View):
         Shows an index for a company
         """
         company = self.company
-        single_punto_emision = PuntoEmision.objects.filter(establecimiento__company=self.company)
-        if len(single_punto_emision) == 1:
-            single_punto_emision = single_punto_emision[0]
-        else:
-            single_punto_emision = None
         context = {}
         context.update({
             'item_list': Item.objects.filter(company=company),
@@ -204,7 +212,7 @@ class CompanyIndex(CompanySelected, View):
             'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company),
             'customer_list': Customer.objects.filter(company=company),
             'company': company,
-            'single_punto_emision': single_punto_emision,
+            'single_punto_emision': self.single_punto_emision,
             'user': self.request.user,
         })
         return render(request, "billing/company_index.html", context)
@@ -445,21 +453,22 @@ class ProformaBillPaymentView(ProformaBillView,
 
 class ProformaBillCreateView(PuntoEmisionSelected,
                              ProformaBillView,
-                             CreateView):
+                             View):
     template_name_suffix = '_create_form'
     form_class = ProformaBillForm
 
-    def get_form(self, *args, **kwargs):
-        form = super(self.__class__, self).get_form(*args, **kwargs)
-        form.fields['issued_to'].queryset = Customer.objects.filter(
-            company=self.company)
-        return form
-
-    def form_valid(self, form):
-        form.instance.company = self.company
-        form.instance.punto_emision = self.punto_emision
-        form.instance.date = datetime.now(tz).replace(microsecond=0)
-        return super(ProformaBillCreateView, self).form_valid(form)
+    def get(self, request, punto_emision_id):
+        company = self.company
+        proforma_no = company.siguiente_numero_proforma
+        company.siguiente_numero_proforma = proforma_no + 1
+        company.save()
+        new_proforma = models.ProformaBill(
+            number='P-{:08d}'.format(proforma_no),
+            date=datetime.now(tz=pytz.timezone('America/Guayaquil')),
+            punto_emision=self.punto_emision,
+            issued_to=None)
+        new_proforma.save()
+        return redirect('proformabill_detail', new_proforma.id)
 
 
 class ProformaBillUpdateView(ProformaBillView, PuntoEmisionSelected, UpdateView):

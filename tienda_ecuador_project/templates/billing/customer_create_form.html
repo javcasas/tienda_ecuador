@@ -3,14 +3,28 @@
 
 {% block title %}Nuevo cliente - {{ block.super }} {% endblock %}
 
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'customer_index' company.id %}'>Clientes</a></li>
+    <li><a href='{% url 'customer_create' company.id %}'>Nuevo Cliente</a></li>
+{% endblock %}
+
 {% block body %}
     {{ block.super }}
+    <div class='col-xs-12'>
         <form method='post' action='.' class='form'>
             {% csrf_token %}
             {% bootstrap_form form %}
             {% buttons %}
-                <button type='submit' class="btn btn-primary">Guardar</button>
-                <a href='{% url 'customer_index' company.id %}' class='btn btn-default'>Cancelar</a>
+                <div class='btn-group btn-group-justified'>
+                    <div class='btn-group'>
+                        <button type='submit' class="btn btn-primary">Guardar</button>
+                    </div>
+                    <div class='btn-group'>
+                        <a href='{% url 'customer_index' company.id %}' class='btn btn-default'>Cancelar</a>
+                    </div>
+                </div>
             {% endbuttons %}
         </form>
+    </div>
 {% endblock %}

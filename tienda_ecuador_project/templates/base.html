@@ -47,7 +47,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/" style='width:200px'>
+          <a class="navbar-brand" href="{% block home_url %}/{% endblock %}" style='width:200px'>
             <img src='/static/img/logo_141x132.png' style='height: 40px; padding: 0px; margin-top: -10px; display: inline '/>
             <span class='text-nowrap'>Facturas</span>
           </a>
@@ -55,7 +55,7 @@
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
             {% block left_nav_bar %}
-              <li><a href='/benefits/'>Ventajas</a></li>
+              <li><a href='{% url 'benefits' %}'>Ventajas</a></li>
               <li><a href='{% url 'pricing' %}'>Precios</a></li>
             {% endblock %}
           </ul>
@@ -63,7 +63,8 @@
             {% block menu_bar %}
               {% if user.is_authenticated %}
                 {% block right_nav_bar %}
-                  <li><a href="{% url 'index' %}">Facturación</a></li>
+                  <li><a href="{% url 'billing_index' %}">Facturación</a></li>
+                  {# FIXME <li><a href="{% url 'accounts_receivable_index' %}">Cuentas por Cobrar</a></li> #}
                 {% endblock %}
                 <li><a href="{% url 'auth_logout' %}">Salir</a></li>
               {% else %}

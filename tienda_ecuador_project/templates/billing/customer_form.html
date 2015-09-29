@@ -4,6 +4,7 @@
 {% block title %}Editar cliente {{ customer.name }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
+    <div class='col-xs-12'>
     <form method='post' action='.' class='form'>
         {% csrf_token %}
         {% bootstrap_form form %}
@@ -12,4 +13,5 @@
             <a href='{% url 'customer_detail' customer.id %}' class='btn btn-default'>Cancelar</a>
         {% endbuttons %}
     </form>
+    </div>
 {% endblock %}

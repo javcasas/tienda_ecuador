@@ -31,7 +31,7 @@ class NotLoggedInTests(TestCase):
     Ensure no useful information can be get without logging in
     """
     def test_index(self):
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('billing_index'))
         self.assertEqual(response.status_code, 302)
 
     def test_company_index(self):
@@ -51,7 +51,7 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         self.c = Client()
         r = self.c.post("/accounts/login/",
                         {'username': username, 'password': password})
-        self.assertRedirects(r, reverse('index'))
+        self.assertRedirects(r, reverse('billing_index'))
 
     def tearDown(self):
         self.assert_no_broken_urls()
@@ -169,7 +169,7 @@ class IndexViewTests(LoggedInWithCompanyTests):
         """
         add_CompanyUser(user=self.user, company=self.company2)
 
-        response = self.c.get(reverse('index'))
+        response = self.c.get(reverse('billing_index'))
         self.assertEquals(response.status_code, 200)
 
         for c in [self.company, self.company2]:
@@ -180,7 +180,7 @@ class IndexViewTests(LoggedInWithCompanyTests):
         """
         A logged-in user is redirected if he has only a single company
         """
-        response = self.c.get(reverse('index'))
+        response = self.c.get(reverse('billing_index'))
         self.assertRedirects(response,
                              reverse('company_index', args=(self.company.id,)))
 
@@ -382,7 +382,7 @@ class GenericObjectCRUDTest(object):
         r = c.post("/accounts/login/",
                    {'username': username, 'password': password})
         self.assertEquals(r['location'],
-                          "http://testserver" + reverse('index'))
+                          "http://testserver" + reverse('billing_index'))
         # Test get
         for url in self.urls_to_test:
             r = c.get(url)
@@ -428,7 +428,7 @@ class GenericObjectCRUDTest(object):
         r = c.post("/accounts/login/",
                    {'username': username, 'password': password})
         self.assertEquals(r['location'],
-                          "http://testserver" + reverse('index'))
+                          "http://testserver" + reverse('billing_index'))
 
         reverse_index_args = (company3.id,)
         r = c.get(
@@ -1001,6 +1001,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.company.cert = base64.b64encode(
             open("billing/testsuite/keystore.PKCS12").read())
         self.company.key = "123456"
+        self.company.licencia = 'professional'
         self.company.save()
         # Confirmar la emision de la factura
         r = self.c.get(
@@ -1223,7 +1224,7 @@ class PopulateBillingTest(TestCase):
         r = c.post("/accounts/login/",
                    {'username': 'javier', 'password': 'tiaputa'})
         self.assertEquals(r['location'],
-                          "http://testserver" + reverse('index'))
+                          "http://testserver" + reverse('billing_index'))
 
         # It seems I can view customers and items for a different company
         urls = [

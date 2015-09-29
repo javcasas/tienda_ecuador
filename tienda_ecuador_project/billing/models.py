@@ -164,9 +164,8 @@ class BaseCustomer(models.Model):
     direccion = models.CharField(max_length=100, blank=True)
 
     def __unicode__(self):
-        return u"({}){} - {}".format(self.tipo_identificacion,
-                                     self.identificacion,
-                                     self.razon_social)
+        return u"{}({})".format(self.razon_social,
+                                self.identificacion)
 
     def clean(self):
         if self.tipo_identificacion == "ruc":
@@ -254,6 +253,21 @@ class ClaveAcceso(object):
     ambiente = ConvertedProperty(pruebas='1', produccion='2')
     tipo_emision = ConvertedProperty(normal='1', offline='2')
 
+    @classmethod
+    def comprobante(self, c):
+        rev_c = c[::-1]
+        multipliers = "234567" * 10
+        pairs = zip(rev_c, multipliers)
+        products = map(lambda (a, b): int(a) * int(b), pairs)
+        total = sum(products)
+        modulus = total % 11
+        if modulus == 0:
+            return "0"
+        elif modulus == 1:
+            return "1"
+        else:
+            return str(11 - modulus)
+
     def __unicode__(self):
         codigo = (u"{2:02d}{1:02d}{0:04d}".format(*self.fecha_emision) +
                   self.tipo_comprobante.code +
@@ -264,20 +278,7 @@ class ClaveAcceso(object):
                   "{:08d}".format(self.codigo) +
                   self.tipo_emision.code)
 
-        def comprobante(c):
-            rev_c = c[::-1]
-            multipliers = "234567" * 10
-            pairs = zip(rev_c, multipliers)
-            products = map(lambda (a, b): int(a) * int(b), pairs)
-            total = sum(products)
-            modulus = total % 11
-            if modulus == 0:
-                return "0"
-            elif modulus == 1:
-                return "1"
-            else:
-                return str(11 - modulus)
-        res = codigo + comprobante(codigo)
+        res = codigo + self.comprobante(codigo)
         return res
 
 
@@ -285,7 +286,7 @@ class ProformaBill(BaseBill):
     """
     Represents a proforma bill
     """
-    issued_to = models.ForeignKey(Customer)
+    issued_to = models.ForeignKey(Customer, null=True, blank=True)
     punto_emision = models.ForeignKey(PuntoEmision)
     secuencial_pruebas = models.IntegerField(default=0, blank=True)
     secuencial_produccion = models.IntegerField(default=0, blank=True)
@@ -388,10 +389,7 @@ class ProformaBill(BaseBill):
                        kwargs={'pk': self.pk})
 
     def __unicode__(self):
-        try:
-            return u"{} - {}".format(self.number, self.issued_to)
-        except:
-            return u"{} - {}".format(self.number, "<Not set>")
+        return u"{} - {}".format(self.number, self.issued_to)
 
 
 ##########################

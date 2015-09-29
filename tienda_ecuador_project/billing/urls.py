@@ -5,7 +5,7 @@ urlpatterns = patterns(
     '',
     # Index views
     url(r'^$',
-        views.index, name='index'),
+        views.index, name='billing_index'),
     url(r'^(?P<company_id>[0-9]+)/$',
         views.CompanyIndex.as_view(), name='company_index'),
 
