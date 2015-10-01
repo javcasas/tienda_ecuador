@@ -1,0 +1,15 @@
+{% extends 'billing/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Seleccionar plan - {{ block.super }}{% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12 even-section'>
+        <h1>Seleccione el mejor plan para su empresa</h1>
+        {% include 'pricing_table.html' %}
+    </div>
+
+{% endblock %}

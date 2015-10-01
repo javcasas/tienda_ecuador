@@ -217,6 +217,63 @@ class CompanyIndex(CompanySelected, View):
         })
         return render(request, "billing/company_index.html", context)
 
+class CompanyProfileView(CompanySelected, DetailView):
+    """
+    View that shows a general index for a given company
+    """
+    model = models.Company
+    context_object_name = 'company'
+    @property
+    def company_id(self):
+        """
+        Overridable property to get the current company id
+        """
+        return self.kwargs['pk']
+
+class CompanyProfileUpdateView(CompanySelected, DetailView):
+    """
+    View that shows a general index for a given company
+    """
+    model = models.Company
+    context_object_name = 'company'
+
+class CompanyProfileSelectPlanView(CompanySelected, View):
+    """
+    View that shows a general index for a given company
+    """
+    model = models.Company
+    context_object_name = 'company'
+
+    @property
+    def company_id(self):
+        """
+        Overridable property to get the current company id
+        """
+        return self.kwargs['pk']
+
+    def get(self, request, pk):
+        context = {
+            'company': self.company,
+            'select_urls': [
+                {'name': 'basic'},
+                {'name': 'professional'},
+                {'name': 'enterprise'},
+            ],
+        }
+        return render(request, "billing/company_profile_select_plan.html", context)
+
+    def post(self, request, pk):
+        try:
+            plan = request.POST['selected_plan']
+            company = self.company
+            company.licencia = plan
+            company.full_clean()
+            company.save()
+            return redirect('company_profile', company.id)
+        except Exception, e:
+            print e
+            return self.get(request, pk)
+
 
 ####################################################################
 #   Item views

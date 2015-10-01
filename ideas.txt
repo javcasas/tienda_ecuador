@@ -20,6 +20,8 @@ Items:
 Tienda online acoplada
     * Usa la misma lista de productos
     * Usa uno de los precios de los productos
+    * Imagen por producto
+    * Categorías y subcategorías
 
 Cuentas por cobrar:
     * Convertir pagos en el futuro automaticamente a cuentas por cobrar
@@ -27,3 +29,11 @@ Cuentas por cobrar:
         * Cliente, fecha de creacion, factura asociada, cantidad a pagar, fecha a pagar
         * Cancelable por deuda, varios pagos por deuda
             * Pagos por deuda: fecha, cantidad, referencia
+
+Mecanismos de pago:
+    * Ingreso en cuenta
+    * Tarjeta de credito/debito por internet
+    * Western Union
+
+MLM:
+    * Ofrecer descuento por traer clientes

@@ -87,6 +87,10 @@ class Company(models.Model):
     def __unicode__(self):
         return self.razon_social
 
+    @property
+    def licencia_pretty(self):
+        return dict(Company_licencia_OPTIONS)[self.licencia]
+
 
 class CompanyUser(models.Model):
     """

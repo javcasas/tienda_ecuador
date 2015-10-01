@@ -1,0 +1,115 @@
+{% load bootstrap3 %}
+    <table class='table table-hover table-pricing'>
+        <thead>
+            <tr>
+                <th class='col-xs-3'></th>
+                <th class='col-xs-3'>Basic</th>
+                <th class='col-xs-3'>Professional</th>
+                <th class='col-xs-3'>Enterprise</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class='descriptions'>
+                <td></td>
+                <td>Para el pequeño negocio</td>
+                <td>Para Ingenieros, Licenciados, Grandes Profesionales y Negocios Serios</td>
+                <td>Para Grandes Empresas</td>
+            </tr>
+            {% if select_urls %}
+                <tr>
+                    <td></td>
+                    {% for select_url in select_urls %}
+                        <td>
+                            <form class='form' action='.' method='post'>
+                                {% csrf_token %}
+                                <button type='submit' name='selected_plan'
+                                        value='{{select_url.name}}' class='btn btn-primary form-control'>
+                                        Elegir plan {{select_url.name|capfirst}}</button>
+                            </form>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endif %}
+            <tr>
+                <td>Listas de Precios</td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Listas de Clientes</td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Facturas Proforma</td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Factura Electrónica</td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Logotipo Personalizado</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Envío de Facturas Proforma al Cliente</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Acceso para Contador</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Pago Diferido</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Cuentas Por Cobrar</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Múltiples Usuarios</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Múltiples Establecimientos</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr>
+                <td>Múltiples Puntos de Emisión</td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-remove text-red'></span></td>
+                <td><span class='glyphicon glyphicon-ok text-green'></span></td>
+            </tr><tr class='prices'>
+                <td></td>
+                <td>&dollar;29 / mes</td>
+                <td>&dollar;69 / mes</td>
+                <td>&dollar;295 / mes</td>
+            </tr>
+            {% if select_urls %}
+                <tr>
+                    <td></td>
+                    {% for select_url in select_urls %}
+                        <td>
+                            <form class='form' action='.' method='post'>
+                                {% csrf_token %}
+                                <button type='submit' name='selected_plan'
+                                        value='{{select_url.name}}' class='btn btn-primary form-control'>
+                                        Elegir plan {{select_url.name|capfirst}}</button>
+                            </form>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
