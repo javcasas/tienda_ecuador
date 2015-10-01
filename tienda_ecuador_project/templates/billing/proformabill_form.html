@@ -4,14 +4,73 @@
 {% block title %}Editar Proforma {{ proformabill.number }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
-    <div class='col-xs-12'>
-    <form method='post' action='.' class='form'>
-        {% csrf_token %}
-        {% bootstrap_form form %}
-        {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'proformabill_detail' proformabill.id %}' class='btn btn-default'>Cancelar</a>
-        {% endbuttons %}
-    </form>
+<div class='col-xs-12'>
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a {% if proformabill.issued_to.razon_social != 'CONSUMIDOR FINAL' %}class='collapsed'{% endif %}
+           role="button" data-toggle="collapse" data-parent="#accordion"
+           href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          Consumidor Final
+        </a>
+      </h4>
     </div>
+    <div id="collapseOne"
+         class="panel-collapse collapse
+         {% if proformabill.issued_to.razon_social == 'CONSUMIDOR FINAL' %}in{% endif %}
+         "
+         role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+        <table class='table'>
+            <tr><th>Cliente</th><td>CONSUMIDOR FINAL</td></tr>
+            <tr><th>RUC</th><td>9999999999999</td></tr>
+        </table>
+        <form method='post' action='.' class='form'>
+            {% csrf_token %}
+            <input type='hidden' name='cons_final' value='True' />
+            {{ form.issued_to.as_hidden }}
+            {% buttons %}
+                <button type='submit' class='btn btn-primary'>Guardar</button>
+                <a href='{% url 'proformabill_detail' proformabill.id %}' class='btn btn-default'>Cancelar</a>
+            {% endbuttons %}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingTwo">
+      <h4 class="panel-title">
+        <a {% if proformabill.issued_to.razon_social == 'CONSUMIDOR FINAL' or not proformabill.issued_to %}class="collapsed"{% endif %}
+           role="button" data-toggle="collapse" data-parent="#accordion"
+           href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+          Con Datos
+        </a>
+      </h4>
+    </div>
+    <div id="collapseTwo"
+         class="panel-collapse collapse
+         {% if proformabill.issued_to.razon_social != 'CONSUMIDOR FINAL' %}in{% endif %}
+         "
+         role="tabpanel" aria-labelledby="headingTwo">
+      <div class="panel-body">
+        <form method='post' action='.' class='form'>
+            {% csrf_token %}
+            <input type='hidden' name='cons_final' value='False' />
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button type='submit' class='btn btn-primary'>Guardar</button>
+                <a href='{% url 'proformabill_detail' proformabill.id %}' class='btn btn-default'>Cancelar</a>
+            {% endbuttons %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</div>
 {% endblock %}

@@ -55,15 +55,23 @@ class ProformaBillForm(forms.ModelForm):
         label="Cliente",
         queryset=models.Customer.objects,
         help_text="Por favor seleccione el cliente.")
-    number = forms.CharField(
-        label="Identificador",
-        max_length=50,
-        help_text="Por favor teclee un código identificador para la proforma.")
 
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.ProformaBill
-        fields = ('issued_to', 'number')
+        fields = ('issued_to',)
+
+    def clean(self):
+        cleaned_data = super(ProformaBillForm, self).clean()
+        consumidor_final = self.data.get('cons_final') == 'True'
+        if consumidor_final:
+            c, created = models.Customer.objects.get_or_create(
+                razon_social='CONSUMIDOR FINAL',
+                tipo_identificacion='ruc',
+                identificacion='9999999999999',
+                company=self.instance.punto_emision.establecimiento.company)
+            cleaned_data['issued_to'] = c
+        return cleaned_data
 
 
 class CustomerForm(forms.ModelForm):

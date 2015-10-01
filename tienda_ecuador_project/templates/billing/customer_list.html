@@ -9,20 +9,7 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-    <h1>Clientes</h1>
-    <table class='table table-hover'>
-        <tr>
-            <th>Razón Social</th>
-            <th>Identificación</th>
-            <th></th>
-        </tr>
-        {% for customer in customer_list %}
-            <tr>
-                <td>{{ customer.razon_social }}</td>
-                <td>{{ customer.identificacion }}</td>
-                <td><a href='{% url "customer_update" customer.id %}' class="btn btn-default">Editar</a></td>
-            </tr>
-        {% endfor %}
-    </table>
+        <h1>Clientes</h1>
+        {% include 'billing/customer/customer_list_table.html' %}
     </div>
 {% endblock %}

@@ -1,0 +1,35 @@
+{% load decimal_format %}
+{% load future %}
+
+{% if proformabill_list %}
+    <table class='table table-hover'>
+        <thead><tr>
+          <th>Identificador</th>
+          <th>Cliente</th>
+          <th>Total</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          {% for proformabill in proformabill_list %}
+            <tr>
+              <td>{{ proformabill.number }}</td>
+              <td>{% firstof proformabill.issued_to '<span class="text-danger">No hay cliente establecido</span>' %}</td>
+              <td>{{ proformabill.total|price2d }}</td>
+              <td>
+                <a href="{{ proformabill.get_absolute_url }}" class='btn btn-default form-control'>Detalle</a>
+              </td>
+            </tr>
+          {% endfor %}
+          {% if show_all_items_button %}
+              <tr>
+                  <td colspan='10'>
+                      <a href='{% url "proformabill_company_index" company.id %}'
+                         class='btn btn-default form-control'>Ver todas las proformas</a>
+                  </td>
+              </tr>
+          {% endif %}
+        </tbody>
+    </table>
+{% else %}
+    No hay proformas
+{% endif %}

@@ -11,17 +11,6 @@
     {{ block.super }}
     <div class='col-xs-12'>
     <h1>Proformas</h1>
-    <table class='table table-hover'>
-        <tr>
-            <th>Proforma</th>
-            <th></th>
-        </tr>
-    {% for proformabill in proformabill_list %}
-        <tr>
-            <td>{{ proformabill }}</td>
-            <td><a href="{% url 'proformabill_detail' proformabill.id %}" class='btn btn-default'>Detalle</a></td>
-        </tr>
-    {% endfor %}
-    </table>
+    {% include 'billing/proformabill/proformabill_list_table.html' %}
     </div>
 {% endblock %}

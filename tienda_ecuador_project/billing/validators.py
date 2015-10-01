@@ -54,6 +54,8 @@ def IsRuc(val):
     """
     if not len(val) == 13:
         raise ValidationError("RUC no tiene 13 digitos")
+    if val == '9999999999999':  # consumidor final
+        return
     if not val.endswith("001"):
         raise ValidationError("RUC no termina en 001")
     IsCedula(val[0:10])

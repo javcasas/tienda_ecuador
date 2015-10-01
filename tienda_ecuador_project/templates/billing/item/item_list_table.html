@@ -1,0 +1,34 @@
+{% load decimal_format %}
+
+{% if item_list %}
+<table class='table table-hover'>
+    <thead>
+        <tr>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Precio Unitario</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in item_list %}
+            <tr>
+                <td>{{ item.sku }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.unit_price|price2d }}</td>
+                <td><a href="{% url 'item_detail' item.id %}" class='btn btn-default'>Detalle</a></td>
+            </tr>
+        {% endfor %}
+        {% if show_all_items_button %}
+            <tr>
+                <td colspan='10'>
+                    <a href='{% url 'item_index' company.id %}'
+                       class='btn btn-default form-control'>Ver todos los Artículos</a>
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+{% else %}
+    No hay artículos.
+{% endif %}

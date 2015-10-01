@@ -1,0 +1,36 @@
+{% load decimal_format %}
+
+{% if bill_list %}
+    <table class='table table-hover'>
+        <thead>
+            <tr>
+                <th>{# FIXME Poper headers & stuff #}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for bill in bill_list %}
+            <tr>
+                <td>
+                    <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
+                </td>
+            </tr>
+        {% endfor %}
+        {% if show_all_items_button %}
+            <tr>
+                <td colspan='10'>
+                    <a href='{% url 'bill_index' company.id %}'
+                           class='btn btn-default form-control'>Ver todas las facturas</a>
+                </td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+{% else %}
+    No hay facturas. Para emitir una factura, primero cree una
+    {% if single_punto_emision %}
+        <a href='{% url 'proformabill_create' single_punto_emision.id %}'>Nueva Proforma</a>
+    {% else %}
+        {# FIXME #}
+    {% endif %}
+    , y después emita la factura.
+{% endif %}

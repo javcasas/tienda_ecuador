@@ -411,6 +411,13 @@ class IdentificacionTests(TestCase):
         self.valid(tipo_identificacion="ruc",
                    identificacion="1756760292001")
 
+    def test_valid_ruc_consumidor_final(self):
+        """
+        consumidor_final
+        """
+        self.valid(tipo_identificacion="ruc",
+                   identificacion="9999999999999")
+
     def test_invalid_ruc_does_not_end_001(self):
         """
         An invalid RUC that does not end in 001

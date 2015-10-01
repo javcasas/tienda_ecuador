@@ -8,100 +8,36 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12 even-section'>
+
         <div class='col-xs-12 col-sm-8 col-md-6'>
             <h1>Proformas</h1>
-            <table class='table table-hover'>
-                <tr>
-                    <th>Identificador</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th></th>
-                </tr>
-            {% for proformabill in proformabill_list %}
-                <tr>
-                    <td>{{ proformabill.number }}</td>
-                    <td>{{ proformabill.issued_to }}</td>
-                    <td>&dollar;{{ proformabill.total|decimals:2 }}</td>
-                    <td>
-                        <a href="{% url 'proformabill_detail' proformabill.id %}" class='btn btn-default'>Detalle</a>
-                    </td>
-                </tr>
-            {% endfor %}
-            </table>
+            {% include 'billing/proformabill/proformabill_list_table.html' with show_all_items_button=True %}
             {% buttons %}
                 {% if single_punto_emision %}
                     <a href="{% url 'proformabill_create' single_punto_emision.id %}" class='btn btn-primary'>Nueva proforma</a>
                 {% else %}
-                    Ir a punto de emision
-                    {# TODO #}
+                    {# TODO Ir a punto de emision #}
                 {% endif %}
             {% endbuttons %}
         </div>
 
         <div class='col-xs-12 col-sm-8 col-md-6'>
             <h1>Clientes</h1>
-            <table class='table table-hover'>
-                <tr>
-                    <th>Identificación</th>
-                    <th>Razón Social</th>
-                    <th></th>
-                </tr>
-            {% for customer in customer_list %}
-                <tr>
-                    <td>({{customer.tipo_identificacion}}) {{ customer.identificacion }}</td>
-                    <td>{{ customer.razon_social }}</td>
-                    <td><a href="{% url 'customer_detail' customer.id %}" class='btn btn-default'>Detalle</a></td>
-                </tr>
-            {% empty %}
-                {# FIXME: text in <table> without <tr> and <td> #}
-                No hay clientes.
-            {% endfor %}
-            </table>
+            {% include 'billing/customer/customer_list_table.html' with show_all_items_button=True %}
             {% buttons %}
                 <a href="{% url 'customer_create' company.id %}" class='btn btn-primary'>Nuevo cliente</a>
             {% endbuttons %}
         </div>
+    </div>
+    <div class='col-xs-12 even-section'>
         <div class='col-md-6'>
             <h1>Facturas</h1>
-            <table class='table table-hover'>
-            {% for bill in bill_list %}
-                <tr><td>
-                <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
-                </td></tr>
-            {% empty %}
-                {# FIXME: text in <table> without <tr> and <td> #}
-                {% if single_punto_emision %}
-                    No hay facturas. Para emitir una factura, primero cree una 
-                    <a href='{% url 'proformabill_create' single_punto_emision.id %}'>Nueva Proforma</a>
-                    , y después emita la factura.
-                {% else %}
-                    {# FIXME #}
-                {% endif %}
-            {% endfor %}
-            </table>
+            {% include 'billing/bill/bill_list_table.html' with show_all_items_button=True %}
         </div>
 
         <div class='col-md-6'>
             <h1>Artículos en venta</h1>
-            <table class='table table-hover'>
-                <tr>
-                    <th>SKU</th>
-                    <th>Nombre</th>
-                    <th>Precio Unitario</th>
-                    <th></th>
-                </tr>
-            {% for item in item_list %}
-                <tr>
-                    <td>{{ item.sku }}</td>
-                    <td>{{ item.name }}</td>
-                    <td>&dollar;{{ item.unit_price|decimals:2 }}</td>
-                    <td><a href="{% url 'item_detail' item.id %}" class='btn btn-default'>Detalle</a></td>
-                </tr>
-            {% empty %}
-                {# FIXME: text in <table> without <tr> and <td> #}
-                No hay artículos.
-            {% endfor %}
-            </table>
+            {% include 'billing/item/item_list_table.html' with show_all_items_button=True %}
             {% buttons %}
                 <a href="{% url 'item_create' company.id %}" class='btn btn-primary'>Nuevo Artículo</a>
             {% endbuttons %}

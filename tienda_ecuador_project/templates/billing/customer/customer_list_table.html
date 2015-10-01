@@ -1,0 +1,33 @@
+{% load decimal_format %}
+
+{% if customer_list %}
+<table class='table table-hover'>
+    <thead><tr>
+        <th>Identificación</th>
+        <th>Razón Social</th>
+        <th></th>
+    </tr></thead>
+    <tbody>
+        {% for customer in customer_list %}
+            <tr>
+                <td>({{customer.tipo_identificacion}}) {{ customer.identificacion }}</td>
+                <td>{{ customer.razon_social }}</td>
+                <td>
+                    <a href="{% url 'customer_detail' customer.id %}"
+                       class='btn btn-default form-control'>Detalle</a>
+                </td>
+            </tr>
+        {% endfor %}
+        {% if show_all_items_button %}
+            <tr>
+                <td colspan='10'>
+                    <a href='{% url 'customer_index' company.id %}'
+                       class='btn btn-default form-control'>Ver todos los clientes</a>
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+{% else %}
+    No hay clientes.
+{% endif %}

@@ -67,7 +67,7 @@ class LoggedInTests(TestCase, TestHelpersMixin):
                 response, str(value), html=False,
                 msg_prefix='Field {} ({}) not found'.format(field, value))
 
-    def simulate_post(self, url, data_to_post, client=None):
+    def simulate_post(self, url, data_to_post, client=None, form_index=0):
         """
         Simulates a post
             Only commits data that is not in hidden fields
@@ -82,9 +82,9 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         data_to_post = make_post(data_to_post)
         data_to_use = {}
 
+        current_form = root.findall(".//form")[form_index]
         # input fields, including hidden inputs
-        inputs = root.findall(".//form//input")
-        for i in inputs:
+        for i in current_form.findall(".//input"):
             key = i.get('name')
             pre_value = i.get('value')
             type_ = i.get('type')
@@ -577,10 +577,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             "direccion": "pupu street",
         }
         self.data = {
-            'number': '001-002-1234567890',
         }
         self.new_data = {
-            'number': '002-004-0987654321',
         }
         self.customer = add_instance(models.Customer,
                                      company=self.company,
@@ -718,34 +716,15 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         self.assertContains(r, subtotal * 12 / 100)   # IVA
         self.assertContains(r, subtotal * 112 / 100)   # Total con IVA
 
-    def test_proformabill_create_show_form(self):
+    def test_proformabill_create(self):
         """
         Check the proforma bill creation view
         """
-        r = self.c.get(reverse('proformabill_create',
-                               args=(self.punto_emision.id,)))
-        for field in ['number', 'issued_to']:
-            self.assertContains(r, field)
-
-    def test_proformabill_create_submit(self):
-        """
-        Check the proforma bill creation view
-        """
-        proformabill_data = {
-            'number': '6666',
-        }
-        customer, created = models.Customer.objects.get_or_create(
-            company=self.company,
-            **self.customer_data)
         with self.new_item(self.cls) as new:
-            r = self.simulate_post(
-                reverse('proformabill_create', args=(self.punto_emision.id,)),
-                dict(proformabill_data, issued_to=customer.id),
-            )
+            r = self.c.get(reverse('proformabill_create',
+                                   args=(self.punto_emision.id,)))
         self.assertRedirects(
             r, reverse('proformabill_detail', args=(new.id,)))
-        self.assertObjectMatchesData(new, proformabill_data)
-        self.assertObjectMatchesData(new.issued_to, self.customer_data)
 
     def test_proformabill_update_show_form(self):
         """
@@ -766,7 +745,8 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         r = self.simulate_post(
             reverse('proformabill_update',
                     args=(self.proformabill.id,)),
-            dict(self.new_data, issued_to=self.new_customer.id))
+            dict(self.new_data, issued_to=self.new_customer.id),
+            form_index=1)
         self.assertRedirects(
             r, reverse('proformabill_detail',
                        args=(self.proformabill.id,)))

@@ -207,10 +207,10 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {}
         context.update({
-            'item_list': Item.objects.filter(company=company),
+            'item_list': Item.objects.filter(company=company).order_by('sku')[:5],
             'bill_list': Bill.objects.filter(company=company),
-            'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company),
-            'customer_list': Customer.objects.filter(company=company),
+            'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company).order_by("number")[:5],
+            'customer_list': Customer.objects.filter(company=company).order_by('identificacion')[:5],
             'company': company,
             'single_punto_emision': self.single_punto_emision,
             'user': self.request.user,
@@ -477,7 +477,7 @@ class ProformaBillUpdateView(ProformaBillView, PuntoEmisionSelected, UpdateView)
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
         form.fields['issued_to'].queryset = Customer.objects.filter(
-            company=self.company)
+            company=self.company).exclude(identificacion='9999999999999')
         return form
 
 
