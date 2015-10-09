@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 import base64
 import pytz
@@ -8,6 +8,7 @@ from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 
 from billing import models
+import company_accounts.models
 
 from helpers import (add_Company,
                      add_CompanyUser,
@@ -115,7 +116,8 @@ class LoggedInTests(TestCase, TestHelpersMixin):
             default = selected_option[0].get("value") if selected_option else ""
             data_to_use[key] = data_to_post.pop(key, default)
 
-        self.assertFalse(data_to_post, "Items left in data to post: {}".format(data_to_post))
+        self.assertFalse(data_to_post,
+                         "Items left in data to post: {}".format(data_to_post))
         return client.post(url, data_to_use)
 
     def assert_no_broken_urls(self):
@@ -146,7 +148,7 @@ class LoggedInWithCompanyTests(LoggedInTests):
             direccion_matriz="C del pepano")
 
         self.establecimiento = add_instance(
-            models.Establecimiento,
+            company_accounts.models.Establecimiento,
             company=self.company,
             descripcion="Matriz",
             direccion='C del pepino',
@@ -154,7 +156,7 @@ class LoggedInWithCompanyTests(LoggedInTests):
         )
 
         self.punto_emision = add_instance(
-            models.PuntoEmision,
+            company_accounts.models.PuntoEmision,
             establecimiento=self.establecimiento,
             descripcion="Caja de la matriz",
             codigo="001"
@@ -409,7 +411,7 @@ class GenericObjectCRUDTest(object):
             direccion_matriz="C del pepeno")
         add_CompanyUser(user=user, company=company3)
         establecimiento3 = add_instance(
-            models.Establecimiento,
+            company_accounts.models.Establecimiento,
             company=company3,
             descripcion="Matriz",
             direccion='C del pepano',
@@ -501,8 +503,9 @@ class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
 
     def setUp(self):
         super(LoggedInWithItemTests, self).setUp()
-        self.iva = add_instance(models.Iva,
-                                descripcion="12%", codigo='12', porcentaje=12.0)
+        self.iva = add_instance(
+            models.Iva,
+            descripcion="12%", codigo='12', porcentaje=12.0)
         self.ice = add_instance(models.Ice,
                                 descripcion="Bebidas gaseosas", grupo=1,
                                 codigo='3051', porcentaje=50.0)
@@ -576,22 +579,24 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             "email": "a@d.com",
             "direccion": "pupu street",
         }
-        self.data = {
-        }
-        self.new_data = {
-        }
-        self.customer = add_instance(models.Customer,
-                                     company=self.company,
-                                     **self.customer_data)
-        self.new_customer = add_instance(models.Customer,
-                                         company=self.company,
-                                         **self.new_customer_data)
-        self.establecimiento = add_instance(models.Establecimiento,
-                                            company=self.company,
-                                            codigo='001')
-        self.punto_emision = add_instance(models.PuntoEmision,
-                                          establecimiento=self.establecimiento,
-                                          codigo='001')
+        self.data = {}
+        self.new_data = {}
+        self.customer = add_instance(
+            models.Customer,
+            company=self.company,
+            **self.customer_data)
+        self.new_customer = add_instance(
+            models.Customer,
+            company=self.company,
+            **self.new_customer_data)
+        self.establecimiento = add_instance(
+            company_accounts.models.Establecimiento,
+            company=self.company,
+            codigo='001')
+        self.punto_emision = add_instance(
+            company_accounts.models.PuntoEmision,
+            establecimiento=self.establecimiento,
+            codigo='001')
 
         self.proformabill = add_instance(
             models.ProformaBill,
@@ -639,12 +644,14 @@ class ProformaBillTests(LoggedInWithCompanyTests):
         """
         Check the proforma bill index view
         """
-        establecimiento2 = add_instance(models.Establecimiento,
-                                        company=self.company,
-                                        codigo='002')
-        punto_emision2 = add_instance(models.PuntoEmision,
-                                      establecimiento=establecimiento2,
-                                      codigo='002')
+        establecimiento2 = add_instance(
+            company_accounts.models.Establecimiento,
+            company=self.company,
+            codigo='002')
+        punto_emision2 = add_instance(
+            models.PuntoEmision,
+            establecimiento=establecimiento2,
+            codigo='002')
         proformabill2 = add_instance(
             models.ProformaBill,
             issued_to=self.customer,
@@ -804,7 +811,7 @@ class ProformaBillItemTests(LoggedInWithCompanyTests):
         self.customer = add_instance(models.Customer,
                                      company=self.company,
                                      **self.customer_data)
-        self.establecimiento = add_instance(models.Establecimiento,
+        self.establecimiento = add_instance(company_accounts.models.Establecimiento,
                                             company=self.company,
                                             codigo='001')
         self.punto_emision = add_instance(models.PuntoEmision,
@@ -930,7 +937,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.customer = add_instance(models.Customer,
                                      company=self.company,
                                      **self.customer_data)
-        self.establecimiento = add_instance(models.Establecimiento,
+        self.establecimiento = add_instance(company_accounts.models.Establecimiento,
                                             company=self.company,
                                             codigo='001')
         self.punto_emision = add_instance(models.PuntoEmision,
@@ -981,8 +988,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.company.cert = base64.b64encode(
             open("billing/testsuite/keystore.PKCS12").read())
         self.company.key = "123456"
-        self.company.licencia = 'professional'
-        self.company.save()
+        self.company.licence.approve('professional', date(2020, 1, 1))
         # Confirmar la emision de la factura
         r = self.c.get(
             reverse('proformabill_emit_to_bill',
@@ -1007,7 +1013,9 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             proforma.secuencial_pruebas,
             10)
         self.assertEquals(
-            models.PuntoEmision.objects.get(id=self.punto_emision.id).siguiente_secuencial_pruebas,
+            models.PuntoEmision.objects
+            .get(id=self.punto_emision.id)
+            .siguiente_secuencial_pruebas,
             11)
         r = self.c.get(
             reverse('proformabill_emit_gen_xml',
@@ -1122,7 +1130,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             if "claveAcceso" in k:
                 for i, (a, b) in enumerate(zip(node.text, v)):
                     if a != b:
-                        differences.append("Difference at char {}: '{}' != '{}'".format(i, a, b))
+                        differences.append(
+                            "Difference at char {}: '{}' != '{}'".format(i, a, b))
                 msg = msg + "\n" + "\n".join(differences)
             self.assertEquals(node.text, v, msg)
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from itertools import count
 from decimal import Decimal
 import pytz
@@ -7,8 +7,6 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 
 from billing.models import (ReadOnlyObject,
-                            Company,
-                            CompanyUser,
                             ProformaBill,
                             Bill,
                             Item,
@@ -16,9 +14,13 @@ from billing.models import (ReadOnlyObject,
                             Customer,
                             Iva, Ice,
                             ItemInBill,
+                            ClaveAcceso)
+from company_accounts.models import (
+                            Company,
+                            CompanyUser,
                             Establecimiento,
                             PuntoEmision,
-                            ClaveAcceso)
+                            )
 
 from billing import models
 
@@ -376,7 +378,7 @@ class ItemTests(TestCase, TestHelpersMixin):
         Prueba str() y unicode()
         """
         ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
-                  unit_cost=10, unit_price=10, decimales_qty=0)
+                              unit_cost=10, unit_price=10, decimales_qty=0)
         self.assertEquals(ob.increment_qty, "1")
 
 

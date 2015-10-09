@@ -1,0 +1,39 @@
+from django.shortcuts import get_object_or_404, redirect
+
+import models
+
+
+def valid_licence(user, valid_licences):
+    """
+    Returns True iif the company from the user has
+    a licence in valid_licences
+    """
+    cu = get_object_or_404(models.CompanyUser, user=user)
+    return cu.company.licence.effective_licence in valid_licences
+
+
+class licence_required(object):
+    """
+    Decorator that checks the licence and redirects
+    to pricing
+    """
+    def __init__(self, *args):
+        self.licences = args
+
+    def __call__(self, f):
+        orig_dispatch = f.dispatch
+
+        def wrapper(otherself, request, *args, **kwargs):
+            if not valid_licence(request.user, self.licences):
+                return redirect("pricing")
+            return orig_dispatch(otherself, request, *args, **kwargs)
+        f.dispatch = wrapper
+        return f
+
+
+class LicenceControlMixin(object):
+    """
+    Mixin that provides the valid_licence method
+    """
+    def valid_licence(self, valid_licences):
+        return valid_licence(self.user, valid_licences)

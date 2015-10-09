@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-from django.conf import settings
 from decimal import Decimal
 import billing.models
 
@@ -10,7 +9,7 @@ import billing.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('company_accounts', '0001_initial'),
     ]
 
     operations = [
@@ -61,65 +60,21 @@ class Migration(migrations.Migration):
             name='Bill',
             fields=[
                 ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
+                ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
             },
             bases=(billing.models.ReadOnlyMixin, 'billing.basebill'),
         ),
         migrations.CreateModel(
-            name='Company',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('nombre_comercial', models.CharField(unique=True, max_length=100)),
-                ('ruc', models.CharField(unique=True, max_length=100)),
-                ('razon_social', models.CharField(unique=True, max_length=100)),
-                ('direccion_matriz', models.CharField(max_length=100)),
-                ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
-                ('obligado_contabilidad', models.BooleanField(default=False)),
-                ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
-                ('licencia', models.CharField(default=b'demo', max_length=20, choices=[(b'demo', b'Demo'), (b'basic', b'Basic'), (b'professional', b'Professional'), (b'enterprise', b'Enterprise')])),
-                ('siguiente_numero_proforma', models.IntegerField(default=1)),
-                ('logo', models.ImageField(upload_to=b'company_logos', blank=True)),
-                ('cert', models.CharField(max_length=20000, blank=True)),
-                ('key', models.CharField(max_length=100, blank=True)),
-            ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='CompanyUser',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('company', models.ForeignKey(to='billing.Company')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
-        migrations.CreateModel(
             name='Customer',
             fields=[
                 ('basecustomer_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseCustomer')),
-                ('company', models.ForeignKey(to='billing.Company')),
+                ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
             },
             bases=('billing.basecustomer',),
-        ),
-        migrations.CreateModel(
-            name='Establecimiento',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('descripcion', models.CharField(max_length=50)),
-                ('codigo', models.CharField(max_length=3)),
-                ('direccion', models.CharField(max_length=100)),
-                ('company', models.ForeignKey(to='billing.Company')),
-            ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='FormaPago',
@@ -136,7 +91,7 @@ class Migration(migrations.Migration):
             name='Item',
             fields=[
                 ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
-                ('company', models.ForeignKey(to='billing.Company')),
+                ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
             },
@@ -182,6 +137,7 @@ class Migration(migrations.Migration):
                 ('secuencial_pruebas', models.IntegerField(default=0, blank=True)),
                 ('secuencial_produccion', models.IntegerField(default=0, blank=True)),
                 ('issued_to', models.ForeignKey(blank=True, to='billing.Customer', null=True)),
+                ('punto_emision', models.ForeignKey(to='company_accounts.PuntoEmision')),
             ],
             options={
             },
@@ -196,20 +152,6 @@ class Migration(migrations.Migration):
             options={
             },
             bases=('billing.iteminbill',),
-        ),
-        migrations.CreateModel(
-            name='PuntoEmision',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('descripcion', models.CharField(max_length=50)),
-                ('codigo', models.CharField(max_length=3)),
-                ('siguiente_secuencial_pruebas', models.IntegerField(default=1)),
-                ('siguiente_secuencial_produccion', models.IntegerField(default=1)),
-                ('establecimiento', models.ForeignKey(to='billing.Establecimiento')),
-            ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='Tax',
@@ -244,12 +186,6 @@ class Migration(migrations.Migration):
             bases=('billing.tax',),
         ),
         migrations.AddField(
-            model_name='proformabill',
-            name='punto_emision',
-            field=models.ForeignKey(to='billing.PuntoEmision'),
-            preserve_default=True,
-        ),
-        migrations.AddField(
             model_name='pago',
             name='plazo_pago',
             field=models.ForeignKey(to='billing.PlazoPago'),
@@ -259,12 +195,6 @@ class Migration(migrations.Migration):
             model_name='pago',
             name='proforma_bill',
             field=models.ForeignKey(to='billing.ProformaBill'),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='bill',
-            name='company',
-            field=models.ForeignKey(to='billing.Company'),
             preserve_default=True,
         ),
         migrations.AddField(

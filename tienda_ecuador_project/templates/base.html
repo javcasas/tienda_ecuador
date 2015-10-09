@@ -65,7 +65,7 @@
                 {% block right_nav_bar %}
                   <li><a href="{% url 'billing_index' %}">Facturación</a></li>
                   {# FIXME <li><a href="{% url 'accounts_receivable_index' %}">Cuentas por Cobrar</a></li> #}
-                  <li><a href="{% url 'company_profile' company.id %}">Configuración</a></li>
+                  <li><a href="{% url 'company_accounts:company_select' %}">Configuración</a></li>
                 {% endblock %}
                 <li><a href="{% url 'auth_logout' %}">Salir</a></li>
               {% else %}

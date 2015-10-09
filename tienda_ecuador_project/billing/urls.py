@@ -4,16 +4,9 @@ from billing import views
 urlpatterns = patterns(
     '',
     # Index views
-    url(r'^$',
-        views.index, name='billing_index'),
+    url(r'^$', views.index, name='billing_index'),
     url(r'^(?P<company_id>[0-9]+)/$',
         views.CompanyIndex.as_view(), name='company_index'),
-    url(r'^(?P<pk>[0-9]+)/profile/$',
-        views.CompanyProfileView.as_view(), name='company_profile'),
-    url(r'^(?P<pk>[0-9]+)/profile/edit/$',
-        views.CompanyProfileUpdateView.as_view(), name='company_profile_update'),
-    url(r'^(?P<pk>[0-9]+)/profile/select_plan/$',
-        views.CompanyProfileSelectPlanView.as_view(), name='company_profile_select_plan'),
 
     # Item views
     url(r'^item/index/(?P<company_id>[0-9]+)/$',

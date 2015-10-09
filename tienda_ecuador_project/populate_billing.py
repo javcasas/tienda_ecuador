@@ -9,9 +9,10 @@ django.setup()
 from functools import partial
 from datetime import datetime
 import pytz
-from billing.models import (Company, Item, ProformaBill, ProformaBillItem,
-                            CompanyUser, Customer, Iva, Ice)
+from billing.models import (Item, ProformaBill, ProformaBillItem,
+                            Customer, Iva, Ice)
 from billing import models
+import company_accounts.models
 from django.contrib.auth.models import User
 
 
@@ -32,10 +33,10 @@ def add_instance(klass, **kwargs):
     s.save()
     return s
 
-add_Company = partial(add_instance, Company)
+add_Company = partial(add_instance, company_accounts.models.Company)
 add_Item = partial(add_instance, Item)
 add_Customer = partial(add_instance, Customer)
-add_CompanyUser = partial(add_instance, CompanyUser)
+add_CompanyUser = partial(add_instance, company_accounts.models.CompanyUser)
 add_ProformaBill = partial(add_instance, ProformaBill)
 add_ProformaBillItem = partial(add_instance, ProformaBillItem)
 
@@ -62,21 +63,21 @@ def my_populate():
                      razon_social=u'Roberto Gutiérrez', direccion_matriz=u'C/ Rumiñahui')
     t2 = add_Company(nombre_comercial=u"Mega Iluminación", ruc=u'1234567891',
                      razon_social=u'Alberto Álvarez', direccion_matriz=u'C/ Orellana')
-    e1 = add_instance(models.Establecimiento,
+    e1 = add_instance(company_accounts.models.Establecimiento,
                       company=t1,
                       direccion='C/ Ruminahui',
                       descripcion='Matriz',
                       codigo='001')
-    e2 = add_instance(models.Establecimiento,
+    e2 = add_instance(company_accounts.models.Establecimiento,
                       company=t2,
                       direccion='C/ Orellana',
                       descripcion='Matriz',
                       codigo='001')
-    pe1 = add_instance(models.PuntoEmision,
+    pe1 = add_instance(company_accounts.models.PuntoEmision,
                        establecimiento=e1,
                        descripcion='Caja principal',
                        codigo='001')
-    pe2 = add_instance(models.PuntoEmision,
+    pe2 = add_instance(company_accounts.models.PuntoEmision,
                        establecimiento=e2,
                        descripcion='Caja principal',
                        codigo='001')

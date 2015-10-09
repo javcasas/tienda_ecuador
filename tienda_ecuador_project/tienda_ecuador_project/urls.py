@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 from django.conf.urls.static import static
 from django.conf import settings
 import views
-import billing
+import company_accounts.forms
 import registration.views
 
 
@@ -18,15 +18,18 @@ urlpatterns = [
     url(r'^support/$', views.SupportView.as_view(), name='support'),
 
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^company_accounts/',
+        include('company_accounts.urls',
+                app_name='company_accounts', namespace='company-accounts')),
     url(r'^billing/', include('billing.urls')),
     url(r'^accounts_receivable/', include('accounts_receivable.urls')),
 
     # Translated login & register forms
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
-        {'authentication_form': billing.forms.LoginForm},
+        {'authentication_form': company_accounts.forms.LoginForm},
         name='auth_login'),
     url(r'^accounts/register/$', 
-        registration.views.RegistrationView.as_view(form_class=billing.forms.MyUserCreationForm),
+        registration.views.RegistrationView.as_view(form_class=company_accounts.forms.MyUserCreationForm),
         name='registration_register'),
 
     url(r'^accounts/', include('registration.backends.simple.urls')),

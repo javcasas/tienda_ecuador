@@ -14,20 +14,21 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 from django.http import JsonResponse, HttpResponse
 from django.forms.models import model_to_dict
-from django.utils.decorators import method_decorator
 
 
 import models
 from models import (Item,
                     Bill,
-                    CompanyUser,
-                    Company,
                     Customer,
                     ProformaBill,
                     ProformaBillItem,
-                    Establecimiento,
-                    PuntoEmision,
                     ClaveAcceso)
+from company_accounts.models import (CompanyUser,
+                                     Company,
+                                     Establecimiento,
+                                     PuntoEmision)
+from company_accounts.licence_helpers import licence_required
+
 from forms import (ItemForm,
                    ProformaBillForm,
                    ProformaBillAddItemForm,
@@ -53,35 +54,6 @@ def index(request):
         'user': request.user,
     }
     return render(request, "billing/index.html", param_dict)
-
-
-def valid_licence(user, valid_licences):
-    cu = get_object_or_404(models.CompanyUser, user=user)
-    return cu.company.licencia in valid_licences
-
-
-class licence_required(object):
-    def __init__(self, *args):
-        self.licences = args
-
-    def __call__(self, f):
-        orig_dispatch = f.dispatch
-        def wrapper(otherself, request, *args, **kwargs):
-            if not valid_licence(request.user, self.licences):
-                return redirect("pricing")
-            return orig_dispatch(otherself, request, *args, **kwargs)
-        f.dispatch = wrapper
-        return f
-
-
-class LicenceControlMixin(object):
-    def valid_licence(self, valid_licences):
-        return valid_licence(self.user, valid_licences)
-    def get_context_data(self, **kwargs):
-        context = super(CompanySelected, self).get_context_data(**kwargs)
-        licence = get_object_or_404(models.CompanyUser, user=user).company.licencia
-        context['licence'] = {licence: True}
-        return context
 
 
 class CompanySelected(object):
@@ -121,7 +93,8 @@ class CompanySelected(object):
         Returns a PuntoEmision object if it's the only one
         for the current company
         """
-        single_punto_emision = PuntoEmision.objects.filter(establecimiento__company=self.company)
+        single_punto_emision = PuntoEmision.objects.filter(
+            establecimiento__company=self.company)
         if len(single_punto_emision) == 1:
             return single_punto_emision[0]
         else:
@@ -207,72 +180,22 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {}
         context.update({
-            'item_list': Item.objects.filter(company=company).order_by('sku')[:5],
+            'item_list': (Item.objects
+                          .filter(company=company)
+                          .order_by('sku')[:5]),
             'bill_list': Bill.objects.filter(company=company),
-            'proformabill_list': ProformaBill.objects.filter(punto_emision__establecimiento__company=company).order_by("number")[:5],
-            'customer_list': Customer.objects.filter(company=company).order_by('identificacion')[:5],
+            'proformabill_list':
+                ProformaBill.objects
+                .filter(punto_emision__establecimiento__company=company)
+                .order_by("number")[:5],
+            'customer_list':
+                Customer.objects
+                .filter(company=company).order_by('identificacion')[:5],
             'company': company,
             'single_punto_emision': self.single_punto_emision,
             'user': self.request.user,
         })
         return render(request, "billing/company_index.html", context)
-
-class CompanyProfileView(CompanySelected, DetailView):
-    """
-    View that shows a general index for a given company
-    """
-    model = models.Company
-    context_object_name = 'company'
-    @property
-    def company_id(self):
-        """
-        Overridable property to get the current company id
-        """
-        return self.kwargs['pk']
-
-class CompanyProfileUpdateView(CompanySelected, DetailView):
-    """
-    View that shows a general index for a given company
-    """
-    model = models.Company
-    context_object_name = 'company'
-
-class CompanyProfileSelectPlanView(CompanySelected, View):
-    """
-    View that shows a general index for a given company
-    """
-    model = models.Company
-    context_object_name = 'company'
-
-    @property
-    def company_id(self):
-        """
-        Overridable property to get the current company id
-        """
-        return self.kwargs['pk']
-
-    def get(self, request, pk):
-        context = {
-            'company': self.company,
-            'select_urls': [
-                {'name': 'basic'},
-                {'name': 'professional'},
-                {'name': 'enterprise'},
-            ],
-        }
-        return render(request, "billing/company_profile_select_plan.html", context)
-
-    def post(self, request, pk):
-        try:
-            plan = request.POST['selected_plan']
-            company = self.company
-            company.licencia = plan
-            company.full_clean()
-            company.save()
-            return redirect('company_profile', company.id)
-        except Exception, e:
-            print e
-            return self.get(request, pk)
 
 
 ####################################################################
@@ -414,7 +337,8 @@ class ProformaBillView(object):
     context_object_name = 'proformabill'
 
     def get_queryset(self):
-        return self.model.objects.filter(punto_emision__establecimiento__company=self.company)
+        return (self.model.objects
+                .filter(punto_emision__establecimiento__company=self.company))
 
     @property
     def punto_emision_id(self):
@@ -452,6 +376,7 @@ class ProformaBillDetailView(ProformaBillView,
     """
     Detail view for proforma bills
     """
+
 
 class ProformaBillDetailViewTable(ProformaBillView,
                              PuntoEmisionSelected,
@@ -503,8 +428,11 @@ class ProformaBillPaymentView(ProformaBillView,
                         plazo_pago=installment,
                         proforma_bill=proforma).save()
             return redirect("proformabill_detail", proforma.id)
-        #elif request.POST['payment_mode'] == 'installments':
-            #return HttpResponse(str(("Cuotitas", request.POST['payment_method'], request.POST['payment_installments'], request.POST['payment_time_between_installments'])))
+        # elif request.POST['payment_mode'] == 'installments':
+        #     return HttpResponse(str(("Cuotitas",
+        #                         request.POST['payment_method'],
+        #                         request.POST['payment_installments'],
+        #                         request.POST['payment_time_between_installments'])))
         return HttpResponse("Ok")
 
 
@@ -528,7 +456,9 @@ class ProformaBillCreateView(PuntoEmisionSelected,
         return redirect('proformabill_detail', new_proforma.id)
 
 
-class ProformaBillUpdateView(ProformaBillView, PuntoEmisionSelected, UpdateView):
+class ProformaBillUpdateView(ProformaBillView,
+                             PuntoEmisionSelected,
+                             UpdateView):
     form_class = ProformaBillForm
 
     def get_form(self, *args, **kwargs):
@@ -723,7 +653,9 @@ class ProformaBillAddItemView(ProformaBillSelected,
 
     def form_valid(self, form):
         copy_from = form.cleaned_data["copy_from"]
-        copy_from = Item.objects.filter(company=self.company).get(id=copy_from.id)
+        copy_from = (Item.objects
+                     .filter(company=self.company)
+                     .get(id=copy_from.id))
         form.instance.proforma_bill = self.proformabill
 
         item_vals = {}
@@ -765,7 +697,8 @@ class ProformaBillItemUpdateViewJS(ProformaBillItemView,
                                    ProformaBillSelected,
                                    View):
     def post(self, request, pk):
-        proformabill_item = get_object_or_404(self.model, proforma_bill=self.proformabill, pk=pk)
+        proformabill_item = get_object_or_404(
+            self.model, proforma_bill=self.proformabill, pk=pk)
 
         def accept_qty(val):
             val = Decimal(val)
@@ -814,7 +747,9 @@ class BillDayListReport(BillView, ListView):
                               int(self.kwargs['month']),
                               int(self.kwargs['day']))
         end_date = start_date + timedelta(days=1)
-        return self.model.objects.filter(company=self.company).filter(date__gte=start_date, date__lt=end_date)
+        return (self.model.objects
+                .filter(company=self.company)
+                .filter(date__gte=start_date, date__lt=end_date))
 
     def get_context_data(self, **kwargs):
         context = super(BillDayListReport, self).get_context_data(**kwargs)
