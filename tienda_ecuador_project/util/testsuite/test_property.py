@@ -1,14 +1,14 @@
 from django.test import TestCase
-from billing import utils
+from util.property import Property, ConvertedProperty
 
 
 class PropertyTests(TestCase):
     """
     Tests for Property
     """
-    good = utils.Property(lambda x: True)
-    bad = utils.Property(lambda x: False)
-    default = utils.Property()
+    good = Property(lambda x: True)
+    bad = Property(lambda x: False)
+    default = Property()
 
     def test_good(self):
         self.good = 4
@@ -29,7 +29,7 @@ class ConvertedPropertyTests(TestCase):
     """
     Tests for ConvertedProperty
     """
-    v = utils.ConvertedProperty(one=1, two=2, three=3)
+    v = ConvertedProperty(one=1, two=2, three=3)
 
     def test_set(self):
         self.v = "one"

@@ -1,14 +1,13 @@
 # * encoding: utf8 *
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 from django.db import models
 from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-from utils import Property, ConvertedProperty
-from validators import IsCedula, IsRuc
+from util.property import Property, ConvertedProperty
+from util.validators import IsCedula, IsRuc
 
 from company_accounts.models import Company, PuntoEmision
 
@@ -493,4 +492,5 @@ class Pago(models.Model):
 
     @property
     def cantidad(self):
-        return (self.porcentaje * self.proforma_bill.total_con_impuestos) / Decimal(100)
+        return ((self.porcentaje * self.proforma_bill.total_con_impuestos)
+                / Decimal(100))
