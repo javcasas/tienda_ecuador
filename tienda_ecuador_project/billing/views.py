@@ -34,6 +34,7 @@ from forms import (ItemForm,
                    ProformaBillAddItemForm,
                    ProformaBillItemForm,
                    CustomerForm)
+from util import signature
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -555,36 +556,7 @@ class ProformaBillEmitGenXMLView(ProformaBillView,
         res.render()
         xml_content = res.content
         # sign xml_content
-        d = tempfile.mkdtemp()
-        try:
-            cert_path = os.path.join(d, "cert")
-            xml_path = os.path.join(d, "xml")
-            with open(cert_path, "w") as f:
-                f.write(base64.b64decode(self.company.cert))
-            with open(xml_path, "w") as f:
-                f.write(xml_content)
-            os.system(
-                'cd {signer_dir} && '
-                'java'
-                ' -classpath "core/*:deps/*:./sources/MITyCLibXADES/test/:."'
-                ' XAdESBESSignature'
-                ' {xml_path} {keystore_path} {keystore_pw}'
-                ' {res_dir} xml_signed'.format(
-                    signer_dir='billing/signer/',
-                    xml_path=xml_path,
-                    keystore_path=cert_path,
-                    keystore_pw=self.company.key,
-                    res_dir=d))
-            xml_content = open(os.path.join(d, "xml_signed")).read()
-        except IOError:
-            # Failure to sign
-            raise
-        finally:
-            for f in os.listdir(d):
-                os.unlink(os.path.join(d, f))
-            os.rmdir(d)
-
-        res.content = xml_content
+        res.content = signature.sign_data(xml_content, base64.b64decode(self.company.cert), self.company.key)
         return res
 
 
