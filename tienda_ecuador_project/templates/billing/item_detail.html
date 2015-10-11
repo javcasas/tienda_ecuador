@@ -4,6 +4,7 @@
 
 {% block body %}
 {{ block.super }}
+<div class='col-xs-12'>
 <table class='table table-hover'>
     <tr>
         <th>SKU</th> <td>{{ item.sku }}</td>
@@ -34,7 +35,6 @@
 </table>
 {% buttons %}
     <a href='{% url "item_update" item.id %}' class='btn btn-primary'>Editar</a>
-    <a href='{% url "item_index" company.id %}' class='btn btn-default'>Artículos</a>
-    <a href='{% url "company_index" company.id %}' class='btn btn-default'>Menú General</a>
 {% endbuttons %}
+</div>
 {% endblock %}

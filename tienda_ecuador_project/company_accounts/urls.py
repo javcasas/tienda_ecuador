@@ -6,6 +6,10 @@ urlpatterns = patterns(
     # Index views
     url(r'^$',
         views.company_select, name='company_select'),
+    url(r'^(?P<pk>[0-9]+)/$',
+        views.CompanyProfileView.as_view(
+            template_name_suffix='_main_menu'
+        ), name='company_main_menu'),
     url(r'^(?P<pk>[0-9]+)/profile/$',
         views.CompanyProfileView.as_view(), name='company_profile'),
     url(r'^(?P<pk>[0-9]+)/profile/edit/$',

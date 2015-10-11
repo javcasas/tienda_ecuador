@@ -28,15 +28,13 @@ def company_select(request):
     request.current_app = request.resolver_match.namespace
     c_user = models.CompanyUser.objects.filter(user=request.user)
     if len(c_user) == 1:
-        return redirect("company_accounts:company_profile", c_user[0].company.id)
+        return redirect("company_accounts:company_main_menu", c_user[0].company.id)
     param_dict = {
         'companies':
             models.Company.objects.filter(id__in=[cu.id for cu in c_user]),
         'user': request.user,
     }
     return render(request, "company_accounts/index.html", param_dict)
-
-
 
 
 class CompanySelected(object):

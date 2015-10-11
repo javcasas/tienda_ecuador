@@ -5,145 +5,143 @@
 {% block title %}Ver Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{block.super}}
+<div class='col-xs-12'>
 
-<h1>Forma de Pago</h1>
+  <h1>Forma de Pago</h1>
 
-<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-
-
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingOne">
-      <h4 class="panel-title">
-        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded='False' aria-controls="collapseOne">
-          Pago inmediato
-        </a>
-      </h4>
-    </div>
-    <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
-      <div class="panel-body">
-        <div class='row'>
-          <form action='.' method='post'>
-            {% csrf_token %}
-            <input type='hidden' name='payment_mode' value='immediate' />
-            {% for payment_kind in payment_kinds %}
-              <button class='btn btn-default col-xs-12 col-sm-6 col-lg-3'
-                      name='payment_method' value='{{ payment_kind.id}}'
-                      type='submit'>
-                {{ payment_kind.descripcion }}
-              </button>
-            {% endfor %}
-          </form>
-        </div>
+  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="headingOne">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded='False' aria-controls="collapseOne">
+            Pago inmediato
+          </a>
+        </h4>
       </div>
-    </div>
-  </div>
-
-
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingTwo">
-      <h4 class="panel-title">
-        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Pago diferido
-        </a>
-      </h4>
-    </div>
-    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
-      <div class="panel-body">
-        <div class='row'>
-          <form action='.' method='post'>
-            {% csrf_token %}
-            <input type='hidden' name='payment_mode' value='deferred' />
-            <div class='col-xs-12 col-sm-6 col-lg-3'>
-              <h4>Forma de pago</h4>
-              <select class='btn btn-default col-xs-12' name='payment_method'>
-                {% for payment_kind in payment_kinds %}
-                  <option value='{{ payment_kind.id}}'>
-                    {{ payment_kind.descripcion }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class='col-xs-12 col-sm-6 col-lg-3'>
-              <h4>Plazo</h4>
-              <select class='btn btn-default col-xs-12' name='payment_time_to_pay'>
-                {% for payment_term in deferred.payment_terms %}
-                  <option value='{{payment_term.id}}'>
-                    {{ payment_term.descripcion }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class='col-xs-8 col-xs-offset-2'>
-              &nbsp;
-            </div>
-            <div class='col-xs-8 col-xs-offset-2'>
-              <button class='btn btn-primary col-xs-12'>Aceptar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <div class="panel panel-default hidden">
-    <div class="panel-heading" role="tab" id="headingThree">
-      <h1 class="panel-title">
-        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-          Pago por cuotas
-        </a>
-      </h1>
-    </div>
-    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
-      <div class="panel-body">
-        <div class='row'>
-          <div class='col-xs-12 col-lg-4'>
+      <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+        <div class="panel-body">
+          <div class='row'>
             <form action='.' method='post'>
               {% csrf_token %}
-              <input type='hidden' name='payment_mode' value='installments' />
-              <h4>Forma de pago</h4>
-              <select class='btn btn-default col-xs-12 btn-lg' name='payment_method'>
-                {% for payment_kind in payment_kinds %}
-                  <option value='{{ payment_kind.id}}'>
-                    {{ payment_kind.descripcion }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
+              <input type='hidden' name='payment_mode' value='immediate' />
+              {% for payment_kind in payment_kinds %}
+                <button class='btn btn-default col-xs-12 col-sm-6 col-lg-3'
+                        name='payment_method' value='{{ payment_kind.id}}'
+                        type='submit'>
+                  {{ payment_kind.descripcion }}
+                </button>
+              {% endfor %}
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="headingTwo">
+        <h4 class="panel-title">
+          <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            Pago diferido
+          </a>
+        </h4>
+      </div>
+      <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+        <div class="panel-body">
+          <div class='row'>
+            <form action='.' method='post'>
+              {% csrf_token %}
+              <input type='hidden' name='payment_mode' value='deferred' />
+              <div class='col-xs-12 col-sm-6 col-lg-3'>
+                <h4>Forma de pago</h4>
+                <select class='btn btn-default col-xs-12' name='payment_method'>
+                  {% for payment_kind in payment_kinds %}
+                    <option value='{{ payment_kind.id}}'>
+                      {{ payment_kind.descripcion }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class='col-xs-12 col-sm-6 col-lg-3'>
+                <h4>Plazo</h4>
+                <select class='btn btn-default col-xs-12' name='payment_time_to_pay'>
+                  {% for payment_term in deferred.payment_terms %}
+                    <option value='{{payment_term.id}}'>
+                      {{ payment_term.descripcion }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class='col-xs-8 col-xs-offset-2'>
+                &nbsp;
+              </div>
+              <div class='col-xs-8 col-xs-offset-2'>
+                <button class='btn btn-primary col-xs-12'>Aceptar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="panel panel-default hidden">
+      <div class="panel-heading" role="tab" id="headingThree">
+        <h1 class="panel-title">
+          <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            Pago por cuotas
+          </a>
+        </h1>
+      </div>
+      <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+        <div class="panel-body">
+          <div class='row'>
             <div class='col-xs-12 col-lg-4'>
-              <h4>Número de cuotas</h4>
-              <select class='btn btn-default col-xs-12 btn-lg' name='payment_installments'>
-                {% for payment_number_term in dues.payment_number_terms %}
-                  <option value='{{ payment_number_term}}'>
-                    {{ payment_number_term }} cuotas
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class='col-xs-12 col-lg-4'>
-              <h4>Plazo entre cuotas</h4>
-              <select class='btn btn-default col-xs-12 btn-lg' name='payment_time_between_installments'>
-                {% for payment_term in dues.payment_terms %}
-                  <option value='{{payment_term.id}}'>
-                    {{ payment_term.descripcion }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class='col-xs-8 col-xs-offset-2'>
-              &nbsp;
-            </div>
-            <div class='col-xs-8 col-xs-offset-2'>
-              <button class='btn btn-primary col-xs-12 btn-lg'>Aceptar</button>
-            </div>
-          </form>
+              <form action='.' method='post'>
+                {% csrf_token %}
+                <input type='hidden' name='payment_mode' value='installments' />
+                <h4>Forma de pago</h4>
+                <select class='btn btn-default col-xs-12 btn-lg' name='payment_method'>
+                  {% for payment_kind in payment_kinds %}
+                    <option value='{{ payment_kind.id}}'>
+                      {{ payment_kind.descripcion }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class='col-xs-12 col-lg-4'>
+                <h4>Número de cuotas</h4>
+                <select class='btn btn-default col-xs-12 btn-lg' name='payment_installments'>
+                  {% for payment_number_term in dues.payment_number_terms %}
+                    <option value='{{ payment_number_term}}'>
+                      {{ payment_number_term }} cuotas
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class='col-xs-12 col-lg-4'>
+                <h4>Plazo entre cuotas</h4>
+                <select class='btn btn-default col-xs-12 btn-lg' name='payment_time_between_installments'>
+                  {% for payment_term in dues.payment_terms %}
+                    <option value='{{payment_term.id}}'>
+                      {{ payment_term.descripcion }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class='col-xs-8 col-xs-offset-2'>
+                &nbsp;
+              </div>
+              <div class='col-xs-8 col-xs-offset-2'>
+                <button class='btn btn-primary col-xs-12 btn-lg'>Aceptar</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-
 </div>
-
 
 {% endblock %}

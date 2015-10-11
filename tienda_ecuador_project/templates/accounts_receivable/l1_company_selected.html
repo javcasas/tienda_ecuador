@@ -4,13 +4,7 @@
 {% block home_url %}{% url 'company_accounts:company_select' %}{% endblock %}
 
 {% block left_nav_bar %}
-{% if single_punto_emision %}
-    <li><a href="{% url 'proformabill_create' single_punto_emision.id %}" >Nueva proforma</a></li>
-{% else %}
-    {# TODO Ir a punto de emision #}
-{% endif %}
-<li><a href="{% url 'customer_create' company.id %}">Nuevo cliente</a></li>
-<li><a href="{% url 'item_create' company.id %}">Nuevo Artículo</a></li>
+    {# TODO Llenar #}
 {% endblock %}
 
 {% block body_block %}

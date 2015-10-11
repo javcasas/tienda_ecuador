@@ -5,6 +5,8 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
+from util.property import Property, ConvertedProperty
+
 
 Company_ambiente_sri_OPTIONS = (
     ('pruebas', 'Pruebas'),
@@ -69,6 +71,18 @@ def default_licence():
     n.save()
     return n.id
 
+class Issue(object):
+    message = Property()
+    url = Property()
+    level = ConvertedProperty(success=0, info=1, warning=2, danger=3)
+    button_text = Property()
+
+    def __init__(self, level, message, url, button_text='Arreglar'):
+        self.message = message
+        self.level = level
+        self.url = url
+        self.button_text = button_text
+
 
 class Company(models.Model):
     """
@@ -95,6 +109,33 @@ class Company(models.Model):
 
     def get_absolute_url(self):
         return reverse("company_accounts:company_profile", kwargs={'pk': self.pk})
+
+    @property
+    def issues(self):
+        """
+        Makes a list of issues in a given company to be shown
+        """
+        res = []
+        if self.licence.licence == 'demo':
+            res.append(
+                Issue('warning',
+                      'DSSTI Facturas está en modo Demo',
+                      reverse('company_accounts:company_profile_select_plan',
+                              kwargs={'pk': self.id})),
+                      'Seleccionar Plan')
+        elif self.licence.days_to_expiration < 10:
+            res.append(
+                Issue('warning',
+                      'Quedan pocos días para que caduque la licencia de DSSTI Facturas',
+                      reverse('company_accounts:company_profile',
+                              kwargs={'pk': self.id})))
+        elif self.licence.expired:
+            res.append(
+                Issue('danger',
+                      'La licencia de DSSTI Facturas ha caducado',
+                      reverse('company_accounts:company_profile',
+                              kwargs={'pk': self.id})))
+        return res
 
 
 class CompanyUser(models.Model):

@@ -1,0 +1,41 @@
+{% extends 'accounts_receivable/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Cuentas por Cobrar - {{ block.super }}{% endblock %}
+
+{% block body %}
+  {{ block.super }}
+  <div class='col-xs-12 even-section'>
+    <h1>Cuentas por Cobrar</h1>
+    {% if items_por_cobrar %}
+      <table class='table table-hover'>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Factura</th>
+            <th>Por cobrar</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items_por_cobrar %}
+            <tr>
+              <td>{{ item.date }}</td>
+              <td>{{ item.bill.number }}</td>
+              <td>{{ item.qty }}</td>
+              <td>
+                <a href='{# FIXME: url #}' class='btn btn-primary'>Cobrar</a>
+                <a href='{# FIXME: url #}' class='btn btn-default'>Detalle</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No hay cuentas por cobrar</p>
+    {% endif %}
+  </div>
+
+{% endblock %}

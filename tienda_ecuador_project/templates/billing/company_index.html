@@ -7,9 +7,9 @@
 
 {% block body %}
     {{ block.super }}
-    <div class='col-xs-12 even-section'>
+    <div class='col-xs-12'>
 
-        <div class='col-xs-12 col-sm-8 col-md-6'>
+        <div class='col-xs-12 col-md-6 even-section'>
             <h1>Proformas</h1>
             {% include 'billing/proformabill/proformabill_list_table.html' with show_all_items_button=True %}
             {% buttons %}
@@ -21,7 +21,7 @@
             {% endbuttons %}
         </div>
 
-        <div class='col-xs-12 col-sm-8 col-md-6'>
+        <div class='col-xs-12 col-md-6 even-section'>
             <h1>Clientes</h1>
             {% include 'billing/customer/customer_list_table.html' with show_all_items_button=True %}
             {% buttons %}
@@ -29,13 +29,13 @@
             {% endbuttons %}
         </div>
     </div>
-    <div class='col-xs-12 even-section'>
-        <div class='col-md-6'>
+    <div class='col-xs-12'>
+        <div class='col-xs-12 col-md-6 even-section'>
             <h1>Facturas</h1>
             {% include 'billing/bill/bill_list_table.html' with show_all_items_button=True %}
         </div>
 
-        <div class='col-md-6'>
+        <div class='col-xs-12 col-md-6 even-section'>
             <h1>Artículos en venta</h1>
             {% include 'billing/item/item_list_table.html' with show_all_items_button=True %}
             {% buttons %}

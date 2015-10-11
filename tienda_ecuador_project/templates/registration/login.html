@@ -12,7 +12,7 @@
                 <h4>Tengo cuenta en DSSTI Facturas</h4>
             </div>
             <div class='panel-body'>
-                <div style='height:200px; width:100%; position:relative'>
+                <div style='height:300px; width:100%; position:relative'>
                     <form method="post" action="." class='form'>
                     {% csrf_token %}
                     {% bootstrap_form form %}
@@ -34,7 +34,7 @@
                 <h4>No tengo cuenta en DSSTI Facturas</h4>
             </div>
             <div class='panel-body'>
-                <div style='height:200px; width:100%; position:relative'>
+                <div style='height:300px; width:100%; position:relative'>
                     <p style='font-size: 130%'>Crear una cuenta para su negocio es muy sencillo, sólo lleva unos minutos.</p>
                     <a href="{% url 'registration_register' %}"
                        class='btn btn-primary form-control'

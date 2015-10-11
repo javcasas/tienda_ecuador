@@ -16,14 +16,15 @@ from django.forms.models import model_to_dict
 
 import models
 import billing.models
+from company_accounts.views import CompanyView, CompanySelected
 
 tz = pytz.timezone('America/Guayaquil')
 
 
-@login_required
-def index(request):
+class CompanyIndexView(CompanyView,
+                       CompanySelected,
+                       DetailView):
     """
-    Shows an index for the current user
+    View that shows a general index for a given company
     """
-    param_dict = {}
-    return render(request, "accounts_receivable/index.html", param_dict)
+    template_name = 'accounts_receivable/company_index.html'

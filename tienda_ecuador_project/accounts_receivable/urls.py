@@ -4,6 +4,6 @@ from accounts_receivable import views
 urlpatterns = patterns(
     '',
     # Index views
-    url(r'^$',
-        views.index, name='accounts_receivable_index'),
+    url(r'^(?P<pk>[0-9]+)$',
+        views.CompanyIndexView.as_view(), name='accounts_receivable_index'),
 )
