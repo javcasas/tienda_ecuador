@@ -1,8 +1,18 @@
 # -*- coding: utf8 -*-
+import time
 from django import forms
 from company_accounts import models
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
+
+from util import signature
+
+
+sample_xml = """<?xml version="1.0" ?>
+<factura id="comprobante" version="1.1.0">
+</factura>
+"""
 
 
 class CompanyForm(forms.ModelForm):
@@ -25,6 +35,37 @@ class CompanyForm(forms.ModelForm):
         model = models.Company
         fields = ('razon_social', 'nombre_comercial', 'ruc',
                   'direccion_matriz')
+
+
+class CertificateForm(forms.Form):
+    cert = forms.FileField(
+        label='Certificado')
+    cert_key = forms.CharField(
+        widget=forms.PasswordInput,
+        label='Contraseña del Certificado')
+
+    def clean(self):
+        cleaned_data = super(CertificateForm, self).clean()
+        cert_key = cleaned_data['cert_key']
+        cert_data = cleaned_data['cert'].read()
+        # Try signing
+        test_id = "test{}".format(hash(self))
+        try:
+            signature.add_cert(test_id, "test", cert_data, cert_key)
+            if signature.sign(test_id, "test", sample_xml) is None:
+                raise ValidationError(_(u'Contraseña incorrecta'),
+                                      code='invalid_key')
+            else:
+                cleaned_data['cert_data'] = cert_data
+        finally:
+            raised = True
+            while raised:
+                try:
+                    signature.del_cert(test_id, "test")
+                    raised = False
+                except:
+                    time.sleep(0.1)
+        return cleaned_data
 
 
 class LoginForm(AuthenticationForm):

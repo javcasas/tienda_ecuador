@@ -49,6 +49,8 @@ def add_User(**kwargs):
 
 
 def my_populate():
+    u1 = add_User(username='roberto', password='qwerty', email='')
+    u2 = add_User(username='luis', password='qwerty', email='')
     u3, created = User.objects.get_or_create(username='javier')
     u3.set_password("tiaputa")
     u3.is_staff = True
@@ -110,9 +112,7 @@ def my_populate():
     c3 = add_Customer(razon_social=u'María del Mar Orellana', tipo_identificacion='ruc',
                       identificacion="1756760219001", company=t2)
 
-    u1 = add_User(username='roberto', password='qwerty', email='')
     ut1 = add_CompanyUser(user=u1, company=t1)
-    u2 = add_User(username='luis', password='qwerty', email='')
     ut2 = add_CompanyUser(user=u2, company=t2)
     ut3 = add_CompanyUser(user=u3, company=t1)
     ut4 = add_CompanyUser(user=u4, company=t1)

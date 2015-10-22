@@ -6,12 +6,13 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import View
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.core.urlresolvers import reverse
+from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
+from django.core.urlresolvers import reverse, reverse_lazy
 
 import models
 import forms
 from licence_helpers import LicenceControlMixin, valid_licence, licence_required
+from util import signature
 
 
 tz = pytz.timezone('America/Guayaquil')
@@ -180,3 +181,21 @@ class CompanyProfileSelectPlanView(CompanyView, CompanySelected, View):
         except Exception, e:
             print e
             return self.get(request, pk)
+
+
+class CompanyUploadCertView(CompanyView, CompanySelected, FormView):
+    """
+    View that shows a general index for a given company
+    """
+    template_name = "company_accounts/company_upload_cert.html"
+    form_class = forms.CertificateForm
+
+    @property
+    def success_url(self):
+        return reverse("company_accounts:company_profile", args=(self.company.id,))
+
+    def form_valid(self, form):
+        cert_key = form.cleaned_data['cert_key']
+        cert_data = form.cleaned_data['cert_data']
+        signature.add_cert(self.company.ruc, self.company.id, cert_data, cert_key)
+        return super(CompanyUploadCertView, self).form_valid(form)

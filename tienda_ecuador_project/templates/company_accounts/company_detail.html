@@ -20,9 +20,16 @@
             <a href='{% url 'company_accounts:company_profile_update' company.id %}' class='btn btn-primary form-control'>Editar detalles</a>
         </div>
         <div class='col-xs-12'>
-            <table class='table table-hover text-center valign-bottom'>
+            <table class='table table-hover text-center valign-bottom table-vertical-center'>
                 <tr>
-                    <th>Certificado de Firma Electrónica</th><td>{# FIXME Mostrar estado #}</td><td>{# FIXME Boton 'subir certificado' #}</td>
+                    <th>Certificado de Firma Electrónica</th>
+                    {% if company.can_sign %}
+                        <td class='bg-success'>Certificado de firma correcto</td>
+                        <td><a href='{% url 'company_accounts:company_upload_cert' company.id %}' class='btn btn-default'>Subir nuevo certificado</a></td>
+                    {% else %}
+                        <td class='bg-danger text-danger'>No hay certificado de firma</td>
+                        <td><a href='{% url 'company_accounts:company_upload_cert' company.id %}' class='btn btn-primary'>Subir certificado</a></td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <th>Plan de DSSTI Facturas</th>
@@ -32,23 +39,21 @@
                 {% if company.licence.licence != 'demo' %}
                 <tr>
                     <th>Validez de la licencia</th>
-                    {% if company.licence.licence_not_expired %}
-                        <td class='bg-success'>
-                            Licencia válida hasta {{ company.licence.expiration }}
-                        </td>
-                    {% else %}
-                        <td class='bg-danger'>
-                            <span class='text-danger'>
+                    {% if company.licence.expired %}
+                        <td class='bg-danger text-danger'>
                             Licencia caducada
-                            </span>
                         </td>
                         <td>
                             {# FIXME Payment options & payment #}
                         </td>
+                    {% else %}
+                        <td class='bg-success'>
+                            Licencia válida hasta {{ company.licence.expiration }} ({{ company.licence.days_to_expiration}} días)
+                        </td>
                     {% endif %}
                 </tr>
                 {% endif %}
-                <tr>
+                <tr class='hidden'>
                     <th>Control de Contador</th><td>{# FIXME Mostrar estado #}</td><td>{# FIXME Boton 'agregar contador' #}</td>
                 </tr>
             </table>

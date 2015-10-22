@@ -16,4 +16,6 @@ urlpatterns = patterns(
         views.CompanyProfileUpdateView.as_view(), name='company_profile_update'),
     url(r'^(?P<pk>[0-9]+)/profile/select_plan/$',
         views.CompanyProfileSelectPlanView.as_view(), name='company_profile_select_plan'),
+    url(r'^(?P<pk>[0-9]+)/cert/$',
+        views.CompanyUploadCertView.as_view(), name='company_upload_cert'),
 )

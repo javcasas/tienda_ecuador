@@ -377,6 +377,13 @@ class ProformaBillDetailView(ProformaBillView,
     """
     Detail view for proforma bills
     """
+    def get_context_data(self, **kwargs):
+        res = super(ProformaBillDetailView, self).get_context_data(**kwargs)
+        sri_errors = self.request.session.get("sri_errors")
+        if sri_errors:
+            res['sri_errors'] = sri_errors
+            #del self.request.session['sri_errors']
+        return res
 
 
 class ProformaBillDetailViewTable(ProformaBillView,
@@ -485,79 +492,117 @@ class ProformaBillDeleteView(ProformaBillView,
 class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_emit'
 
+    def get_context_data(self, **kwargs):
+        res = super(ProformaBillEmitView, self).get_context_data(**kwargs)
+        try:
+            res['msgs'] = self.error_messages
+        except:
+            pass
+        return res
+
     def post(self, request, pk):
+        # Increment sequentials
         proforma = self.get_object()
         if proforma.secuencial == 0:
             proforma.secuencial = proforma.punto_emision.siguiente_secuencial
             proforma.punto_emision.siguiente_secuencial += 1
-        proforma.save()
-        proforma.punto_emision.save()
+            proforma.save()
+            proforma.punto_emision.save()
+        # FIXME
+        # Generate and sign XML
+        xml_data = gen_xml(request, proforma)
+        with open("res.txt", "w") as f:
+            f.write(xml_data)
+        # Send XML to SRI 
+        from util import sri_sender
+        result = sri_sender.enviar_comprobante(xml_data)
+        if result.estado == 'DEVUELTA':
+            errors = []
+            for error in result.comprobantes.comprobante[0].mensajes.mensaje:
+                converted = {}
+                for key in ['tipo', 'identificador', 'mensaje', 'informacionAdicional']:
+                    converted[key] = getattr(error, key)
+                errors.append(converted)
+            request.session['sri_errors'] = errors
+            return redirect("proformabill_detail", proforma.id)
+        return HttpResponse(str(result))
+        # If response is good:
+            # convert to bill
+            # generate RIDE
+            # redirect to bill
+        # else:
+            # print errors
         return HttpResponse("ok")
+
+
+
+def gen_xml(request, proformabill):
+    company = proformabill.punto_emision.establecimiento.company
+
+    context = {
+        'proformabill': proformabill,
+        'company': company,
+    }
+    info_tributaria = {}
+    info_tributaria['ambiente'] = {
+        'pruebas': '1',
+        'produccion': '2'
+    }[company.ambiente_sri]
+
+    info_tributaria['tipo_emision'] = '1'   # 1: normal
+                                            # 2: indisponibilidad sistema
+    info_tributaria['cod_doc'] = '01'   # 01: factura
+                                        # 04: nota de credito
+                                        # 05: nota de debito
+                                        # 06: guia de remision
+                                        # 07: comprobante de retencion
+    c = ClaveAcceso()
+    proformabill.date = proformabill.date.astimezone(
+        pytz.timezone('America/Guayaquil'))
+    c.fecha_emision = (proformabill.date.year,
+                       proformabill.date.month,
+                       proformabill.date.day)
+    c.tipo_comprobante = "factura"
+    c.ruc = str(company.ruc)
+    c.ambiente = company.ambiente_sri
+    c.serie = 23013   # FIXME
+    c.numero = proformabill.secuencial
+    c.codigo = 17907461  # FIXME
+    c.tipo_emision = "normal"
+    info_tributaria['clave_acceso'] = unicode(c)
+
+    context['info_tributaria'] = info_tributaria
+
+    info_factura = {}
+    info_factura['tipo_identificacion_comprador'] = {    # tabla 7
+        'ruc': '04',
+        'cedula': '05',
+        'pasaporte': '06',
+        'consumidor_final': '07',
+        'exterior': '08',
+        'placa': '09',
+    }[proformabill.issued_to.tipo_identificacion]
+    info_factura['total_descuento'] = 0     # No hay descuentos
+    info_factura['propina'] = 0             # No hay propinas
+    info_factura['moneda'] = 'DOLAR'
+    context['info_factura'] = info_factura
+
+    response = render(request, "billing/proformabill_xml.html", context)
+
+    xml_content = response.content
+    # sign xml_content
+    return signature.sign(company.ruc, company.id, xml_content)
 
 
 @licence_required('basic', 'professional', 'enterprise')
 class ProformaBillEmitGenXMLView(ProformaBillView,
                                  PuntoEmisionSelected,
-                                 DetailView):
-    template_name_suffix = '_xml'
+                                 View):
 
-    def get_context_data(self, **kwargs):
-        context = super(self.__class__, self).get_context_data(**kwargs)
-
-        info_tributaria = {}
-        info_tributaria['ambiente'] = {
-            'pruebas': '1',
-            'produccion': '2'
-        }[self.company.ambiente_sri]
-
-        info_tributaria['tipo_emision'] = '1'   # 1: normal
-                                                # 2: indisponibilidad sistema
-        info_tributaria['cod_doc'] = '01'   # 01: factura
-                                            # 04: nota de credito
-                                            # 05: nota de debito
-                                            # 06: guia de remision
-                                            # 07: comprobante de retencion
-        proformabill = context['proformabill']
-
-        c = ClaveAcceso()
-        proformabill.date = proformabill.date.astimezone(
-            pytz.timezone('America/Guayaquil'))
-        c.fecha_emision = (proformabill.date.year,
-                           proformabill.date.month,
-                           proformabill.date.day)
-        c.tipo_comprobante = "factura"
-        c.ruc = str(self.company.ruc)
-        c.ambiente = self.company.ambiente_sri
-        c.serie = 23013   # FIXME
-        c.numero = proformabill.secuencial
-        c.codigo = 17907461  # FIXME
-        c.tipo_emision = "normal"
-        info_tributaria['clave_acceso'] = unicode(c)
-
-        context['info_tributaria'] = info_tributaria
-
-        info_factura = {}
-        info_factura['tipo_identificacion_comprador'] = {    # tabla 7
-            'ruc': '04',
-            'cedula': '05',
-            'pasaporte': '06',
-            'consumidor_final': '07',
-            'exterior': '08',
-            'placa': '09',
-        }[context['proformabill'].issued_to.tipo_identificacion]
-        info_factura['total_descuento'] = 0     # No hay descuentos
-        info_factura['propina'] = 0             # No hay propinas
-        info_factura['moneda'] = 'DOLAR'
-        context['info_factura'] = info_factura
-        return context
-
-    def render_to_response(self, context, **kwargs):
-        res = super(self.__class__, self).render_to_response(context, **kwargs)
-        res.render()
-        xml_content = res.content
-        # sign xml_content
-        res.content = signature.sign_data(xml_content, base64.b64decode(self.company.cert), self.company.key)
-        return res
+    def get(self, request, pk):
+        proformabill = self.get_queryset().get(id=pk)
+        xml = gen_xml(request, proformabill)
+        return HttpResponse(xml)
 
 
 #############################################################

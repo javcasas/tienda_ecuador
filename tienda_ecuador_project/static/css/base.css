@@ -152,3 +152,15 @@ div.footer hr {
     font-size: 16px;
     font-weight: bold;
 }
+
+table.table-vertical-center tr td, table.table-vertical-center tr th {
+    vertical-align: middle;
+}    
+
+.spaced-top {
+    margin-top: 2em;
+}
+
+form.spaced-bottom {
+    padding-bottom: 2em;
+}

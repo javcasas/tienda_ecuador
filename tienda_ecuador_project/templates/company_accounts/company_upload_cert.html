@@ -1,0 +1,22 @@
+{% extends 'company_accounts/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Subir Certificado de Firma - {{ block.super }}{% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12 even-section'>
+        <h1>Subir Certificado de Firma</h1>
+        <p>Para poder emitir comprobantes electrónicos válidos y aceptados por el SRI, deben estar firmados con su certificado electrónico. Puede obtener dicho certificado en el Banco Central del Ecuador.
+        </p>
+        <form class='form col-lg-offset-2 col-lg-8' action='.' method='post' enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type='submit' class='btn btn-primary col-xs-6'>Subir certificado</button>
+            <a href='{% url "company_accounts:company_profile" company.id %}' class='btn btn-default col-xs-6'>Cancelar</a>
+        </form>
+    </div>
+
+{% endblock %}
