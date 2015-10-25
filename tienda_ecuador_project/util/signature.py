@@ -2,6 +2,11 @@ import zmq
 import base64
 
 
+class Timeout(Exception):
+    """
+    Raised when an operation times out
+    """
+
 context = zmq.Context()
 
 
@@ -12,6 +17,8 @@ def request(cmd, server="tcp://localhost:5555", timeout=2000):
         socket.connect(server)
         socket.send(cmd)
         return socket.recv()
+    except zmq.Again:
+        raise Timeout()
     finally:
         socket.setsockopt(zmq.LINGER, 100)
         socket.close()

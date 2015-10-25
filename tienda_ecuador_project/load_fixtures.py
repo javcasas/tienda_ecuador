@@ -40,7 +40,7 @@ def load_fixture(fn):
             module, class_ = class_.split(".")
             model = try_load(module, class_)
             m = model(pk=pk, **params)
-            print "    ", m
+            print "    ", type(m), m
             m.save()
             res.append(m)
     return res

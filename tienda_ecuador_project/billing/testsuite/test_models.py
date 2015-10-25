@@ -92,7 +92,6 @@ base_data = {
     },
     'Ice': {
         'descripcion': "Bebidas gaseosas",
-        'grupo': 1,
         'codigo': '3051',
         'porcentaje': 50.0,
     },
@@ -337,7 +336,7 @@ class ItemTests(TestCase, TestHelpersMixin):
         """
         iva = add_instance(Iva, descripcion="12%", codigo="12", porcentaje=12)
         ice = add_instance(Ice, descripcion="Gaseosas",
-                           codigo="145", grupo=1, porcentaje=50)
+                           codigo="145", porcentaje=50)
         proforma = ItemInBill(
             sku="1234", name="asdf", description="asdf", unit_cost=10,
             unit_price=10, qty=6)
@@ -609,7 +608,6 @@ class IceTests(TestCase, TestHelpersMixin):
     def setUp(self):
         self.ice = add_instance(Ice,
                                 descripcion="Gaseosas",
-                                grupo=3,
                                 codigo="asdf",
                                 porcentaje=50)
 
@@ -617,5 +615,5 @@ class IceTests(TestCase, TestHelpersMixin):
         self.assertTrue(self.ice)
         self.assertFalse(
             add_instance(Ice,
-                         descripcion="No ICE", grupo=0,
+                         descripcion="No ICE",
                          codigo="", porcentaje=0))

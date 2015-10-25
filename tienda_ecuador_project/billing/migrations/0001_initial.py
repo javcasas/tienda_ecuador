@@ -179,7 +179,6 @@ class Migration(migrations.Migration):
             name='Ice',
             fields=[
                 ('tax_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.Tax')),
-                ('grupo', models.IntegerField()),
             ],
             options={
             },

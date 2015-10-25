@@ -119,7 +119,10 @@ class Company(models.Model):
 
     @property
     def can_sign(self):
-        return signature.has_cert(self.ruc, self.id)
+        try:
+            return signature.has_cert(self.ruc, self.id)
+        except signature.Timeout:
+            return False
 
     @property
     def issues(self):

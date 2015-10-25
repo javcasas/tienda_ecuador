@@ -324,8 +324,6 @@ class Ice(Tax):
     """
     Representa el ICE
     """
-    grupo = models.IntegerField()
-
     def __nonzero__(self):
         return self.descripcion != "No ICE"
 
