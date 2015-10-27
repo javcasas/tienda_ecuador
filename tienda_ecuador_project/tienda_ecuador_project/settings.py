@@ -25,7 +25,7 @@ SECRET_KEY = '$_#46wab876m+$%*)n!=2bf5+7xvi8(!-p@(b2+!0-dd_brfm$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['facturas.dssti.com', 'facturacion.dssti.com', ]
 
 
 # Application definition

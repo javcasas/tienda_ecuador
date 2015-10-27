@@ -1,0 +1,7 @@
+django
+django-registration-redux
+django-bootstrap3
+pyyaml
+zmq
+Pillow
+pytz
