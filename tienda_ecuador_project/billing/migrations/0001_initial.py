@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 from decimal import Decimal
-import billing.models
 
 
 class Migration(migrations.Migration):
@@ -60,11 +59,14 @@ class Migration(migrations.Migration):
             name='Bill',
             fields=[
                 ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
+                ('numero_autorizacion', models.CharField(max_length=50)),
+                ('fecha_autorizacion', models.DateTimeField()),
+                ('ambiente_sri', models.CharField(max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
                 ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
             },
-            bases=(billing.models.ReadOnlyMixin, 'billing.basebill'),
+            bases=('billing.basebill',),
         ),
         migrations.CreateModel(
             name='Customer',

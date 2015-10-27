@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from util.property import Property, ConvertedProperty
 from util.validators import IsCedula, IsRuc
 
-from company_accounts.models import Company, PuntoEmision
+from company_accounts.models import Company, PuntoEmision, ambiente_sri_OPTIONS
 
 
 class ReadOnlyObject(Exception):
@@ -124,22 +124,25 @@ class BaseBill(models.Model):
             return False
 
 
-class Bill(ReadOnlyMixin, BaseBill):
+class Bill(BaseBill):
     """
     Represents a bill
     """
     company = models.ForeignKey(Company)
-
-    copy_from_fields = ['number', 'date', 'xml_content', 'ride_content']
+    numero_autorizacion = models.CharField(max_length=50)
+    fecha_autorizacion = models.DateTimeField()
+    ambiente_sri = models.CharField(
+        max_length=20,
+        choices=ambiente_sri_OPTIONS)
 
     @classmethod
     def fromProformaBill(cls, proforma):
+        copy_from_fields = ['date', ]
         data = {}
         for field in cls.copy_from_fields:
             data[field] = getattr(proforma, field)
         data['company'] = proforma.punto_emision.establecimiento.company
-        new = Bill(**data)
-        new.secret_save()
+        new = cls(**data)
         return new
 
 
@@ -154,7 +157,8 @@ class ClaveAcceso(object):
 
     fecha_emision = Property(fecha_emision_validator)
     ruc = Property()
-    serie = Property()
+    establecimiento = Property()
+    punto_emision = Property()
     numero = Property()
     codigo = Property()
 
@@ -182,7 +186,8 @@ class ClaveAcceso(object):
                   self.tipo_comprobante.code +
                   self.ruc +
                   self.ambiente.code +
-                  "{:06d}".format(self.serie) +
+                  "{:03d}".format(self.establecimiento) +
+                  "{:03d}".format(self.punto_emision) +
                   "{:09d}".format(self.numero) +
                   "{:08d}".format(self.codigo) +
                   self.tipo_emision.code)
@@ -423,8 +428,11 @@ class ItemInBill(BaseItem):
 
     @property
     def valor_ice(self):
-        return (self.total_sin_impuestos *
-                (self.ice.porcentaje / Decimal("100.0")))
+        if self.ice:
+            return (self.total_sin_impuestos *
+                    (self.ice.porcentaje / Decimal("100.0")))
+        else:
+            return Decimal(0)
 
     @property
     def valor_iva(self):

@@ -9,7 +9,7 @@ from util.property import Property, ConvertedProperty
 from util import signature
 
 
-Company_ambiente_sri_OPTIONS = (
+ambiente_sri_OPTIONS = (
     ('pruebas', 'Pruebas'),
     ('produccion', 'Producción')
 )
@@ -73,11 +73,6 @@ def default_licence():
     return n.id
 
 class Issue(object):
-    message = Property()
-    url = Property()
-    level = ConvertedProperty(success=0, info=1, warning=2, danger=3)
-    button_text = Property()
-
     def __init__(self, level, message, url, button_text='Arreglar'):
         self.message = message
         self.level = level
@@ -87,7 +82,7 @@ class Issue(object):
     def __unicode__(self):
         return u"{} - {}".format(self.level, self.message)
 
-    def __str__(self):
+    def __repr__(self):
         return "<issue {}>".format(self.__unicode__().encode("ascii", "replace"))
 
 
@@ -101,10 +96,6 @@ class Company(models.Model):
     direccion_matriz = models.CharField(max_length=100)
     contribuyente_especial = models.CharField(max_length=20, blank=True)
     obligado_contabilidad = models.BooleanField(default=False)
-    ambiente_sri = models.CharField(
-        max_length=20,
-        choices=Company_ambiente_sri_OPTIONS,
-        default="pruebas")
     licence = models.ForeignKey(Licence, default=default_licence)
     siguiente_numero_proforma = models.IntegerField(default=1)
     logo = models.ImageField(upload_to='company_logos', blank=True)
@@ -191,6 +182,10 @@ class PuntoEmision(models.Model):
     codigo = models.CharField(max_length=3)
     siguiente_secuencial_pruebas = models.IntegerField(default=1)
     siguiente_secuencial_produccion = models.IntegerField(default=1)
+    ambiente_sri = models.CharField(
+        max_length=20,
+        choices=ambiente_sri_OPTIONS,
+        default="pruebas")  # FIXME: default=produccion
 
     @property
     def siguiente_secuencial(self):

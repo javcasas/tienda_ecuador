@@ -23,13 +23,24 @@
 
 
 <div class='col-xs-12'>
-{% for error in sri_errors %}
+
+  {% if proformabill.punto_emision.ambiente_sri == 'pruebas' %}
+    <div class="alert alert-danger" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span></button>
+        <strong>Entorno Pruebas</strong> El sistema está configurado para emitir facturas en el entorno de Pruebas.
+        La factura no será válida.
+    </div>
+  {% endif %}
+
+  {% for error in sri_errors %}
     <div class="alert alert-danger alert-dismissible" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span></button>
         <strong>{{ error.tipo }}</strong> (#{{error.identificador}}) {{ error.mensaje }} - {{ error.informacionAdicional }} 
     </div>
-{% endfor %}
+  {% endfor %}
+
   <div class='panel panel-default'>
     <div class='panel-heading'>
       <h2 class='panel-title'>Factura</h2>
@@ -138,8 +149,15 @@
         <h2 class='panel-title'>Acciones</h2>
     </div>
     <div class='panel-body'>
+      {% if company.can_sign %}
       <a href="{% url "proformabill_emit_to_bill" proformabill.id %}"
          class='btn btn-primary col-xs-12'>Emitir Proforma como Factura Real</a>
+      {% else %}
+      <p>No hay certificado de firma. No es posible emitir facturas hasta que no se suba un certificado de firma</p>
+      <a href="{% url "company_accounts:company_upload_cert" company.id %}"
+         class='btn btn-warning col-xs-12'>Subir Certificado de Firma</a>
+      {% endif %}
+        
       <a href="{% url "proformabill_delete" proformabill.id %}"
          class='btn btn-danger col-xs-12 spacer'>Eliminar Proforma</a>
     </div>

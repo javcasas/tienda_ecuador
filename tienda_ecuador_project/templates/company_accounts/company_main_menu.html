@@ -7,6 +7,7 @@
 
 {% block body %}
     {{ block.super }}
+
     <div class='col-xs-12'>
         {% for issue in company.issues %}
             <div class='alert alert-{{ issue.level }}' role='alert'>

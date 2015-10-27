@@ -511,25 +511,55 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
         # FIXME
         # Generate and sign XML
         xml_data = gen_xml(request, proforma)
-        with open("res.txt", "w") as f:
+        proforma.xml_content = xml_data
+        proforma.save()
+        with file("res.txt", "w") as f:
+            print type(xml_data)
             f.write(xml_data)
         # Send XML to SRI 
         from util import sri_sender
         result = sri_sender.enviar_comprobante(xml_data)
-        if result.estado == 'DEVUELTA':
+        def convert_messages(messages):
             errors = []
-            for error in result.comprobantes.comprobante[0].mensajes.mensaje:
+            for error in messages:
                 converted = {}
                 for key in ['tipo', 'identificador', 'mensaje', 'informacionAdicional']:
                     converted[key] = getattr(error, key)
                 errors.append(converted)
-            request.session['sri_errors'] = errors
+            return errors
+
+        if result.estado == 'DEVUELTA':
+            request.session['sri_errors'] = convert_messages(result.comprobantes.comprobante[0].mensajes.mensaje)
             return redirect("proformabill_detail", proforma.id)
-        return HttpResponse(str(result))
-        # If response is good:
-            # convert to bill
-            # generate RIDE
-            # redirect to bill
+        else:
+            validar_result = None
+            for i in range(5):
+                validar_result = sri_sender.validar_comprobante(clave_acceso)
+                try:
+                    if validar_result.autorizacion[0].estado in ['AUTORIZADO', 'NO AUTORIZADO']:
+                        break
+                except:
+                    pass
+                import time
+                time.sleep(1)
+            if validar_result.autorizacion[0].estado == 'AUTORIZADO':
+                # convert to bill
+                new = models.Bill.fromProformaBill(proforma)
+                new.numero_autorizacion = validar_result.autorizacion[0].numeroAutorizacion
+                new.fecha_autorizacion = validar_result.autorizacion[0].fechaAutorizacion
+                new.xml_content = validar_result.autorizacion[0].comprobante
+                new.save()
+                # generate RIDE
+                
+                # Remove proforma
+                for item in proforma.items:
+                    item.delete()
+                proforma.delete()
+                # redirect to bill
+                pass
+            else:
+                request.session['sri_errors'] = convert_messages(validar_result.autorizacion[0].mensajes.mensaje)
+                
         # else:
             # print errors
         return HttpResponse("ok")
@@ -547,7 +577,7 @@ def gen_xml(request, proformabill):
     info_tributaria['ambiente'] = {
         'pruebas': '1',
         'produccion': '2'
-    }[company.ambiente_sri]
+    }[proformabill.punto_emision.ambiente_sri]
 
     info_tributaria['tipo_emision'] = '1'   # 1: normal
                                             # 2: indisponibilidad sistema
@@ -565,7 +595,8 @@ def gen_xml(request, proformabill):
     c.tipo_comprobante = "factura"
     c.ruc = str(company.ruc)
     c.ambiente = company.ambiente_sri
-    c.serie = 23013   # FIXME
+    c.establecimiento = int(proformabill.punto_emision.establecimiento.codigo)
+    c.punto_emision = int(proformabill.punto_emision.codigo)
     c.numero = proformabill.secuencial
     c.codigo = 17907461  # FIXME
     c.tipo_emision = "normal"

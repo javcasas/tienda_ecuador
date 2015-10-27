@@ -70,6 +70,7 @@
         </detalle>
         {% endfor %}
     </detalles>
+    {% if retenciones %}
     <retenciones>
         {% for retencion in retenciones %}
         <retencion>
@@ -80,6 +81,7 @@
         </retencion>
         {% endfor %}
     </retenciones>
+    {% endif %}
     {% if info_adicional %}
     <infoAdicional>
         {% for k,v in info_adicional %}

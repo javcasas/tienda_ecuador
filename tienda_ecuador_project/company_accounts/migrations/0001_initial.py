@@ -24,7 +24,6 @@ class Migration(migrations.Migration):
                 ('direccion_matriz', models.CharField(max_length=100)),
                 ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
                 ('obligado_contabilidad', models.BooleanField(default=False)),
-                ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
                 ('siguiente_numero_proforma', models.IntegerField(default=1)),
                 ('logo', models.ImageField(upload_to=b'company_logos', blank=True)),
                 ('cert', models.CharField(max_length=20000, blank=True)),
@@ -78,6 +77,7 @@ class Migration(migrations.Migration):
                 ('codigo', models.CharField(max_length=3)),
                 ('siguiente_secuencial_pruebas', models.IntegerField(default=1)),
                 ('siguiente_secuencial_produccion', models.IntegerField(default=1)),
+                ('ambiente_sri', models.CharField(default=b'pruebas', max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
                 ('establecimiento', models.ForeignKey(to='company_accounts.Establecimiento')),
             ],
             options={
