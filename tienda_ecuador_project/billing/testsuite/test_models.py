@@ -47,7 +47,6 @@ base_data = {
         "razon_social": "Paco Pil",
         "direccion_matriz": "C del pepino",
         "contribuyente_especial": "",
-        "ambiente_sri": "pruebas",
         'siguiente_numero_proforma': 4,
         'cert': '',
         'key': '',
@@ -135,9 +134,13 @@ class FieldsTests(TestCase, TestHelpersMixin):
                    punto_emision=self.punto_emision,
                    issued_to=self.customer))
 
-        self.bill = add_Bill(
-            **dict(base_data['BaseBill'],
-                   company=self.company))
+        self.bill = add_instance(
+            models.Bill,
+            company=self.company,
+            fecha_autorizacion=date(2015, 5, 1),
+            numero_autorizacion='12342423423',
+            ambiente_sri='pruebas',
+            **base_data['BaseBill'])
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
         self.ice = add_instance(Ice, **dict(base_data['Ice']))
@@ -164,7 +167,10 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'punto_emision': self.punto_emision,
                  'issued_to': self.customer}),
             (Bill, base_data['BaseBill'],
-                {'company': self.company}),
+                {'company': self.company,
+                 'fecha_autorizacion': datetime(2015, 5, 1, tzinfo=pytz.timezone('America/Guayaquil')),
+                 'numero_autorizacion': '12342423423',
+                 'ambiente_sri': 'pruebas'}),
             (Item, base_data['BaseItem'],
                 {"company": self.company,
                  }),
@@ -223,45 +229,6 @@ class UnicodeTests(TestCase, TestHelpersMixin):
                                  data['unidad_tiempo']))
 
 
-class ReadOnlyTests(TestCase, TestHelpersMixin):
-    """
-    Test that checks that a final model can be created,
-    but not modified
-    """
-    def setUp(self):
-        self.company = Company.objects.get_or_create(**base_data['Company'])[0]
-        self.tests = [
-            (Bill,
-                {'number': '3',
-                 'date': get_date(),
-                 'company': self.company})
-        ]
-
-    def test_update_disabled(self):
-        '''
-        Ensures save and delete fails for read only classes
-        '''
-        for cls, data in self.tests:
-            ob = cls(**data)
-            ob.save()
-            with self.assertRaises(ReadOnlyObject):
-                ob.save()
-            with self.assertRaises(ReadOnlyObject):
-                ob.delete()
-
-    def test_secret_methods(self):
-        '''
-        Ensures secret_save and secret_delete works
-        '''
-        for cls, data in self.tests:
-            ob = cls(**data)
-            ob.save()
-            ob.secret_save()
-            ob.secret_delete()
-            with self.assertRaises(cls.DoesNotExist):
-                cls.objects.get(id=ob.id)
-
-
 class CompanyUserTests(TestCase, TestHelpersMixin):
     def setUp(self):
         self.company = add_Company(**base_data['Company'])
@@ -304,9 +271,9 @@ class ProformaToFinalTests(TestCase, TestHelpersMixin):
             number='3')
         proforma.save()
         bill = Bill.fromProformaBill(proforma)
-        for field in ['number', 'date', 'xml_content', 'ride_content']:
-            v1 = getattr(bill, field)
-            v2 = getattr(proforma, field)
+        for field in ['date', ]:
+            v1 = getattr(proforma, field)
+            v2 = getattr(bill, field)
             self.assertEquals(
                 v1, v2,
                 "Field '{}' is different: {} != {}".format(
@@ -572,7 +539,8 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         c.tipo_comprobante = "factura"
         c.ruc = "1790746119001"
         c.ambiente = "produccion"
-        c.serie = 23013
+        c.establecimiento = 23
+        c.punto_emision = 13
         c.numero = 174
         c.codigo = 17907461
         c.tipo_emision = "normal"

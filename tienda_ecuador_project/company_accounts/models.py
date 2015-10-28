@@ -189,7 +189,7 @@ class PuntoEmision(models.Model):
 
     @property
     def siguiente_secuencial(self):
-        ambiente = self.establecimiento.company.ambiente_sri
+        ambiente = self.ambiente_sri
         if ambiente == 'pruebas':
             return self.siguiente_secuencial_pruebas
         elif ambiente == 'produccion':
@@ -199,7 +199,7 @@ class PuntoEmision(models.Model):
 
     @siguiente_secuencial.setter
     def siguiente_secuencial(self, newval):
-        ambiente = self.establecimiento.company.ambiente_sri
+        ambiente = self.ambiente_sri
         if ambiente == 'pruebas':
             self.siguiente_secuencial_pruebas = newval
         elif ambiente == 'produccion':

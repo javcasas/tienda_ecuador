@@ -513,9 +513,6 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
         xml_data = gen_xml(request, proforma)
         proforma.xml_content = xml_data
         proforma.save()
-        with file("res.txt", "w") as f:
-            print type(xml_data)
-            f.write(xml_data)
         # Send XML to SRI 
         from util import sri_sender
         result = sri_sender.enviar_comprobante(xml_data)
@@ -594,7 +591,7 @@ def gen_xml(request, proformabill):
                        proformabill.date.day)
     c.tipo_comprobante = "factura"
     c.ruc = str(company.ruc)
-    c.ambiente = company.ambiente_sri
+    c.ambiente = proformabill.punto_emision.ambiente_sri
     c.establecimiento = int(proformabill.punto_emision.establecimiento.codigo)
     c.punto_emision = int(proformabill.punto_emision.codigo)
     c.numero = proformabill.secuencial

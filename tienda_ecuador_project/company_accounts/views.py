@@ -199,3 +199,26 @@ class CompanyUploadCertView(CompanyView, CompanySelected, FormView):
         cert_data = form.cleaned_data['cert_data']
         signature.add_cert(self.company.ruc, self.company.id, cert_data, cert_key)
         return super(CompanyUploadCertView, self).form_valid(form)
+
+
+######################
+# PuntoEmision views #
+######################
+class PuntoEmisionView(object):
+    model = models.PuntoEmision
+    context_object_name = 'punto_emision'
+
+    @property
+    def punto_emision_id(self):
+        return self.kwargs["pk"]
+
+
+class PuntoEmisionDetailView(PuntoEmisionView, PuntoEmisionSelected, DetailView):
+    """
+    View that shows a general index for a given punto_emision
+    """
+
+class PuntoEmisionUpdateView(PuntoEmisionView, PuntoEmisionSelected, UpdateView):
+    """
+    View that shows a general index for a given punto_emision
+    """

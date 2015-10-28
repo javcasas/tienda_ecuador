@@ -1,45 +1,87 @@
 from django.test import TestCase
-from util.property import Property, ConvertedProperty
+from util.property import Property, ConvertedProperty, ProtectedSetattr
 
 
 class PropertyTests(TestCase):
     """
     Tests for Property
     """
-    good = Property(lambda x: True)
-    bad = Property(lambda x: False)
-    default = Property()
+    class TestClass(object):
+        good = Property(lambda x: True)
+        bad = Property(lambda x: False)
+        default = Property()
 
     def test_good(self):
-        self.good = 4
-        self.assertEquals(self.good, 4)
+        new = self.TestClass()
+        new.good = 4
+        self.assertEquals(new.good, 4)
 
     def test_bad(self):
+        new = self.TestClass()
         with self.assertRaises(ValueError):
-            self.bad = 6
+            new.bad = 6
         with self.assertRaises(AttributeError):
-            self.bad
+            new.bad
 
     def test_default(self):
-        self.default = 4
-        self.assertEquals(self.default, 4)
+        new = self.TestClass()
+        new.default = 4
+        self.assertEquals(new.default, 4)
+
+    def test_multiple(self):
+        new = self.TestClass()
+        other = self.TestClass()
+        new.good = 4
+        self.assertEquals(new.good, 4)
+        with self.assertRaises(AttributeError):
+            other.good
 
 
 class ConvertedPropertyTests(TestCase):
     """
     Tests for ConvertedProperty
     """
-    v = ConvertedProperty(one=1, two=2, three=3)
+    class TestClass(object):
+        v = ConvertedProperty(one=1, two=2, three=3)
 
     def test_set(self):
-        self.v = "one"
-        self.assertEquals(self.v, "one")
+        new = self.TestClass()
+        new.v = "one"
+        self.assertEquals(new.v, "one")
 
     def test_invalid_set(self):
+        new = self.TestClass()
         with self.assertRaises(ValueError):
-            self.v = "nein"
+            new.v = "nein"
 
     def test_code(self):
-        self.v = "one"
-        self.assertEquals(self.v.code, 1)
-        self.assertEquals(set(self.v.options), {'one', 'two', 'three'})
+        new = self.TestClass()
+        new.v = "one"
+        self.assertEquals(new.v.code, 1)
+        self.assertEquals(set(new.v.options), {'one', 'two', 'three'})
+
+    def test_multiple(self):
+        new = self.TestClass()
+        other = self.TestClass()
+        new.v = 'one'
+        self.assertEquals(new.v, 'one')
+        with self.assertRaises(AttributeError):
+            other.v
+
+
+class ProtectedSetattrTests(TestCase):
+    """
+    Tests for Property
+    """
+    class TestClass(ProtectedSetattr):
+        good = Property(lambda x: True)
+
+    def test_good(self):
+        new = self.TestClass()
+        new.good = 4
+        self.assertEquals(new.good, 4)
+
+    def test_not_found(self):
+        new = self.TestClass()
+        with self.assertRaises(AttributeError):
+            new.b = 3

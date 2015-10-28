@@ -18,4 +18,10 @@ urlpatterns = patterns(
         views.CompanyProfileSelectPlanView.as_view(), name='company_profile_select_plan'),
     url(r'^(?P<pk>[0-9]+)/cert/$',
         views.CompanyUploadCertView.as_view(), name='company_upload_cert'),
+
+    # PuntoEmision
+    url(r'^punto_emision/(?P<pk>[0-9]+)/$',
+        views.PuntoEmisionDetailView.as_view(), name='punto_emision_detail'),
+    url(r'^punto_emision/(?P<pk>[0-9]+)/edit/$',
+        views.PuntoEmisionUpdateView.as_view(), name='punto_emision_update'),
 )

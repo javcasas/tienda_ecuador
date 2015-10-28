@@ -26,7 +26,6 @@ base_data = {
         "razon_social": "Paco Pil",
         "direccion_matriz": "C del pepino",
         "contribuyente_especial": "",
-        "ambiente_sri": "pruebas",
         'siguiente_numero_proforma': 4,
         'cert': '',
         'key': '',

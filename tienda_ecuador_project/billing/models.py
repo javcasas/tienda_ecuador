@@ -6,7 +6,7 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 
-from util.property import Property, ConvertedProperty
+from util.property import Property, ConvertedProperty, ProtectedSetattr
 from util.validators import IsCedula, IsRuc
 
 from company_accounts.models import Company, PuntoEmision, ambiente_sri_OPTIONS
@@ -139,14 +139,14 @@ class Bill(BaseBill):
     def fromProformaBill(cls, proforma):
         copy_from_fields = ['date', ]
         data = {}
-        for field in cls.copy_from_fields:
+        for field in copy_from_fields:
             data[field] = getattr(proforma, field)
         data['company'] = proforma.punto_emision.establecimiento.company
         new = cls(**data)
         return new
 
 
-class ClaveAcceso(object):
+class ClaveAcceso(ProtectedSetattr):
     def fecha_emision_validator(v):
         try:
             y, m, d = v
@@ -280,7 +280,7 @@ class ProformaBill(BaseBill):
 
     @property
     def secuencial(self):
-        ambiente = self.punto_emision.establecimiento.company.ambiente_sri
+        ambiente = self.punto_emision.ambiente_sri
         if ambiente == 'pruebas':
             return self.secuencial_pruebas
         elif ambiente == 'produccion':
@@ -290,7 +290,7 @@ class ProformaBill(BaseBill):
 
     @secuencial.setter
     def secuencial(self, newval):
-        ambiente = self.punto_emision.establecimiento.company.ambiente_sri
+        ambiente = self.punto_emision.ambiente_sri
         if ambiente == 'pruebas':
             self.secuencial_pruebas = newval
         elif ambiente == 'produccion':

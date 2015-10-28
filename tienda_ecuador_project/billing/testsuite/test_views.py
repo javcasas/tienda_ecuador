@@ -939,10 +939,10 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                                      **self.customer_data)
         self.establecimiento = add_instance(company_accounts.models.Establecimiento,
                                             company=self.company,
-                                            codigo='001')
+                                            codigo='023')
         self.punto_emision = add_instance(models.PuntoEmision,
                                           establecimiento=self.establecimiento,
-                                          codigo='001',
+                                          codigo='013',
                                           siguiente_secuencial_pruebas=10,
                                           siguiente_secuencial_produccion=14)
         self.proformabill = add_instance(
@@ -1042,10 +1042,10 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 "{:09}".format(proforma.secuencial_pruebas),
                 "17907461",
                 "1",
-                "8"]),
+                "7"]),
             "./infoTributaria/codDoc": "01",  # factura
-            "./infoTributaria/estab": "001",
-            "./infoTributaria/ptoEmi": "001",
+            "./infoTributaria/estab": "023",
+            "./infoTributaria/ptoEmi": "013",
             "./infoTributaria/secuencial":
                 z9(proforma.secuencial_pruebas),
             "./infoTributaria/dirMatriz": self.company.direccion_matriz,
@@ -1154,6 +1154,7 @@ class ReportViews(LoggedInWithCompanyTests):
             models.Bill,
             company=self.company,
             date=datetime(2015, 5, 9, 11, 30),
+            fecha_autorizacion=datetime(2015, 5, 9, 11, 34),
             number='001-001-123456789',
             xml_content='blah'*20,
             ride_content='blih'*50)
@@ -1161,6 +1162,7 @@ class ReportViews(LoggedInWithCompanyTests):
             models.Bill,
             company=self.company,
             date=datetime(2015, 5, 10, 11, 30),
+            fecha_autorizacion=datetime(2015, 5, 9, 11, 34),
             number='001-001-123456790',
             xml_content='blah'*20,
             ride_content='blih'*50)
