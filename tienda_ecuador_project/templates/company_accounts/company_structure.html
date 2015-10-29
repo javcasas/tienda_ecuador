@@ -1,0 +1,52 @@
+{% extends 'company_accounts/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Estructura de la Empresa - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>Establecimientos</a></li>
+{% endblock %}
+
+{% block body %}
+  {{ block.super }}
+  <div class='col-xs-12 even-section'>
+    <h1>Estructura de la empresa</h1>
+    <table class='table table-vertical-center'>
+      <thead>
+        <tr>
+          <th>Establecimiento</th>
+          <th>Punto Emisión</th>
+          <th>Código</th>
+          <th>Ambiente SRI</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for establecimiento in company.establecimientos %}
+          <tr class='info'>
+            <td>{{ establecimiento.descripcion }}</td>
+            <td></td>
+            <td>{{ establecimiento.codigo }}</td>
+            <td></td>
+            <td><a href='{# FIXME #}' class='btn btn-default hidden'>Detalle</a>
+          </tr>
+          {% for punto_emision in establecimiento.puntos_emision %}
+            <tr>
+              <td></td>
+              <td>{{ punto_emision.descripcion }}</td>
+              <td>{{ punto_emision.codigo }}</td>
+              <td class='{% if punto_emision.ambiente_sri == 'pruebas' %}warning{% else %}success{% endif %}'>
+                  {{ punto_emision.ambiente_sri.capitalize }}</td>
+              <td><a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id%}'
+                     class='btn btn-default'>Detalle</a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

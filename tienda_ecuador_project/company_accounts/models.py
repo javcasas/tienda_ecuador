@@ -116,6 +116,10 @@ class Company(models.Model):
             return False
 
     @property
+    def establecimientos(self):
+        return Establecimiento.objects.filter(company=self)
+
+    @property
     def issues(self):
         """
         Makes a list of issues in a given company to be shown
@@ -128,16 +132,16 @@ class Company(models.Model):
                       reverse('company_accounts:company_profile_select_plan',
                               kwargs={'pk': self.id}),
                       u'Seleccionar Plan'))
-        elif self.licence.days_to_expiration < 10:
-            res.append(
-                Issue('warning',
-                      u'Quedan pocos días para que caduque la licencia de DSSTI Facturas',
-                      reverse('company_accounts:company_profile',
-                              kwargs={'pk': self.id})))
         elif self.licence.expired:
             res.append(
                 Issue('danger',
                       u'La licencia de DSSTI Facturas ha caducado',
+                      reverse('company_accounts:company_profile',
+                              kwargs={'pk': self.id})))
+        elif self.licence.days_to_expiration < 10:
+            res.append(
+                Issue('warning',
+                      u'Quedan pocos días para que caduque la licencia de DSSTI Facturas',
                       reverse('company_accounts:company_profile',
                               kwargs={'pk': self.id})))
         if not self.can_sign:
@@ -171,6 +175,10 @@ class Establecimiento(models.Model):
     descripcion = models.CharField(max_length=50)
     codigo = models.CharField(max_length=3)
     direccion = models.CharField(max_length=100)
+
+    @property
+    def puntos_emision(self):
+        return PuntoEmision.objects.filter(establecimiento=self)
 
 
 class PuntoEmision(models.Model):
@@ -207,4 +215,5 @@ class PuntoEmision(models.Model):
         else:
             raise Exception("Unknown ambiente_sri: {}".format(ambiente))
 
-
+    def get_absolute_url(self):
+        return reverse("company_accounts:punto_emision_detail", kwargs={'pk': self.pk})

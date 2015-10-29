@@ -5,6 +5,12 @@
 
 {% block title %}Subir Certificado de Firma - {{ block.super }}{% endblock %}
 
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_profile' company.id %}'>Perfil</a></li>
+    <li><a href='{% url 'company_accounts:company_upload_cert' company.id %}'>Subir Certificado de Firma</a></li>
+{% endblock %}
+
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12 even-section'>

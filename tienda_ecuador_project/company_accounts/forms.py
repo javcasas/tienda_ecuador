@@ -112,3 +112,27 @@ class MyUserCreationForm(UserCreationForm):
         widget=forms.PasswordInput,
         help_text=_(u"Introduzca la misma contraseña otra vez, "
                     u"para verificación."))
+
+
+class PuntoEmisionForm(forms.ModelForm):
+    descripcion = forms.CharField(
+        label='Descripción',
+        max_length=50)
+    codigo = forms.CharField(
+        label="Código",
+        max_length=3)
+    siguiente_secuencial_pruebas = forms.IntegerField(
+        label=u"Siguiente Secuencial de Pruebas")
+    siguiente_secuencial_produccion = forms.IntegerField(
+        label=u"Siguiente Secuencial de Producción")
+    ambiente_sri = forms.ChoiceField(
+        label="Ambiente SRI",
+        choices=models.ambiente_sri_OPTIONS)
+
+    # An inline class to provide additional information on the form.
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        model = models.PuntoEmision
+        fields = ('descripcion', 'codigo', 'ambiente_sri',
+                  'siguiente_secuencial_pruebas',
+                  'siguiente_secuencial_produccion', )

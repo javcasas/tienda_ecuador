@@ -1,0 +1,33 @@
+{% extends 'company_accounts/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Estructura de la Empresa - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>Establecimientos</a></li>
+    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>{{ establecimiento.descripcion }}</a></li>
+    <li><a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id %}'>
+           {{ punto_emision.descripcion }}</a></li>
+{% endblock %}
+
+{% block body %}
+  {{ block.super }}
+  <div class='col-xs-12 even-section'>
+    <h1>Punto de Emisión '{{ punto_emision.descripcion }}' en Establecimiento {{ establecimiento.descripcion }}</h1>
+    <table class='table table-hover'>
+      <tbody>
+        <tr><th>Descripción</th><td>{{ punto_emision.descripcion }}</td></tr>
+        <tr><th>Código</th><td>{{ punto_emision.codigo }}</td></tr>
+        <tr><th>Ambiente SRI</th><td>{{ punto_emision.ambiente_sri.capitalize }}</td></tr>
+        <tr><th>Siguiente Secuencial de Pruebas</th>
+            <td>{{ punto_emision.siguiente_secuencial_pruebas|stringformat:'09d' }}</td></tr>
+        <tr><th>Siguiente Secuencial de Producción</th>
+            <td>{{ punto_emision.siguiente_secuencial_produccion|stringformat:'09d' }}</td></tr>
+      </tbody>
+    </table>
+    <a href='{% url 'company_accounts:company_structure' company.id %}' class='btn btn-default btn-block'>Volver</a>
+  </div>
+{% endblock %}

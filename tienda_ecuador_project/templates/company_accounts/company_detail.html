@@ -5,6 +5,11 @@
 
 {% block title %}Detalles de la Empresa - {{ block.super }}{% endblock %}
 
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_profile' company.id %}'>Perfil</a></li>
+{% endblock %}
+
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12 even-section'>
@@ -19,7 +24,7 @@
             <h4>{{company.direccion_matriz}}</h4>
             <a href='{% url 'company_accounts:company_profile_update' company.id %}' class='btn btn-primary form-control'>Editar detalles</a>
         </div>
-        <div class='col-xs-12'>
+        <div class='col-xs-12 spaced-top'>
             <table class='table table-hover text-center valign-bottom table-vertical-center'>
                 <tr>
                     <th>Certificado de Firma Electrónica</th>

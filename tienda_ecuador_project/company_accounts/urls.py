@@ -6,6 +6,8 @@ urlpatterns = patterns(
     # Index views
     url(r'^$',
         views.company_select, name='company_select'),
+
+    # Company Views
     url(r'^(?P<pk>[0-9]+)/$',
         views.CompanyProfileView.as_view(
             template_name_suffix='_main_menu'
@@ -19,7 +21,13 @@ urlpatterns = patterns(
     url(r'^(?P<pk>[0-9]+)/cert/$',
         views.CompanyUploadCertView.as_view(), name='company_upload_cert'),
 
-    # PuntoEmision
+    # Company Structure view
+    url(r'^(?P<pk>[0-9]+)/structure/$',
+        views.CompanyProfileView.as_view(
+            template_name_suffix='_structure'
+        ), name='company_structure'),
+
+    # PuntoEmision Views
     url(r'^punto_emision/(?P<pk>[0-9]+)/$',
         views.PuntoEmisionDetailView.as_view(), name='punto_emision_detail'),
     url(r'^punto_emision/(?P<pk>[0-9]+)/edit/$',

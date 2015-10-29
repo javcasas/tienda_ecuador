@@ -222,3 +222,4 @@ class PuntoEmisionUpdateView(PuntoEmisionView, PuntoEmisionSelected, UpdateView)
     """
     View that shows a general index for a given punto_emision
     """
+    form_class = forms.PuntoEmisionForm
