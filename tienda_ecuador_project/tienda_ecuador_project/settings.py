@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'accounts_receivable',
     'registration',
     'bootstrap3',
+    'reports',
 )
 
 REGISTRATION_OPEN = True       # If True, users can register

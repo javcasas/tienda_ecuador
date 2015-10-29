@@ -23,6 +23,7 @@ urlpatterns = [
                 app_name='company_accounts', namespace='company-accounts')),
     url(r'^billing/', include('billing.urls')),
     url(r'^accounts_receivable/', include('accounts_receivable.urls')),
+    url(r'^reports/', include('reports.urls')),
 
     # Translated login & register forms
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
