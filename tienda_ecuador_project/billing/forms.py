@@ -63,16 +63,15 @@ class ProformaBillForm(forms.ModelForm):
         fields = ('issued_to',)
 
     def clean(self):
-        cleaned_data = super(ProformaBillForm, self).clean()
-        consumidor_final = self.data.get('cons_final') == 'True'
-        if consumidor_final:
+        if self.data.get('cons_final') == 'True':
+            self.data = dict(self.data)
             c, created = models.Customer.objects.get_or_create(
                 razon_social='CONSUMIDOR FINAL',
                 tipo_identificacion='ruc',
                 identificacion='9999999999999',
                 company=self.instance.punto_emision.establecimiento.company)
-            cleaned_data['issued_to'] = c
-        return cleaned_data
+            self.data['issued_to'] = str(c.id)
+        return super(ProformaBillForm, self).clean()
 
 
 class CustomerForm(forms.ModelForm):

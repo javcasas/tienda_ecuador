@@ -1,5 +1,5 @@
 {% extends 'billing/l2_proformabill_selected.html' %}
-{% block title %}Eliminar Item {{ item }} de Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
+{% block title %}Eliminar Item {{ item }} de Factura {{ proformabill }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
     <form action="" method="post">{% csrf_token %}

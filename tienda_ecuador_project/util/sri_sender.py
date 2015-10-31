@@ -14,4 +14,4 @@ def enviar_comprobante(xml_data):
 def validar_comprobante(clave_acceso):
     client = Client(urls['pruebas']['autorizacion'])
     result = client.service.autorizacionComprobante(clave_acceso)
-    print result.autorizaciones
+    return result

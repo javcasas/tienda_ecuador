@@ -100,4 +100,12 @@ urlpatterns = patterns(
     url(r'^report/(?P<company_id>[0-9]+)/bills/day/(?P<year>[0-9]+)/(?P<month>[0-9]+)/(?P<day>[0-9]+)/$',
         views.BillDayListReport.as_view(),
         name='report_daily_bills'),
+
+    # Bill Views
+    url(r'^bill/(?P<pk>[0-9]+)/read/$',
+        views.BillDetailView.as_view(), name='bill_detail'),
+    url(r'^bill_list/(?P<company_id>[0-9]+)/$',
+        views.BillListView.as_view(
+            template_name='billing/bill/bill_list_table.html',
+        ), name='bill_list'),
 )

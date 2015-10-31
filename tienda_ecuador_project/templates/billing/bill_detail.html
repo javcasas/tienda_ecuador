@@ -1,0 +1,45 @@
+{% extends 'billing/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block body %}
+{{ block.super }}
+<div class='col-xs-12'>
+{{bill}}
+<table class='table table-hover'>
+    <tr>
+        <th>Número</th> <td>{{ bill.number }}</td>
+    </tr>
+    <tr>
+        <th>Fecha Emisión</th> <td>{{ bill.date }}</td>
+    </tr>
+    <tr>
+        <th>Fecha Autorización</th> <td>{{ bill.fecha_autorizacion }}</td>
+    </tr>
+    <tr>
+        <th>Número Autorización</th> <td>{{ bill.numero_autorizacion }}</td>
+    </tr>
+    <tr>
+        <th>Clave Acceso</th> <td>{{ bill.clave_acceso }}</td>
+    </tr>
+    <tr>
+        <th>Ambiente SRI</th> <td>{{ bill.ambiente_sri }}</td>
+    </tr>
+    <tr>
+        <th>Total sin IVA</th> <td>{{ bill.total_sin_iva }}</td>
+    </tr>
+    <tr>
+        <th>IVA cobrado</th> <td>{{ bill.iva }}</td>
+    </tr>
+    <tr>
+        <th>IVA retenido</th> <td>{{ bill.iva_retenido }}</td>
+    </tr>
+    <tr>
+        <th>XML</th> <td>{{ bill.xml_content }}</td>
+    </tr>
+</table>
+{% buttons %}
+    <a href='' class='btn btn-primary'>Editar</a>
+{% endbuttons %}
+</div>
+{% endblock %}

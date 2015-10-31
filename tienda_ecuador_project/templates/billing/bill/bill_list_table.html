@@ -4,21 +4,27 @@
     <table class='table table-hover'>
         <thead>
             <tr>
-                <th>{# FIXME Poper headers & stuff #}</th>
+                <th>Número</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
         {% for bill in bill_list %}
             <tr>
+                <td>{{ bill.numero }}</td>
+                <td>{{ bill.date }}</td>
+                <td>{{ bill.total_con_iva }}</td>
                 <td>
-                    <a href="{% url 'bill_detail' company.id bill.id %}">{{ bill.number }} - {{ bill.issued_to.name }}</a>
+                    <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default btn-block'>Detalle</a>
                 </td>
             </tr>
         {% endfor %}
         {% if show_all_items_button %}
             <tr>
                 <td colspan='10'>
-                    <a href='{% url 'bill_index' company.id %}'
+                    <a href='{% url 'bill_list' company.id %}'
                            class='btn btn-default form-control'>Ver todas las facturas</a>
                 </td>
             </tr>

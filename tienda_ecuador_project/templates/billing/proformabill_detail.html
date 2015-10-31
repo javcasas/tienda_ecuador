@@ -2,11 +2,11 @@
 {% load bootstrap3 %}
 {% load decimal_format %}
 
-{% block title %}Ver Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
+{% block title %}Ver Factura {{ proformabill }} - {{ block.super }}{% endblock %}
 
 {% block left_nav_bar %}
-    <li><a href="{% url 'proformabill_create' punto_emision.id %}">Nueva Proforma</a></li>
-    <li><a href="{% url 'proformabill_delete' proformabill.id %}" class='btn-danger' >Eliminar Proforma</a></li>
+    <li><a href="{% url 'proformabill_create' punto_emision.id %}">Nueva Factura</a></li>
+    <li><a href="{% url 'proformabill_delete' proformabill.id %}" class='btn-danger' >Eliminar Factura</a></li>
 
 {% endblock %}
 
@@ -34,10 +34,16 @@
   {% endif %}
 
   {% for error in sri_errors %}
-    <div class="alert alert-danger alert-dismissible" role="alert">
+    <div class="alert alert-danger" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span></button>
-        <strong>{{ error.tipo }}</strong> (#{{error.identificador}}) {{ error.mensaje }} - {{ error.informacionAdicional }} 
+        <strong>{{ error.tipo }}</strong>
+        (#{{error.identificador}})
+        {{ error.mensaje }}
+        {% if error.informacionAdicional %}{{ error.informacionAdicional }}{% endif %}
+        {% if error.url %}
+            <a href='{{ error.url }}' class='btn btn-default'>{{ error.url_msg }}</a>
+        {% endif %}
     </div>
   {% endfor %}
 
@@ -51,6 +57,20 @@
           <th>Numero</th>
           <td>{{ proformabill.number }}</td>
         </tr>
+
+        {% if proformabill.clave_acceso %}
+            <tr>
+                <th>{% if proformabill.punto_emision.ambiente_sri == 'pruebas' %}
+                    Clave Provisional de Acceso de Pruebas
+                    {% else %}
+                    Clave Provisional de Acceso
+                    {% endif %}
+                </th>
+                <td>{{ proformabill.clave_acceso }}
+                </td>
+            </tr>
+        {% endif %}
+
         {% if proformabill.issued_to %}
           <tr>
             <th>Cliente</th>
@@ -151,7 +171,7 @@
     <div class='panel-body'>
       {% if company.can_sign %}
       <a href="{% url "proformabill_emit_to_bill" proformabill.id %}"
-         class='btn btn-primary col-xs-12'>Emitir Proforma como Factura Real</a>
+         class='btn btn-primary col-xs-12'>Emitir Factura</a>
       {% else %}
       <p>No hay certificado de firma. No es posible emitir facturas hasta que no se suba un certificado de firma</p>
       <a href="{% url "company_accounts:company_upload_cert" company.id %}"
@@ -159,7 +179,7 @@
       {% endif %}
         
       <a href="{% url "proformabill_delete" proformabill.id %}"
-         class='btn btn-danger col-xs-12 spacer'>Eliminar Proforma</a>
+         class='btn btn-danger col-xs-12 spacer'>Eliminar Factura</a>
     </div>
   </div>
 </div>

@@ -10,12 +10,12 @@
         <codDoc>{{ info_tributaria.cod_doc }}</codDoc>
         <estab>{{ proformabill.punto_emision.establecimiento.codigo }}</estab>
         <ptoEmi>{{ proformabill.punto_emision.codigo }}</ptoEmi>
-        <secuencial>{{ proformabill.secuencial|stringformat:'09d' }}</secuencial>
+        <secuencial>{{ secuencial|stringformat:'09d' }}</secuencial>
         <dirMatriz>{{ company.direccion_matriz }}</dirMatriz>
     </infoTributaria>
     <infoFactura>
         <fechaEmision>{{ proformabill.date|date:"d/m/Y" }}</fechaEmision>
-        {% if info_factura.direccion_establecimiento %}<dirEstablecimiento>{{ info_factura.direccion_establecimiento }}</dirEstablecimiento>{% endif %}
+        {% if establecimiento.direccion %}<dirEstablecimiento>{{ establecimiento.direccion }}</dirEstablecimiento>{% endif %}
         {% if company.contribuyente_especial %}<contribuyenteEspecial>{{ company.contribuyente_especial }}</contribuyenteEspecial>{% endif %}
         <obligadoContabilidad>{% if company.obligado_contabilidad %}SI{% else %}NO{% endif %}</obligadoContabilidad>
         <tipoIdentificacionComprador>{{ info_factura.tipo_identificacion_comprador }}</tipoIdentificacionComprador>
@@ -41,10 +41,10 @@
     <detalles>
         {% for item in proformabill.items %}
         <detalle>
-            {% if detalle.codigo_principal %}<codigoPrincipal>{{ detalle.codigo_principal }}</codigoPrincipal>{% endif %}
-            {% if detalle.codigo_auxiliar %}<codigoAuxiliar>{{ detalle.codigo_auxiliar }}</codigoAuxiliar>{% endif %}
+            {% if item.sku %}<codigoPrincipal>{{ item.sku }}</codigoPrincipal>{% endif %}
+            {% if item.codigo_auxiliar %}<codigoAuxiliar>{{ item.codigo_auxiliar }}</codigoAuxiliar>{% endif %}
             <descripcion>{{ item.description }}</descripcion>
-            {% if detalle.unidad_medida %}<unidadMedida>{{ detalle.unidad_medida }}</unidadMedida>{% endif %}
+            {% if item.unidad_medida %}<unidadMedida>{{ item.unidad_medida }}</unidadMedida>{% endif %}
             <cantidad>{{ item.qty|stringformat:'.6f' }}</cantidad>
             <precioUnitario>{{ item.unit_price|stringformat:'.6f' }}</precioUnitario>
             <descuento>{{ 0|stringformat:'.2f' }}</descuento>

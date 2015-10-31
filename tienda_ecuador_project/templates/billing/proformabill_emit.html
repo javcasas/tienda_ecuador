@@ -1,14 +1,14 @@
 {% extends 'billing/l2_proformabill_selected.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Ver Proforma {{ proformabill }} - {{ block.super }}{% endblock %}
+{% block title %}Ver Factura {{ proformabill }} - {{ block.super }}{% endblock %}
 
 
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-        <h2>Emitir Proforma</h2>
-        <p>Por favor, compruebe los datos de la proforma.</p>
+        <h2>Emitir Factura</h2>
+        <p>Por favor, compruebe los datos de la factura.</p>
         {% if msgs %}
             <h3>Hubo errores en la factura</h3>
             {% for msg in msgs %}

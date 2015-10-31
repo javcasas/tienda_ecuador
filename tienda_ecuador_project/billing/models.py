@@ -111,6 +111,8 @@ class BaseBill(models.Model):
     date = models.DateTimeField()
     xml_content = models.TextField(blank=True)
     ride_content = models.TextField(blank=True)
+    clave_acceso = models.CharField(max_length=50, blank=True)
+    issues = models.TextField(default='', blank=True)
 
     def __unicode__(self):
         return u"{} - {}".format(self.number, self.date)
@@ -134,6 +136,9 @@ class Bill(BaseBill):
     ambiente_sri = models.CharField(
         max_length=20,
         choices=ambiente_sri_OPTIONS)
+    total_sin_iva = models.DecimalField(max_digits=20, decimal_places=8)
+    iva = models.DecimalField(max_digits=20, decimal_places=8)
+    iva_retenido = models.DecimalField(max_digits=20, decimal_places=8)
 
     @classmethod
     def fromProformaBill(cls, proforma):
@@ -144,6 +149,10 @@ class Bill(BaseBill):
         data['company'] = proforma.punto_emision.establecimiento.company
         new = cls(**data)
         return new
+
+    @property
+    def total_con_iva(self):
+        return self.total_sin_iva + self.iva
 
 
 class ClaveAcceso(ProtectedSetattr):

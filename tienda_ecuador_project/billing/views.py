@@ -2,6 +2,7 @@ import tempfile
 import os
 import base64
 import pytz
+import time
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -35,6 +36,7 @@ from forms import (ItemForm,
                    ProformaBillItemForm,
                    CustomerForm)
 from util import signature
+from util import sri_sender
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -379,10 +381,19 @@ class ProformaBillDetailView(ProformaBillView,
     """
     def get_context_data(self, **kwargs):
         res = super(ProformaBillDetailView, self).get_context_data(**kwargs)
-        sri_errors = self.request.session.get("sri_errors")
+        fix_urls = {'45': ("asdf", 'Eliminar secuencial actual')}  # FIXME
+        try:
+            sri_errors = json.loads(self.proforma.issues)
+        except:
+            sri_errors = None
+
         if sri_errors:
             res['sri_errors'] = sri_errors
-            #del self.request.session['sri_errors']
+            for err in sri_errors:
+                url = fix_urls.get(err['identificador'])
+                if url:
+                    err['url'] = url[0]
+                    err['url_msg'] = url[1]
         return res
 
 
@@ -471,8 +482,20 @@ class ProformaBillUpdateView(ProformaBillView,
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
-        form.fields['issued_to'].queryset = Customer.objects.filter(
-            company=self.company).exclude(identificacion='9999999999999')
+        c, created = models.Customer.objects.get_or_create(
+            razon_social='CONSUMIDOR FINAL',
+            tipo_identificacion='ruc',
+            identificacion='9999999999999',
+            company=self.company)
+        if form.data.get("cons_final") == 'True':
+            print "TRRT"
+            form.data = form.data.copy()
+            form.data['issued_to'] = c.id
+            form.fields['issued_to'].queryset = Customer.objects.filter(
+                company=self.company)
+        else:
+            form.fields['issued_to'].queryset = Customer.objects.filter(
+                company=self.company).exclude(identificacion='9999999999999')
         return form
 
 
@@ -501,80 +524,144 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
         return res
 
     def post(self, request, pk):
-        # Increment sequentials
+        # Local vars
         proforma = self.get_object()
-        if proforma.secuencial == 0:
-            proforma.secuencial = proforma.punto_emision.siguiente_secuencial
-            proforma.punto_emision.siguiente_secuencial += 1
-            proforma.save()
-            proforma.punto_emision.save()
-        # FIXME
+        punto_emision = proforma.punto_emision
+        establecimiento = punto_emision.establecimiento
+        company = establecimiento.company
+
+        ambiente = punto_emision.ambiente_sri
+        secuencial = {
+            'pruebas': punto_emision.siguiente_secuencial_pruebas,
+            'produccion': punto_emision.siguiente_secuencial_produccion,
+        }[ambiente]
+
+        numero_comprobante = "{}-{}-{:09d}".format(establecimiento.codigo,
+                                                   punto_emision.codigo,
+                                                   secuencial)
+
         # Generate and sign XML
-        xml_data = gen_xml(request, proforma)
+        xml_data, clave_acceso = gen_bill_xml(request, proforma)
+        assert(clave_acceso == proforma.clave_acceso)
+        print "Claves de acceso coinciden"
+
         proforma.xml_content = xml_data
+        proforma.clave_acceso = clave_acceso
         proforma.save()
+
         # Send XML to SRI 
-        from util import sri_sender
-        result = sri_sender.enviar_comprobante(xml_data)
+        enviar_comprobante_result = sri_sender.enviar_comprobante(xml_data)
+        enviar_msgs = enviar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
+
         def convert_messages(messages):
-            errors = []
-            for error in messages:
+            def convert_msg(msg):
                 converted = {}
                 for key in ['tipo', 'identificador', 'mensaje', 'informacionAdicional']:
-                    converted[key] = getattr(error, key)
-                errors.append(converted)
-            return errors
+                    converted[key] = getattr(error, key, None)
+            return map(convert_msg, messages)
 
-        if result.estado == 'DEVUELTA':
-            request.session['sri_errors'] = convert_messages(result.comprobantes.comprobante[0].mensajes.mensaje)
+        # True if any of the error messages is 43: repeated access key
+        used_access_key_error = any(map(lambda x: x.identificador == '43', enviar_msgs))
+
+        if enviar_comprobante_result.estado == 'DEVUELTA' and not used_access_key_error:
+            proforma.issues = json.dumps(convert_messages(enviar_msgs))
+            proforma.save()
             return redirect("proformabill_detail", proforma.id)
-        else:
-            validar_result = None
-            for i in range(5):
-                validar_result = sri_sender.validar_comprobante(clave_acceso)
+
+        # Check result
+        def validar_comprobante(clave):
+            for i in range(10):
+                print "Validando", i
+                validar_result = sri_sender.validar_comprobante(clave)
                 try:
-                    if validar_result.autorizacion[0].estado in ['AUTORIZADO', 'NO AUTORIZADO']:
-                        break
-                except:
+                    if validar_result.autorizaciones[0][0].estado in ['AUTORIZADO', 'NO AUTORIZADO']:
+                        return validar_result.autorizaciones[0][0]
+                except Exception, e:
+                    print e
                     pass
-                import time
                 time.sleep(1)
-            if validar_result.autorizacion[0].estado == 'AUTORIZADO':
-                # convert to bill
-                new = models.Bill.fromProformaBill(proforma)
-                new.numero_autorizacion = validar_result.autorizacion[0].numeroAutorizacion
-                new.fecha_autorizacion = validar_result.autorizacion[0].fechaAutorizacion
-                new.xml_content = validar_result.autorizacion[0].comprobante
-                new.save()
-                # generate RIDE
-                
-                # Remove proforma
-                for item in proforma.items:
-                    item.delete()
-                proforma.delete()
-                # redirect to bill
+            return None
+        autorizacion = validar_comprobante(clave_acceso)
+
+        if not autorizacion:
+            proforma.issues = json.dumps([{'tipo': 'ERROR',
+                                              'identificador': '',
+                                              'mensaje': 'Tiempo de espera agotado'}])
+            proforma.save()
+            return redirect("proformabill_detail", proforma.id)
+
+        if autorizacion.estado != 'AUTORIZADO':
+            proforma.issues = json.dumps(convert_messages(autorizacion.mensajes))
+            proforma.save()
+            return redirect("proformabill_detail", proforma.id)
+
+        # Accepted
+        # convert to bill
+        new = models.Bill.fromProformaBill(proforma)
+        new.numero_autorizacion = autorizacion.numeroAutorizacion
+        new.fecha_autorizacion = autorizacion.fechaAutorizacion
+        new.xml_content = autorizacion.comprobante
+        new.clave_acceso = clave_acceso
+        new.iva = sum(proforma.iva.values())
+        new.iva_retenido = 0
+        new.total_sin_iva = sum(proforma.subtotal.values())
+        new.ambiente_sri = autorizacion.ambiente.lower()
+        new.number = numero_comprobante
+        new.issues = json.dumps(convert_messages(autorizacion.mensajes))
+        new.save()
+
+        # update sequence numbers
+        if ambiente == 'pruebas':
+            punto_emision.siguiente_secuencial_pruebas = secuencial + 1
+        else:
+            punto_emision.siguiente_secuencial_produccion = secuencial + 1
+        punto_emision.save()
+
+        # generate RIDE
+        # FIXME
+        
+        # Remove proforma
+        for item in proforma.items:
+            item.delete()
+        proforma.delete()
+        # redirect to bill
+        return redirect("bill_detail", new.id)
+
+
+def gen_bill_xml(request, proformabill):
+
+    def get_code_from_proforma_number(number):
+        for i in range(len(number)):
+            try:
+                assert(int(number[i:]) >= 0)
+                return int(number[i:])
+            except (ValueError, AssertionError):
                 pass
-            else:
-                request.session['sri_errors'] = convert_messages(validar_result.autorizacion[0].mensajes.mensaje)
-                
-        # else:
-            # print errors
-        return HttpResponse("ok")
+        else:
+            return 0
 
-
-
-def gen_xml(request, proformabill):
     company = proformabill.punto_emision.establecimiento.company
 
     context = {
         'proformabill': proformabill,
+        'punto_emision': proformabill.punto_emision,
+        'establecimiento': proformabill.punto_emision.establecimiento,
         'company': company,
     }
+
+    ambiente_sri = proformabill.punto_emision.ambiente_sri
+    secuencial = {
+        'pruebas': proformabill.punto_emision.siguiente_secuencial_pruebas,
+        'produccion': proformabill.punto_emision.siguiente_secuencial_produccion
+    }[ambiente_sri]
+
+    context['secuencial'] = secuencial
+
     info_tributaria = {}
     info_tributaria['ambiente'] = {
         'pruebas': '1',
         'produccion': '2'
-    }[proformabill.punto_emision.ambiente_sri]
+    }[ambiente_sri]
 
     info_tributaria['tipo_emision'] = '1'   # 1: normal
                                             # 2: indisponibilidad sistema
@@ -594,10 +681,11 @@ def gen_xml(request, proformabill):
     c.ambiente = proformabill.punto_emision.ambiente_sri
     c.establecimiento = int(proformabill.punto_emision.establecimiento.codigo)
     c.punto_emision = int(proformabill.punto_emision.codigo)
-    c.numero = proformabill.secuencial
-    c.codigo = 17907461  # FIXME
+    c.numero = secuencial
+    c.codigo = get_code_from_proforma_number(proformabill.number)
     c.tipo_emision = "normal"
-    info_tributaria['clave_acceso'] = unicode(c)
+    clave_acceso = unicode(c)
+    info_tributaria['clave_acceso'] = clave_acceso
 
     context['info_tributaria'] = info_tributaria
 
@@ -615,11 +703,16 @@ def gen_xml(request, proformabill):
     info_factura['moneda'] = 'DOLAR'
     context['info_factura'] = info_factura
 
+    context['info_adicional'] = {
+        'Generado Con': 'DSSTI Facturas',
+        'Web': 'http://facturas.dssti.com',
+    }
+
     response = render(request, "billing/proformabill_xml.html", context)
 
     xml_content = response.content
     # sign xml_content
-    return signature.sign(company.ruc, company.id, xml_content)
+    return signature.sign(company.ruc, company.id, xml_content), clave_acceso
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -629,7 +722,7 @@ class ProformaBillEmitGenXMLView(ProformaBillView,
 
     def get(self, request, pk):
         proformabill = self.get_queryset().get(id=pk)
-        xml = gen_xml(request, proformabill)
+        xml = gen_bill_xml(request, proformabill)
         return HttpResponse(xml)
 
 
@@ -772,7 +865,7 @@ class ProformaBillItemDeleteView(ProformaBillItemView,
 ################
 # Bill Reports #
 ################
-class BillView(CompanySelected):
+class BillView(object):
     model = Bill
     context_object_name = 'bill'
 
@@ -780,11 +873,11 @@ class BillView(CompanySelected):
         return self.model.objects.filter(company=self.company)
 
     @property
-    def punto_emision_id(self):
-        return self.model.objects.get(id=self.kwargs['pk']).punto_emision.id
+    def company_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).company.id
 
 
-class BillDayListReport(BillView, ListView):
+class BillDayListReport(BillView, CompanySelected, ListView):
     context_object_name = "bill_list"
 
     def get_queryset(self):
@@ -801,3 +894,15 @@ class BillDayListReport(BillView, ListView):
         for key in ['year', 'month', 'day']:
             context[key] = self.kwargs[key]
         return context
+
+class BillListView(BillView, CompanySelected, ListView):
+    context_object_name = "bill_list"
+
+    @property
+    def company_id(self):
+        return self.kwargs['company_id']
+
+
+class BillDetailView(BillView, CompanySelected, DetailView):
+    """
+    """
