@@ -1,6 +1,7 @@
 from datetime import date
 import pytz
 
+import django
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
@@ -51,6 +52,7 @@ class CompanySelected(object):
     @property
     def company(self):
         # Ensure there is a corresponding CompanyUser, or 404
+        print django.utils.translation.get_language()
         get_object_or_404(
             models.CompanyUser,
             user_id=self.request.user.id, company_id=self.company_id)

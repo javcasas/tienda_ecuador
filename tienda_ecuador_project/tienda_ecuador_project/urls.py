@@ -26,12 +26,12 @@ urlpatterns = [
     url(r'^reports/', include('reports.urls')),
 
     # Translated login & register forms
-    url(r'^accounts/login/$', 'django.contrib.auth.views.login',
-        {'authentication_form': company_accounts.forms.LoginForm},
-        name='auth_login'),
-    url(r'^accounts/register/$', 
-        registration.views.RegistrationView.as_view(form_class=company_accounts.forms.MyUserCreationForm),
-        name='registration_register'),
+#    url(r'^accounts/login/$', 'django.contrib.auth.views.login',
+#        {'authentication_form': company_accounts.forms.LoginForm},
+#        name='auth_login'),
+#    url(r'^accounts/register/$', 
+#        registration.views.RegistrationView.as_view(form_class=company_accounts.forms.MyUserCreationForm),
+#        name='registration_register'),
 
-    url(r'^accounts/', include('registration.backends.simple.urls')),
+    url(r'^accounts/', include('registration.backends.default.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

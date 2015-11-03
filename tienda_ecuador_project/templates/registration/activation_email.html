@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <title>{{ site.name }} {% trans "registration" %}</title>
+</head>
+
+<body>
+<p>
+    Muchas gracias por registrarse en DSSTI Facturas.
+</p>
+<p>
+    Haga click en el siguiente enlace para activar su cuenta y empezar a usar DSSTI Facturas.
+</p>
+
+<p>
+    <a href="http://{{site.domain}}{% url 'registration_activate' activation_key %}">
+        {{site.domain}}{% url 'registration_activate' activation_key %}
+    </a>
+</p>
+<p>
+    Si usted no se registró en DSSTI Facturas, por favor, ignore este e-mail, y su dirección
+    será eliminada automáticamente de nuestros registros.
+</p>
+<p>
+Saludos cordiales,
+DSSTI
+</p>
+</body>
+
+</html>

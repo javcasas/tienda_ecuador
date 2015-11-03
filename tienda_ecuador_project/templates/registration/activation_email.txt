@@ -1,0 +1,11 @@
+Muchas gracias por registarse en DSSTI Facturas.
+
+Haga click en el siguiente enlace para activar su cuenta y empezar a usar DSSTI Facturas.
+
+http://{{site.domain}}{% url 'registration_activate' activation_key %}
+
+Si usted no se registró en DSSTI Facturas, por favor, ignore este e-mail, y su dirección
+será eliminada automáticamente de nuestros registros.
+
+Saludos cordiales,
+DSSTI

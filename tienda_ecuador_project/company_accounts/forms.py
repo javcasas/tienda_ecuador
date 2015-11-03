@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 import time
 from django import forms
 from company_accounts import models
@@ -53,7 +53,7 @@ class CertificateForm(forms.Form):
         try:
             signature.add_cert(test_id, "test", cert_data, cert_key)
             if signature.sign(test_id, "test", sample_xml) is None:
-                raise ValidationError(_(u'Contraseña incorrecta'),
+                raise ValidationError(u'Contraseña incorrecta',
                                       code='invalid_key')
             else:
                 cleaned_data['cert_data'] = cert_data
@@ -66,52 +66,6 @@ class CertificateForm(forms.Form):
                 except:
                     time.sleep(0.1)
         return cleaned_data
-
-
-class LoginForm(AuthenticationForm):
-    username = forms.CharField(
-        max_length=30,
-        label='Usuario')
-    password = forms.CharField(
-        widget=forms.PasswordInput,
-        label='Contraseña')
-
-    error_messages = {
-        'invalid_login': _(u"Usuario o Contraseña incorrectos. "
-                           u"Tenga en cuenta que ambos campos son"
-                           u" sensibles a mayúsculas y minúsculas"),
-        'no_cookies': _(u"Su Navegador Web no tiene activadas las cookies. "
-                        u"Actívelas para entrar al sistema."),
-        'inactive': _(u"Esta cuenta está inactiva."),
-    }
-
-
-class MyUserCreationForm(UserCreationForm):
-    """
-    A form that creates a user, with no privileges, from the given username and
-    password.
-    """
-    error_messages = {
-        'duplicate_username': _("Ya hay un usuario con ese nombre."),
-        'password_mismatch': _(u"Los dos campos de contraseña no coinciden."),
-    }
-    username = forms.RegexField(
-        label=_("Usuario"),
-        max_length=30,
-        regex=r'^[\w.@+-]+$',
-        help_text=_(u"Requerido. Máximo 30 caracteres. Sólo letras, dígitos y"
-                    u"@/./+/-/_ ."),
-        error_messages={
-            'invalid': _(u"El usuario sólo puede contener letras, números "
-                         "y caracteres @/./+/-/_.")})
-    password1 = forms.CharField(
-        label=_(u"Contraseña"),
-        widget=forms.PasswordInput)
-    password2 = forms.CharField(
-        label=_(u"Contraseña (repetir)"),
-        widget=forms.PasswordInput,
-        help_text=_(u"Introduzca la misma contraseña otra vez, "
-                    u"para verificación."))
 
 
 class PuntoEmisionForm(forms.ModelForm):

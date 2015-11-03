@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ company.nombre_comercial }} - {{ block.super }}{% endblock %}
+
+{% block home_url %}{% url 'company_accounts:company_select' %}{% endblock %}
+
+{% block body_block %}
+    <div class='row even-section'>
+        <div class='col-xs-12 company-bar'>
+            <h1>{{ company.nombre_comercial }}</h1>
+            <h3>{{ company.razon_social }} - {{ company.ruc }}</h3>
+        </div>
+        <div class='col-xs-12'>
+            <ol class='breadcrumb'>
+                {% block breadcrumbs %}
+                {% endblock %}
+            </ol>
+        </div>
+        {% block body %}{% endblock %}
+    </div>
+{% endblock %}

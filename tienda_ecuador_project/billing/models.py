@@ -1,4 +1,4 @@
-# * encoding: utf8 *
+# * encoding: utf-8 *
 from datetime import date
 from decimal import Decimal
 
@@ -430,6 +430,7 @@ class ItemInBill(BaseItem):
     Base class for items that are part of a bill
     """
     qty = models.DecimalField(max_digits=20, decimal_places=8)
+    descuento = models.DecimalField(max_digits=20, decimal_places=8, default=0)
 
     @property
     def total_sin_impuestos(self):

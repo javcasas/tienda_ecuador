@@ -1,4 +1,4 @@
-# * encoding: utf8 *
+# * encoding: utf-8 *
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE',
                       'tienda_ecuador_project.settings')

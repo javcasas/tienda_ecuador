@@ -1,31 +1,19 @@
-{% extends 'base.html' %}
+{% extends 'l0_company_selected.html' %}
 {% block title %}{{ company.nombre_comercial }} - {{ block.super }}{% endblock %}
 
-{% block home_url %}{% url 'company_accounts:company_select' %}{% endblock %}
-
 {% block left_nav_bar %}
-{% if single_punto_emision %}
-    <li><a href="{% url 'proformabill_create' single_punto_emision.id %}" >Nueva proforma</a></li>
-{% else %}
-    {# TODO Ir a punto de emision #}
-{% endif %}
-<li><a href="{% url 'customer_create' company.id %}">Nuevo cliente</a></li>
-<li><a href="{% url 'item_create' company.id %}">Nuevo Artículo</a></li>
+    <li><a href="{% url 'billing_index' %}">Facturación</a></li>
+    {% block left_menu %}
+        {% if single_punto_emision %}
+            <li><a href="{% url 'proformabill_create' single_punto_emision.id %}" >Nueva factura</a></li>
+        {% else %}
+            {# TODO Ir a punto de emision #}
+        {% endif %}
+        <li><a href="{% url 'customer_create' company.id %}">Nuevo cliente</a></li>
+        <li><a href="{% url 'item_create' company.id %}">Nuevo Artículo</a></li>
+    {% endblock %}
 {% endblock %}
 
-{% block body_block %}
-    <div class='row even-section'>
-        <div class='col-xs-12 company-bar'>
-            <h1>{{ company.nombre_comercial }}</h1>
-            <h3>({{ company.razon_social }})</h3>
-        </div>
-        <div class='col-xs-12'>
-            <ol class='breadcrumb'>
-                <li><a href='{% url 'company_index' company.id %}'>{{ company.nombre_comercial }}</a></li>
-                {% block breadcrumbs %}
-                {% endblock %}
-            </ol>
-        </div>
-        {% block body %}{% endblock %}
-    </div>
+{% block breadcrumbs %}
+    <li><a href='{% url 'company_index' company.id %}'>{{ company.nombre_comercial }}</a></li>
 {% endblock %}

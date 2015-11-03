@@ -4,10 +4,9 @@
 
 {% block title %}Ver Factura {{ proformabill }} - {{ block.super }}{% endblock %}
 
-{% block left_nav_bar %}
+{% block left_menu %}
     <li><a href="{% url 'proformabill_create' punto_emision.id %}">Nueva Factura</a></li>
     <li><a href="{% url 'proformabill_delete' proformabill.id %}" class='btn-danger' >Eliminar Factura</a></li>
-
 {% endblock %}
 
 {% block body %}

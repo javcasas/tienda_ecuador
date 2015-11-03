@@ -7,7 +7,7 @@
     <li><a href='{% url 'customer_detail' customer.id %}'>{{ customer.razon_social }}</a></li>
 {% endblock %}
 
-{% block left_nav_bar %}
+{% block left_menu %}
     <li><a href="{% url 'customer_create' company.id %}">Nuevo cliente</a></li>
     <li><a href="{% url 'customer_update' company.id %}">Editar cliente</a></li>
     <li><a href="{% url 'customer_delete' customer.id %}" class='btn-danger'>Eliminar cliente</a></li>
