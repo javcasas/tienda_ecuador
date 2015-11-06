@@ -33,5 +33,5 @@ urlpatterns = [
 #        registration.views.RegistrationView.as_view(form_class=company_accounts.forms.MyUserCreationForm),
 #        name='registration_register'),
 
-    url(r'^accounts/', include('registration.backends.default.urls')),
+    url(r'^accounts/', include('registration.backends.simple.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -9,6 +9,7 @@ from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.db.models import Count
 
 import models
 import forms
@@ -19,9 +20,39 @@ from util import signature
 tz = pytz.timezone('America/Guayaquil')
 
 
-@login_required
-def company_select(request):
+class LoggedInIndexView(View):
+    def get(self, request):
+        try:
+            c_user = models.CompanyUser.objects.get(user=request.user)
+            return redirect("company_accounts:company_main_menu", c_user.company.id)
+        except (models.CompanyUser.DoesNotExist):
+            return redirect("company_accounts:create_company")
+
+            
+class CompanyCreateView(CreateView):
+    template_name_suffix = '_create_form'
+    model = models.Company
+    form_class = forms.CompanyForm
+    
+    def get(self, request):
+        try:
+            c_user = models.CompanyUser.objects.get(user=request.user)
+            return redirect("company_accounts:company_main_menu", c_user[0].company.id)
+        except (models.CompanyUser.DoesNotExist):
+            return super(CompanyCreateView, self).get(request)
+
+    def form_valid(self, form):
+        models.Company.objects.annotate(number_of_companies=Count("companyuser")).filter(number_of_companies=0).delete()
+        res = super(self.__class__, self).form_valid(form)
+        new_company = form.instance
+        c_u = models.CompanyUser(user=self.request.user, company=new_company)
+        c_u.save()
+        return res
+
+
+def company_create(request):
     """
+    If the user has a company, it redirects to the main menu, otherwise
     Shows an index for the current user,
     showing the companies he can administer
     If there is a single company,
@@ -52,7 +83,6 @@ class CompanySelected(object):
     @property
     def company(self):
         # Ensure there is a corresponding CompanyUser, or 404
-        print django.utils.translation.get_language()
         get_object_or_404(
             models.CompanyUser,
             user_id=self.request.user.id, company_id=self.company_id)

@@ -13,8 +13,9 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12 even-section'>
-        <div class='col-xs-12 col-lg-6'>
-            <img src='{{company.logo}}' alt='Logotipo' />
+        <div class='col-xs-12 col-lg-6 text-center'>
+            <img src='/{{company.logo}}' alt='Logotipo' class='spaced-top spaced-bottom'/>
+            <a href='{% url 'company_accounts:company_profile_update_logo' company.id %}' class='btn btn-default btn-block'>Cambiar logotipo</a>
         </div>
         <div class='col-xs-12 col-lg-6'>
             <h1>{{company.nombre_comercial}}</h1>

@@ -12,7 +12,7 @@
 {% block body %}
     {{ block.super }}
 <div class='col-xs-12'>
-    <form method='post' action='.' class='form'>
+    <form method='post' action='.' class='form' enctype="multipart/form-data">
         {% csrf_token %}
         {% bootstrap_form form %}
         {% buttons %}

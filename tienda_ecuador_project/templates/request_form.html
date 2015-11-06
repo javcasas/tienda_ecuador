@@ -1,11 +1,6 @@
         <div class='request-form text-center container-fluid'>
             <form class='form-inline' role='form' action="{%url 'request_info'%}" method='post'>
-                {% csrf_token %}
-                <div class='form-group'>
-                    <input type='text' class='form-control' name='company' placeholder='Nombre de la Empresa'/>
-                    <input type='text' class='form-control' name='email' placeholder='Correo Electronico'/>
-                    <button class='btn btn-primary' type='submit'>Probar Gratis</button>
-                </div>
+                <a href='{% url 'company_accounts:company_select' %}' class='btn btn-primary btn-block btn-lg'>Probar Gratis</a>
             </form>
             <div class='request-form-subtext'>
                 <a href='{% url 'benefits' %}'>Descubre más ventajas de DSSTI Facturas</a>

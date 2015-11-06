@@ -1,13 +1,16 @@
 from django.conf.urls import patterns, url
-from company_accounts import views
+from company_accounts import views, forms
+from django.contrib.auth.decorators import login_required
 
 urlpatterns = patterns(
     '',
     # Index views
     url(r'^$',
-        views.company_select, name='company_select'),
+        login_required(views.LoggedInIndexView.as_view()), name='company_select'),
 
     # Company Views
+    url(r'^new/$',
+        login_required(views.CompanyCreateView.as_view()), name='create_company'),
     url(r'^(?P<pk>[0-9]+)/$',
         views.CompanyProfileView.as_view(
             template_name_suffix='_main_menu'
@@ -16,6 +19,8 @@ urlpatterns = patterns(
         views.CompanyProfileView.as_view(), name='company_profile'),
     url(r'^(?P<pk>[0-9]+)/profile/edit/$',
         views.CompanyProfileUpdateView.as_view(), name='company_profile_update'),
+    url(r'^(?P<pk>[0-9]+)/profile/edit_logo/$',
+        views.CompanyProfileUpdateView.as_view(form_class=forms.CompanyLogoForm), name='company_profile_update_logo'),
     url(r'^(?P<pk>[0-9]+)/profile/select_plan/$',
         views.CompanyProfileSelectPlanView.as_view(), name='company_profile_select_plan'),
     url(r'^(?P<pk>[0-9]+)/cert/$',

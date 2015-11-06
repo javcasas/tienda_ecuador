@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from django.core.files.storage import FileSystemStorage
 
 from util.property import Property, ConvertedProperty
 from util import signature
@@ -72,6 +73,12 @@ def default_licence():
     n.save()
     return n.id
 
+class OverwritingStorage(FileSystemStorage):
+    def save(self, path, *args, **kwargs):
+        if self.exists(path):
+            self.delete(path)
+        return super(OverwritingStorage, self).save(path, *args, **kwargs)
+
 class Issue(object):
     def __init__(self, level, message, url, button_text='Arreglar'):
         self.message = message
@@ -86,19 +93,24 @@ class Issue(object):
         return "<issue {}>".format(self.__unicode__().encode("ascii", "replace"))
 
 
+def logo_path_generator(instance, filename):
+    ext = filename.split(".")[-1]
+    return 'static/company_logos/{id}_{ruc}.{ext}'.format(id=instance.id, ruc=instance.ruc, ext=ext)
+
+
 class Company(models.Model):
     """
     Represents a company
     """
-    nombre_comercial = models.CharField(max_length=100, unique=True)
-    ruc = models.CharField(max_length=100, unique=True)
-    razon_social = models.CharField(max_length=100, unique=True)
+    nombre_comercial = models.CharField(max_length=100)
+    ruc = models.CharField(max_length=100)
+    razon_social = models.CharField(max_length=100)
     direccion_matriz = models.CharField(max_length=100)
     contribuyente_especial = models.CharField(max_length=20, blank=True)
     obligado_contabilidad = models.BooleanField(default=False)
     licence = models.ForeignKey(Licence, default=default_licence)
     siguiente_numero_proforma = models.IntegerField(default=1)
-    logo = models.ImageField(upload_to='company_logos', blank=True)
+    logo = models.ImageField(upload_to=logo_path_generator, blank=True, storage=OverwritingStorage())
     cert = models.CharField(max_length=20000, blank=True)
     key = models.CharField(max_length=100, blank=True)
 

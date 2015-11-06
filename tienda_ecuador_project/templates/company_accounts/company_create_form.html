@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Crear empresa - {{ block.super }}{% endblock %}
+{% block body_block %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>Datos de la Empresa</h1>
+        <form method='post' action='.' class='form'>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type='submit' class='btn btn-primary'>Guardar</button>
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock %}

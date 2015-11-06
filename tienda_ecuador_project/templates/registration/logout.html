@@ -4,7 +4,16 @@
 {% block title %} DSSTI - {% endblock %}
 
 {% block body_block %}
-<h1>Salir del Sistema</h1>
-<h2>Usted ha salido de DSSTI Facturas</h2>
-<a href='{% url 'home' %}'>Portada</h2>
+<div class='col-xs-12 even-section'>
+    <h1>Salir del Sistema</h1>
+    <h2>Usted ha salido de DSSTI Facturas</h2>
+    <a href='{% url 'home' %}' class='btn btn-primary'>Portada</a>
+</div>
+<script>
+    $(document).ready(function (){
+        setTimeout(function () {
+            document.location = '{% url 'home' %}';
+        }, 5000);
+    });
+</script>
 {% endblock %}

@@ -164,3 +164,7 @@ table.table-vertical-center tr td, table.table-vertical-center tr th {
 form.spaced-bottom {
     padding-bottom: 2em;
 }
+
+.spaced-bottom {
+    padding-bottom: 2em;
+}

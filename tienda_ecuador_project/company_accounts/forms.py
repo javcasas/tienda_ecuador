@@ -36,6 +36,16 @@ class CompanyForm(forms.ModelForm):
         fields = ('razon_social', 'nombre_comercial', 'ruc',
                   'direccion_matriz')
 
+class CompanyLogoForm(forms.ModelForm):
+    logo = forms.ImageField(
+        label='Logotipo')
+
+    # An inline class to provide additional information on the form.
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        model = models.Company
+        fields = ('logo', )
+
 
 class CertificateForm(forms.Form):
     cert = forms.FileField(
