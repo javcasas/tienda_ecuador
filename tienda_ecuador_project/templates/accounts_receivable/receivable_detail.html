@@ -1,0 +1,83 @@
+{% extends 'accounts_receivable/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+{% load days_left %}
+
+{% block title %}Cuentas por Cobrar - {{ block.super }}{% endblock %}
+
+{% block body %}
+  {{ block.super }}
+  <div class='col-xs-12 even-section'>
+    <h1>Cuenta por Cobrar - {% if receivable.received %} Cobrado {% else %} No Cobrado {% endif %}</h1>
+    <table class='table table-hover'>
+      <tbody>
+        <tr class="{% if not receivable.received %}{{ receivable.days_left|days_left_to_css_class }}{% endif %}">
+          <th>Fecha</th>
+          <td>{{ receivable.date.isoformat }}</td>
+        </tr>
+        <tr>
+          <th>Estado</th>
+          {% if receivable.received %}
+          <td class='text-success success'>
+            Cobrado
+          </td>
+          {% else %}
+          <td class='text-danger danger'>
+            No Cobrado
+          </td>
+          {% endif %}
+        </tr>
+        <tr>
+          <th>Factura</th>
+          <td>{{ receivable.bill.number }}</td>
+        </tr>
+        <tr>
+          <th>Por cobrar</th>
+          <td>{{ receivable.amount_left|price2d }}</td>
+        </tr>
+        <tr>
+          <th>Forma de Pago</th>
+          <td>{{ receivable.method.descripcion }}</td>
+        </tr>
+        <tr>
+          <th>Total</th>
+          <td>{{ receivable.qty|price2d }}</td>
+        </tr>
+        <tr>
+          <th>Comentarios</th>
+          <td>{{ receivable.comment }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Pagos asociados</h2>
+    {% if receivable.payments %}
+      <table class='table table-hover'>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cantidad</th>
+            <th>Forma de Pago</th>
+            <th>Comentario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in receivable.payments %}
+            <tr>
+              <td>{{ payment.date.isoformat }}</td>
+              <td>{{ payment.qty|price2d }}</td>
+              <td>{{ payment.method.descripcion }}</td>
+              <td>{{ payment.comment }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No hay pagos asociados a esta cuenta por cobrar</p>
+    {% endif %}
+    <a href='{% url 'receivable_update' receivable.id %}' class='btn btn-default col-xs-6'>Editar</a>
+    <a href='{% url 'receivable_claim' receivable.id %}' class='btn btn-primary col-xs-6'>Cobrar</a>
+  </div>
+
+{% endblock %}

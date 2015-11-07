@@ -1,0 +1,20 @@
+{% extends 'accounts_receivable/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Confirmar cuenta cobrada {{ receivable }} - {{ block.super }}{% endblock %}
+{% block body %}
+  {{ block.super }}
+  <div class='col-xs-12 even-section'>
+    <h1>Confirmar cuenta cobrada</h1>
+    <p>La cuenta {{ receivable }} ha sido cobrada ({{ receivable.total_paid|price2d }} de {{ receivable.qty|price2d }}). ¿Desea dar de baja la cuenta?
+    </p>
+    <form method='post' action='.' class='form'>
+        {% csrf_token %}
+        {% buttons %}
+            <button type='submit' class='btn btn-primary col-xs-6'>Dar de Baja</button>
+            <a href='{% url 'receivable_detail' receivable.id %}' class='btn btn-default col-xs-6'>No dar de baja</a>
+        {% endbuttons %}
+    </form>
+  </div>
+{% endblock %}

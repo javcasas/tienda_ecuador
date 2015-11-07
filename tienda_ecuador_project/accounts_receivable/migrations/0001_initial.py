@@ -7,6 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('billing', '0007_iteminbill_descuento'),
     ]
 
     operations = [
@@ -14,6 +15,10 @@ class Migration(migrations.Migration):
             name='Payment',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('date', models.DateField()),
+                ('qty', models.DecimalField(max_digits=20, decimal_places=8)),
+                ('comment', models.TextField(blank=True)),
+                ('method', models.ForeignKey(to='billing.FormaPago')),
             ],
             options={
             },
@@ -23,6 +28,12 @@ class Migration(migrations.Migration):
             name='Receivable',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('qty', models.DecimalField(max_digits=20, decimal_places=8)),
+                ('date', models.DateField()),
+                ('received', models.BooleanField(default=False)),
+                ('comment', models.TextField(blank=True)),
+                ('bill', models.ForeignKey(to='billing.Bill')),
+                ('method', models.ForeignKey(to='billing.FormaPago')),
             ],
             options={
             },

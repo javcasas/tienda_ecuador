@@ -1,0 +1,17 @@
+{% extends 'accounts_receivable/l1_company_selected.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Editar Cuenta por Cobrar {{ receivable }} - {{ block.super }}{% endblock %}
+{% block body %}
+  {{ block.super }}
+  <div class='col-xs-12 even-section'>
+    <form method='post' action='.' class='form'>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% buttons %}
+            <button type='submit' class='btn btn-primary'>Guardar</button>
+            <a href='{% url 'receivable_detail' receivable.id %}' class='btn btn-default'>Cancelar</a>
+        {% endbuttons %}
+    </form>
+  </div>
+{% endblock %}

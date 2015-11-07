@@ -2,6 +2,7 @@
 
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load days_left %}
 
 {% block title %}Cuentas por Cobrar - {{ block.super }}{% endblock %}
 
@@ -15,19 +16,21 @@
           <tr>
             <th>Fecha</th>
             <th>Factura</th>
+            <th>Total</th>
             <th>Por cobrar</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for item in items_por_cobrar %}
-            <tr>
-              <td>{{ item.date }}</td>
+            <tr class="{{ item.days_left|days_left_to_css_class }}">
+              <td>{{ item.date.isoformat }}</td>
               <td>{{ item.bill.number }}</td>
-              <td>{{ item.qty }}</td>
+              <td>{{ item.qty|price2d }}</td>
+              <td>{{ item.amount_left|price2d }}</td>
               <td>
-                <a href='{# FIXME: url #}' class='btn btn-primary'>Cobrar</a>
-                <a href='{# FIXME: url #}' class='btn btn-default'>Detalle</a>
+                <a href='{% url 'receivable_claim' item.id %}' class='btn btn-primary'>Cobrar</a>
+                <a href='{% url 'receivable_detail' item.id %}' class='btn btn-default'>Detalle</a>
               </td>
             </tr>
           {% endfor %}

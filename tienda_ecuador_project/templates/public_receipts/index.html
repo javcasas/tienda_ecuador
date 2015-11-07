@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block body_block %}
+{{ block.super }}
+<div class='col-xs-12 even-section'>
+    <h1>Consulta de comprobantes</h1>
+    <form class='form' action='.' method='post'>
+        {% csrf_token %}
+        <label for='clave'>Clave de acceso</label>
+        <input type='text' name='clave' placeholder='Clave de Acceso' class='form-control'/>
+        <button type='submit' class='btn btn-primary btn-block spaced-top'>Consultar</button>
+    </form>
+</div>
+{% endblock %}

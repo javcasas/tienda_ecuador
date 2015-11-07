@@ -43,6 +43,7 @@ INSTALLED_APPS = (
     'registration',
     'bootstrap3',
     'reports',
+    'public_receipts',
 )
 
 REGISTRATION_OPEN = True       # If True, users can register

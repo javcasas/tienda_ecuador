@@ -6,6 +6,7 @@ from django.conf import settings
 import views
 import company_accounts.forms
 import registration.views
+import billing.views
 
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
     url(r'^support/$', views.SupportView.as_view(), name='support'),
 
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^comprobantes/', include('public_receipts.urls', namespace='public-receipts')),
     url(r'^company_accounts/',
         include('company_accounts.urls',
                 app_name='company_accounts', namespace='company-accounts')),
