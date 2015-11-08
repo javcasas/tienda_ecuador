@@ -52,7 +52,7 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         self.c = Client()
         r = self.c.post("/accounts/login/",
                         {'username': username, 'password': password})
-        self.assertRedirects(r, reverse('billing_index'))
+        #self.assertRedirects(r, reverse('billing_index'))
 
     def tearDown(self):
         self.assert_no_broken_urls()

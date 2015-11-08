@@ -79,7 +79,7 @@ base_data = {
         'decimales_qty': 0,
     },
     "BaseBill": {
-        'number': '3',
+        'number': '33344556677',
         'date': get_date(),
         'xml_content': '',
         'ride_content': '',
