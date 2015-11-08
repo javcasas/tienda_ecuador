@@ -171,11 +171,10 @@ class CompanyView(object):
         return self.kwargs['pk']
 
 
-class CompanyProfileView(CompanyView, CompanySelected, DetailView):
+class CompanyProfileView(CompanyView, CompanySelected, LicenceControlMixin, DetailView):
     """
     View that shows a general index for a given company
     """
-
 
 
 class CompanyProfileUpdateView(CompanyView, CompanySelected, UpdateView):

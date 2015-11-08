@@ -35,5 +35,20 @@ class LicenceControlMixin(object):
     """
     Mixin that provides the valid_licence method
     """
+    licence_required = None
     def valid_licence(self, valid_licences):
         return valid_licence(self.user, valid_licences)
+
+    def get_context_data(self, **kwargs):
+        context = super(LicenceControlMixin, self).get_context_data(**kwargs)
+        cu = get_object_or_404(models.CompanyUser, user=self.request.user)
+        effective_licence = cu.company.licence.effective_licence
+        licence_data = {
+            'demo': effective_licence == "demo",
+            'basic': effective_licence in ['basic', 'professional', 'enterprise'],
+            'professional': effective_licence in ['professional', 'enterprise'],
+            'enterprise': effective_licence in ['enterprise'],
+        }
+        context['licence'] = licence_data
+        context['valid_licence'] = licence_data.get(self.licence_required, False)
+        return context

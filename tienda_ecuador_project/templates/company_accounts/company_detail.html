@@ -14,8 +14,16 @@
     {{ block.super }}
     <div class='col-xs-12 even-section'>
         <div class='col-xs-12 col-lg-6 text-center'>
-            <img src='/{{company.logo}}' alt='Logotipo' class='spaced-top spaced-bottom'/>
-            <a href='{% url 'company_accounts:company_profile_update_logo' company.id %}' class='btn btn-default btn-block'>Cambiar logotipo</a>
+            {% if licence.professional and company.logo %}
+                <img src='/{{company.logo}}' alt='Logotipo' class='spaced-top spaced-bottom'/>
+            {% else %}
+                <img src='/static/img/logo_141x132.png' class='spaced-top spaced-bottom'/>
+            {% endif %}
+            <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus"
+               data-placement="bottom"
+               data-href='{% url 'company_accounts:company_profile_update_logo' company.id %}'
+               data-valid-licence='{{ licence.professional }}'
+               class='btn btn-default btn-block'>Cambiar logotipo</a>
         </div>
         <div class='col-xs-12 col-lg-6'>
             <h1>{{company.nombre_comercial}}</h1>
