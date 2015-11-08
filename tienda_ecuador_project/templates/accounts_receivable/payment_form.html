@@ -1,10 +1,13 @@
-{% extends 'accounts_receivable/l1_company_selected.html' %}
+{% extends 'accounts_receivable/l2_receivable_selected.html' %}
 {% load bootstrap3 %}
+{% load decimal_format %}
 
 {% block title %}Cobrar cuenta {{ receivable }} - {{ block.super }}{% endblock %}
 {% block body %}
   {{ block.super }}
   <div class='col-xs-12 even-section'>
+    <h1>Cobrar cuenta {{ receivable }}</h1>
+    <h3>Queda {{ receivable.amount_left|price2d }} por cobrar.</h3>
     <form method='post' action='.' class='form'>
         {% csrf_token %}
         {% bootstrap_form form %}

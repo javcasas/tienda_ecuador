@@ -92,3 +92,16 @@ class ReceivableTests(TestCase):
                        method=self.payment_method)
         payment.save()
         self.assertEquals(list(r.payments), [payment])
+
+    def test_unicode(self):
+        """
+        Tests the amount_left property
+        """
+        r = models.Receivable(qty=Decimal(100),
+                                      bill=self.bill,
+                                      date=get_date(),
+                                      method=self.payment_method,
+                                      comment='')
+        self.assertEquals(
+            unicode(r),
+            "{}/{} - ${}".format(r.bill.number, r.date, r.amount_left))

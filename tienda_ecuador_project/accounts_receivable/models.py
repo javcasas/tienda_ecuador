@@ -48,6 +48,9 @@ class Receivable(models.Model):
     def payments(self):
         return Payment.objects.filter(receivable=self)
 
+    def __unicode__(self):
+        return u"{}/{} - ${}".format(self.bill.number, self.date, self.amount_left)
+
     def get_absolute_url(self):
         return reverse("receivable_detail", args=(self.id,))
 

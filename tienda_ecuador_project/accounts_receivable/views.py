@@ -30,10 +30,11 @@ class CompanyIndexView(CompanyView,
     """
     template_name = 'accounts_receivable/company_index.html'
     model = models.Receivable
-    context_object_name = 'items_por_cobrar'
+    context_object_name = 'receivable_list'
+    received = False
 
     def get_queryset(self):
-        return self.model.objects.filter(bill__company=self.company, received=False)
+        return self.model.objects.filter(bill__company=self.company, received=self.received)
 
 
 class ReceivableView(object):
@@ -90,6 +91,11 @@ class PaymentCreateView(ReceivableSelected, CreateView):
     model = models.Payment
     context_object_name = 'payment'
     form_class = forms.PaymentForm
+
+    def get_form(self, *args):
+        form = super(PaymentCreateView, self).get_form(*args)
+        form.fields['qty'].initial = self.receivable.amount_left
+        return form
 
     def form_valid(self, form):
         form.instance.receivable = self.receivable

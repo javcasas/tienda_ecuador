@@ -4,12 +4,17 @@
 {% load decimal_format %}
 {% load days_left %}
 
-{% block title %}Cuentas por Cobrar - {{ block.super }}{% endblock %}
+{% block title %}Cuentas Cobradas - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+{{ block.super }}
+<li><a href='{% url 'received_list' company.id %}'>Cuentas Cobradas</a></li>
+{% endblock %}
 
 {% block body %}
   {{ block.super }}
   <div class='col-xs-12 even-section'>
-    <h1>Cuentas por Cobrar</h1>
+    <h1>Cuentas Cobradas</h1>
     {% if receivable_list %}
       <table class='table table-hover'>
         <thead>
@@ -17,19 +22,18 @@
             <th>Fecha</th>
             <th>Factura</th>
             <th>Total</th>
-            <th>Por cobrar</th>
+            <th>Cobrado</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for item in receivable_list %}
-            <tr class="{{ item.days_left|days_left_to_css_class }}">
+            <tr>
               <td>{{ item.date.isoformat }}</td>
               <td>{{ item.bill.number }}</td>
               <td>{{ item.qty|price2d }}</td>
-              <td>{{ item.amount_left|price2d }}</td>
+              <td>{{ item.total_paid|price2d }}</td>
               <td>
-                <a href='{% url 'receivable_claim' item.id %}' class='btn btn-primary'>Cobrar</a>
                 <a href='{% url 'receivable_detail' item.id %}' class='btn btn-default'>Detalle</a>
               </td>
             </tr>
@@ -37,10 +41,10 @@
         </tbody>
       </table>
     {% else %}
-      <p>No hay cuentas por cobrar</p>
+      <p>No hay cuentas cobradas</p>
     {% endif %}
-    <h1>Cuentas Cobradas</h1>
-    <a href='{% url 'received_list' company.id %}' class='btn btn-default'>Ver cuentas cobradas</a>
+    <h1>Cuentas por Cobrar</h1>
+    <a href='{% url 'accounts_receivable_index' company.id %}' class='btn btn-default'>Ver cuentas por cobrar</a>
   </div>
 
 {% endblock %}

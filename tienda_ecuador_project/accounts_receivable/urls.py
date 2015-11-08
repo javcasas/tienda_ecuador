@@ -6,6 +6,8 @@ urlpatterns = patterns(
     # Index views
     url(r'^(?P<pk>[0-9]+)$',
         views.CompanyIndexView.as_view(), name='accounts_receivable_index'),
+    url(r'^(?P<pk>[0-9]+)/received/$',
+        views.CompanyIndexView.as_view(received=True, template_name='accounts_receivable/company_received_index.html'), name='received_list'),
 
     # Receivable views
     url(r'^receivable/(?P<pk>[0-9]+)$',

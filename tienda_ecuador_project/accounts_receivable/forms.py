@@ -26,6 +26,8 @@ class PaymentForm(forms.ModelForm):
         label='Fecha')
     qty = forms.DecimalField(
         label='Cantidad cobrada',
+        decimal_places=2,
+        min_value=0,
         help_text="Teclee la cantidad cobrada.")
     method = forms.ModelChoiceField(
         label='Forma de pago',

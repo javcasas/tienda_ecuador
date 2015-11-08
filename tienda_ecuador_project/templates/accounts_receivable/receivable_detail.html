@@ -1,10 +1,8 @@
-{% extends 'accounts_receivable/l1_company_selected.html' %}
+{% extends 'accounts_receivable/l2_receivable_selected.html' %}
 
 {% load bootstrap3 %}
 {% load decimal_format %}
 {% load days_left %}
-
-{% block title %}Cuentas por Cobrar - {{ block.super }}{% endblock %}
 
 {% block body %}
   {{ block.super }}
@@ -77,7 +75,9 @@
       <p>No hay pagos asociados a esta cuenta por cobrar</p>
     {% endif %}
     <a href='{% url 'receivable_update' receivable.id %}' class='btn btn-default col-xs-6'>Editar</a>
-    <a href='{% url 'receivable_claim' receivable.id %}' class='btn btn-primary col-xs-6'>Cobrar</a>
+    {% if not receivable.received %}
+        <a href='{% url 'receivable_claim' receivable.id %}' class='btn btn-primary col-xs-6'>Cobrar</a>
+    {% endif %}
   </div>
 
 {% endblock %}

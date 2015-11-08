@@ -1,0 +1,14 @@
+{% extends 'accounts_receivable/l1_company_selected.html' %}
+{% block title %}{{ company.nombre_comercial }} - {{ block.super }}{% endblock %}
+
+{% block home_url %}{% url 'company_accounts:company_select' %}{% endblock %}
+
+{% block left_nav_bar %}
+    {# TODO Llenar #}
+{% endblock %}
+
+{% block breadcrumbs %}
+{{ block.super }}
+<li><a href='{% url 'receivable_detail' receivable.id %}'>{{ receivable }}</a></li>
+{% endblock %}
+
