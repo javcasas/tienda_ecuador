@@ -37,6 +37,7 @@ from forms import (ItemForm,
                    CustomerForm)
 from util import signature
 from util import sri_sender
+import accounts_receivable.models
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -609,6 +610,17 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
         new.number = numero_comprobante
         new.issues = json.dumps(convert_messages(autorizacion.mensajes))
         new.save()
+
+        # Generate Receivables
+        for payment in proforma.payment:
+            if payment.plazo_pago.unidad_tiempo == 'dias':
+                payment_date = date.today() + timedelta(days=payment.plazo_pago.tiempo)
+            r = accounts_receivable.models.Receivable(
+                    bill=new,
+                    qty=payment.cantidad,
+                    date=payment_date,
+                    method=payment.forma_pago)
+            r.save()
 
         # update sequence numbers
         if ambiente == 'pruebas':
