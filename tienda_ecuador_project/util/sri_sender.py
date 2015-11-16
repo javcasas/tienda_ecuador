@@ -4,14 +4,18 @@ urls = {
         'recepcion': "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantes?wsdl",
         'autorizacion': 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantes?wsdl',
     },        
+    'produccion': {
+        'recepcion': 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
+        'autorizacion': 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
+    },
 }
 
-def enviar_comprobante(xml_data):
-    client = Client(urls['pruebas']['recepcion'])
+def enviar_comprobante(xml_data, entorno='pruebas'):
+    client = Client(urls[entorno]['recepcion'])
     result = client.service.validarComprobante(xml_data.encode('base64'))
     return result
 
-def validar_comprobante(clave_acceso):
-    client = Client(urls['pruebas']['autorizacion'])
+def validar_comprobante(clave_acceso, entorno='pruebas'):
+    client = Client(urls[entorno]['autorizacion'])
     result = client.service.autorizacionComprobante(clave_acceso)
     return result
