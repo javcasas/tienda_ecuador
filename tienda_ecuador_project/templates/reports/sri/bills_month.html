@@ -1,0 +1,10 @@
+{% extends 'reports/sri/bills.html' %}
+{% load decimal_format %}
+{% load date_management %}
+
+{% block date_name %}{{month | month_name }} / {{year}}{% endblock %}
+
+{% block calendar %}
+    {{ calendar }}
+{% endblock %}
+

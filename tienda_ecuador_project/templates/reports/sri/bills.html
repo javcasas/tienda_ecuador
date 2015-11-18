@@ -4,7 +4,7 @@
 
 {% block breadcrumbs %}
     {{ block.super }}
-    <li><a href='{% url 'report_sri_index' company.id %}'>Ingresos</a></li>
+    <li><a href='{% url 'report_sri_index' company.id %}'>Facturación</a></li>
     <li><a href='{% url report_url_year company.id year %}'>{{ year }}</a></li>
     {% if month %}
     <li><a href='{% url report_url_month company.id year month %}'>{{ month | month_name }}</a></li>
@@ -17,7 +17,7 @@
 {% block body %}
     {{ block.super }}
 <div class='col-xs-12'>
-    <h1>Ingresos:
+    <h1>Facturas:
         {% if day %} {{ day }} de {% endif %}
         {% if month %} {{ month | month_name }} de {% else %} Año {% endif %}
         {{ year }}
@@ -44,21 +44,19 @@
             <tr>
                 <th>Fecha</th>
                 <th>Factura</th>
-                <th>Cuenta por Cobrar</th>
-                <th>Cobrado</th>
+                <th>Total sin Impuestos</th>
             </tr>
         </thead>
         <tbody>
-            {% for payment in payment_list %}
+            {% for bill in bill_list %}
                 <tr>
-                    <td>{{ payment.date }}</td>
-                    <td><a href='{% url "bill_detail" payment.receivable.bill.id %}'>{{ payment.receivable.bill.number }}</a></td>
-                    <td><a href='{% url "receivable_detail" payment.receivable.id %}'>{{ payment.receivable.date }} / {{ payment.receivable.qty|money_2d }}</td>
-                    <td><a href='{% url "receivable_detail" payment.receivable.id %}'>{{ payment.qty|money_2d }}</td>
+                    <td>{{ bill.date }}</td>
+                    <td><a href='{% url "bill_detail" bill.id %}'>{{ bill.number }}</a></td>
+                    <td>{{ bill.total_sin_iva | money_2d }}</td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan='4'>No hay cuentas por cobrar en la fecha seleccionada</td>
+                    <td colspan='4'>No hay facturas en la fecha seleccionada</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -66,8 +64,8 @@
     <h1>Totales</h1>
     <table class='table table-hover'>
         <tbody>
-            <tr><th>Cobros</th><td>{{ payment_list | length }}</td></tr>
-            <tr><th>Cantidad Cobrada</th><td>{{ total | money_2d }}</td></tr>
+            <tr><th>Facturas</th><td>{{ bill_list | length }}</td></tr>
+            <tr><th>Total Facturado</th><td>{{ total | money_2d }}</td></tr>
         </tbody>
     </table>
 </div>
