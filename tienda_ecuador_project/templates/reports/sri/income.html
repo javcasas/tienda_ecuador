@@ -4,7 +4,11 @@
 
 {% block breadcrumbs %}
     {{ block.super }}
-    <li><a href='{% url 'report_sri_index' company.id %}'>Ingresos</a></li>
+    <li><a href='{% url 'report_sri_index' company.id %}'>Ingresos
+        {% if ambiente_sri == 'pruebas' %}
+        (Entorno de Pruebas)
+        {% endif %}
+    </a></li>
     <li><a href='{% url report_url_year company.id year %}'>{{ year }}</a></li>
     {% if month %}
     <li><a href='{% url report_url_month company.id year month %}'>{{ month | month_name }}</a></li>
@@ -17,7 +21,12 @@
 {% block body %}
     {{ block.super }}
 <div class='col-xs-12'>
-    <h1>Ingresos:
+    <h1>{% if ambiente_sri == 'pruebas' %}
+        Ingresos (Entorno de Pruebas):
+        {% else %}
+        Ingresos:
+        {% endif %}
+
         {% if day %} {{ day }} de {% endif %}
         {% if month %} {{ month | month_name }} de {% else %} Año {% endif %}
         {{ year }}

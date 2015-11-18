@@ -169,6 +169,8 @@ class DateListReport(CompanySelected, ListView):
         context['report_url_day'] = self.report_url_day
         context['report_url_month'] = self.report_url_month
         context['report_url_year'] = self.report_url_year
+
+        context['ambiente_sri'] = self.ambiente_sri
         return context
 
 
