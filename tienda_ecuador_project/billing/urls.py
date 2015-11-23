@@ -50,6 +50,8 @@ urlpatterns = patterns(
         views.ProformaBillDetailView.as_view(), name='proformabill_detail'),
     url(r'^proforma_bill/(?P<pk>[0-9]+)/update/$',
         views.ProformaBillUpdateView.as_view(), name='proformabill_update'),
+    url(r'^proforma_bill/(?P<proformabill_id>[0-9]+)/new_customer/$',
+        views.ProformaBillNewCustomerView.as_view(), name='proformabill_new_customer'),
     url(r'^proforma_bill/(?P<pk>[0-9]+)/delete/$',
         views.ProformaBillDeleteView.as_view(), name='proformabill_delete'),
 

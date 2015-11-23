@@ -43,7 +43,10 @@
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="headingTwo">
       <h4 class="panel-title">
-        <a {% if proformabill.issued_to.razon_social == 'CONSUMIDOR FINAL' or not proformabill.issued_to %}class="collapsed"{% endif %}
+        <a 
+           {% if proformabill.issued_to.razon_social == 'CONSUMIDOR FINAL' or not proformabill.issued_to %}
+                class="collapsed"
+           {% endif %}
            role="button" data-toggle="collapse" data-parent="#accordion"
            href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
           Con Datos
@@ -62,12 +65,14 @@
             {% bootstrap_form form %}
             {% buttons %}
                 <button type='submit' class='btn btn-primary'>Guardar</button>
+                <a href='{% url 'proformabill_new_customer' proformabill.id %}' class='btn btn-primary'>Introducir Datos</a>
                 <a href='{% url 'proformabill_detail' proformabill.id %}' class='btn btn-default'>Cancelar</a>
             {% endbuttons %}
         </form>
       </div>
     </div>
   </div>
+
 </div>
 
 

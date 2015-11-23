@@ -77,7 +77,7 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         source_html = client.get(url).content
         try:
             root = ET.fromstring(source_html)
-        except:
+        except ET.ParseError:
             open("test.xml", "w").write(source_html)
             raise
         data_to_post = make_post(data_to_post)
@@ -789,6 +789,40 @@ class ProformaBillTests(LoggedInWithCompanyTests):
             r, reverse("proformabill_company_index", args=(self.company.id,)))
         with self.assertRaises(models.ProformaBill.DoesNotExist):
             models.ProformaBill.objects.get(id=self.proformabill.id)
+
+    def test_proformabill_update_new_customer_show_form(self):
+        """
+        Check the proforma bill new customer view
+        """
+        r = self.c.get(
+            reverse('proformabill_new_customer',
+                    args=(self.proformabill.id,)))
+        keys = ['razon_social', "tipo_identificacion", "identificacion",
+                "email", "direccion"]
+        for k in keys:
+            self.assertContains(r, k)
+
+    def test_proformabill_update_new_customer_submit(self):
+        """
+        Check the proforma bill update view
+        """
+        data = {'razon_social': 'Pepe a',
+                "tipo_identificacion": "cedula",
+                "identificacion": "1713831152",
+                "email": "a@ba.com",
+                "direccion": "blebla aaaa street"}
+        with self.new_item(models.Customer) as new:
+            r = self.simulate_post(
+                reverse('proformabill_new_customer',
+                        args=(self.proformabill.id,)),
+                data)
+        self.assertRedirects(
+            r, reverse('proformabill_detail',
+                       args=(self.proformabill.id,)))
+        self.assertObjectMatchesData(new, data)
+        self.assertObjectMatchesData(
+            models.ProformaBill.objects.get(id=self.proformabill.id).issued_to,
+            data)
 
 
 class ProformaBillItemTests(LoggedInWithCompanyTests):

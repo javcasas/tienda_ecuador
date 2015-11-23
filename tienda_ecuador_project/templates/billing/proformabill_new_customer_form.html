@@ -1,0 +1,19 @@
+{% extends 'billing/l2_proformabill_selected.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Editar Factura {{ proformabill.number }} - {{ block.super }}{% endblock %}
+{% block body %}
+    {{ block.super }}
+<div class='col-xs-12'>
+    <h1>Nuevo Cliente para factura {{ proformabill.number }}</h1>
+    <form method='post' action='.' class='form'>
+        {% csrf_token %}
+        <input type='hidden' name='cons_final' value='False' />
+        {% bootstrap_form form %}
+        {% buttons %}
+            <button type='submit' class='btn btn-primary'>Guardar</button>
+            <a href='{% url 'proformabill_detail' proformabill.id %}' class='btn btn-default'>Cancelar</a>
+        {% endbuttons %}
+    </form>
+</div>
+{% endblock %}

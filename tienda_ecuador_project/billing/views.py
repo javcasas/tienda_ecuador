@@ -349,6 +349,55 @@ class ProformaBillView(object):
         return self.model.objects.get(id=self.kwargs['pk']).punto_emision.id
 
 
+class ProformaBillSelected(PuntoEmisionSelected):
+    model = ProformaBillItem
+    context_object_name = 'item'
+
+    @property
+    def proformabill(self):
+        """
+        Attribute that returns the current proformabill
+        """
+        return get_object_or_404(ProformaBill,
+                                 id=self.proformabill_id)
+
+    @property
+    def proformabill_id(self):
+        return self.kwargs['proformabill_id']
+
+    @property
+    def punto_emision_id(self):
+        return self.proformabill.punto_emision.id
+
+    def get_context_data(self, **kwargs):
+        """
+        Adds proformabill to the context data
+        """
+        context = super(ProformaBillSelected, self).get_context_data(**kwargs)
+        context['proformabill'] = self.proformabill
+        return context
+
+    @property
+    def success_url(self):
+        """
+        Generic success URL, goes back to the proforma bill detail view
+        """
+        return reverse("proformabill_detail",
+                       args=(self.proformabill.id,))
+
+
+class ProformaBillItemView(object):
+    model = ProformaBillItem
+    context_object_name = 'item'
+
+    def get_queryset(self):
+        return self.model.objects.filter(proforma_bill=self.proformabill)
+
+    @property
+    def proformabill_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).proforma_bill.id
+
+
 class ProformaBillCompanyListView(CompanySelected,
                                   ProformaBillView,
                                   ListView):
@@ -489,7 +538,6 @@ class ProformaBillUpdateView(ProformaBillView,
             identificacion='9999999999999',
             company=self.company)
         if form.data.get("cons_final") == 'True':
-            print "TRRT"
             form.data = form.data.copy()
             form.data['issued_to'] = c.id
             form.fields['issued_to'].queryset = Customer.objects.filter(
@@ -498,6 +546,25 @@ class ProformaBillUpdateView(ProformaBillView,
             form.fields['issued_to'].queryset = Customer.objects.filter(
                 company=self.company).exclude(identificacion='9999999999999')
         return form
+
+class ProformaBillNewCustomerView(ProformaBillSelected,
+                                  PuntoEmisionSelected,
+                                  CreateView):
+    form_class = CustomerForm
+    model = models.Customer
+    template_name = 'billing/proformabill_new_customer_form.html'
+
+    def form_valid(self, form):
+        form.instance.company = self.company
+        res = super(ProformaBillNewCustomerView, self).form_valid(form)
+        proforma = self.proformabill
+        proforma.issued_to = form.instance
+        proforma.save()
+        return res
+
+    @property
+    def success_url(self):
+        return reverse('proformabill_detail', args=(self.proformabill.id, ))
 
 
 class ProformaBillDeleteView(ProformaBillView,
@@ -741,53 +808,6 @@ class ProformaBillEmitGenXMLView(ProformaBillView,
 #############################################################
 #   Proforma Bill Item views
 #############################################################
-class ProformaBillSelected(PuntoEmisionSelected):
-    model = ProformaBillItem
-    context_object_name = 'item'
-
-    @property
-    def proformabill(self):
-        """
-        Attribute that returns the current proformabill
-        """
-        return get_object_or_404(ProformaBill,
-                                 id=self.proformabill_id)
-
-    @property
-    def proformabill_id(self):
-        return self.kwargs['proformabill_id']
-
-    @property
-    def punto_emision_id(self):
-        return self.proformabill.punto_emision.id
-
-    def get_context_data(self, **kwargs):
-        """
-        Adds proformabill to the context data
-        """
-        context = super(ProformaBillSelected, self).get_context_data(**kwargs)
-        context['proformabill'] = self.proformabill
-        return context
-
-    @property
-    def success_url(self):
-        """
-        Generic success URL, goes back to the proforma bill detail view
-        """
-        return reverse("proformabill_detail",
-                       args=(self.proformabill.id,))
-
-
-class ProformaBillItemView(object):
-    model = ProformaBillItem
-    context_object_name = 'item'
-
-    def get_queryset(self):
-        return self.model.objects.filter(proforma_bill=self.proformabill)
-
-    @property
-    def proformabill_id(self):
-        return self.model.objects.get(id=self.kwargs['pk']).proforma_bill.id
 
 
 class ProformaBillAddItemView(ProformaBillSelected,
