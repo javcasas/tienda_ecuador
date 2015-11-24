@@ -4,3 +4,8 @@
 db.sqlite3
 htmlcov/
 venv/
+signer/
+tienda_ecuador_project/OverwritingStorage/
+tienda_ecuador_project/company_logos/
+tienda_ecuador_project/static/company_logos/
+tienda_ecuador_project/test.xml
