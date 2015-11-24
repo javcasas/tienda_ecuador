@@ -1,6 +1,7 @@
 from functools import partial
 from contextlib import contextmanager
 import urllib
+import xml.etree.ElementTree as ET
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -73,7 +74,7 @@ class TestHelpersMixin(object):
             self.fail("New item of type {} was not created".format(kind))
         res.ob = new_items.pop()
 
-    def simulate_post(self, url, data_to_post, client=None, form_index=0):
+    def simulate_post(self, url, data_to_post, client=None, form_index=0, **client_kwargs):
         """
         Simulates a post
             Only commits data that is not in hidden fields
@@ -123,7 +124,37 @@ class TestHelpersMixin(object):
 
         self.assertFalse(data_to_post,
                          "Items left in data to post: {}".format(data_to_post))
-        return client.post(url, data_to_use)
+        return client.post(url, data_to_use, **client_kwargs)
+
+    def assertContainsTag(self, response, tag_name, **attributes):
+        """
+        Ensures the response contains the specified tag
+        with the specified attributes
+        """
+        try:
+            root = ET.fromstring(response.content)
+        except:
+            open("test.xml", "w").write(response.content)
+            raise
+
+        def valid_tag(tag):
+            for key, val in attributes.iteritems():
+                if key not in tag.attrib:
+                    return False
+                if tag.attrib[key] != val:
+                    return False
+            else:
+                return True
+
+        tags = root.findall(".//" + tag_name)
+        for tag in tags:
+            if valid_tag(tag):
+                return True
+        else:
+            attrs = ["{}='{}'".format(key, val)
+                     for key, val in attributes.iteritems()]
+            self.fail("Tag {} with attrs {} not found".format(
+                      tag_name, " ".join(attrs)))
 
 
 def make_post(data):
