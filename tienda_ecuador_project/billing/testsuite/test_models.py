@@ -140,6 +140,9 @@ class FieldsTests(TestCase, TestHelpersMixin):
             fecha_autorizacion=date(2015, 5, 1),
             numero_autorizacion='12342423423',
             ambiente_sri='pruebas',
+            iva=Decimal(3),
+            total_sin_iva=Decimal(15),
+            iva_retenido=Decimal(0),
             **base_data['BaseBill'])
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
@@ -170,6 +173,9 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'company': self.company,
                  'fecha_autorizacion': datetime(2015, 5, 1, tzinfo=pytz.timezone('America/Guayaquil')),
                  'numero_autorizacion': '12342423423',
+                 'iva': Decimal(3),
+                 'total_sin_iva': Decimal(15),
+                 'iva_retenido': Decimal(0),
                  'ambiente_sri': 'pruebas'}),
             (Item, base_data['BaseItem'],
                 {"company": self.company,

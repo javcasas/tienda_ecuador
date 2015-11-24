@@ -41,7 +41,7 @@ class LicenceControlMixin(object):
 
     def get_context_data(self, **kwargs):
         context = super(LicenceControlMixin, self).get_context_data(**kwargs)
-        cu = get_object_or_404(models.CompanyUser, user=self.request.user)
+        cu = get_object_or_404(models.CompanyUser, user=self.request.user, company=self.company)
         effective_licence = cu.company.licence.effective_licence
         licence_data = {
             'demo': effective_licence == "demo",

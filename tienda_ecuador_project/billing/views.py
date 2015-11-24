@@ -3,6 +3,7 @@ import os
 import base64
 import pytz
 import time
+import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -610,8 +611,8 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
 
         # Generate and sign XML
         xml_data, clave_acceso = gen_bill_xml(request, proforma)
-        assert(clave_acceso == proforma.clave_acceso)
-        print "Claves de acceso coinciden"
+        # assert(clave_acceso == proforma.clave_acceso) FIXME: Is this needed?
+        # print "Claves de acceso coinciden"
 
         proforma.xml_content = xml_data
         proforma.clave_acceso = clave_acceso
@@ -625,7 +626,7 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
             def convert_msg(msg):
                 converted = {}
                 for key in ['tipo', 'identificador', 'mensaje', 'informacionAdicional']:
-                    converted[key] = getattr(error, key, None)
+                    converted[key] = getattr(msg, key, None)
             return map(convert_msg, messages)
 
         # True if any of the error messages is 43: repeated access key

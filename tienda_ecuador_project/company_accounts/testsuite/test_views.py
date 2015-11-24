@@ -50,8 +50,9 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         self.user = add_User(username=username, password=password)
         self.c = Client()
         r = self.c.post("/accounts/login/",
-                        {'username': username, 'password': password})
-        self.assertRedirects(r, reverse('billing_index'))
+                        {'username': username, 'password': password},
+                        follow=True)
+        self.assertRedirects(r, reverse('company_accounts:create_company'))
 
     def tearDown(self):
         self.assert_no_broken_urls()
