@@ -18,24 +18,14 @@ from django.http import JsonResponse, HttpResponse
 from django.forms.models import model_to_dict
 
 
-import models
-from models import (Item,
-                    Bill,
-                    Customer,
-                    ProformaBill,
-                    ProformaBillItem,
-                    ClaveAcceso)
+from billing import models
+from billing import forms
 from company_accounts.models import (CompanyUser,
                                      Company,
                                      Establecimiento,
                                      PuntoEmision)
 from company_accounts.licence_helpers import licence_required
 
-from forms import (ItemForm,
-                   ProformaBillForm,
-                   ProformaBillAddItemForm,
-                   ProformaBillItemForm,
-                   CustomerForm)
 from util import signature
 from util import sri_sender
 import accounts_receivable.models
@@ -185,16 +175,16 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {}
         context.update({
-            'item_list': (Item.objects
+            'item_list': (models.Item.objects
                           .filter(company=company)
                           .order_by('sku')[:5]),
-            'bill_list': Bill.objects.filter(company=company),
+            'bill_list': models.Bill.objects.filter(company=company),  # FIXME, separate bills and proformas
             'proformabill_list':
-                ProformaBill.objects
+                models.Bill.objects  # FIXME, separate bills and proformas
                 .filter(punto_emision__establecimiento__company=company)
                 .order_by("number")[:5],
             'customer_list':
-                Customer.objects
+                models.Customer.objects
                 .filter(company=company).order_by('identificacion')[:5],
             'company': company,
             'single_punto_emision': self.single_punto_emision,
@@ -210,7 +200,7 @@ class ItemView(object):
     """
     Base class for an Item View
     """
-    model = Item
+    model = models.Item
     context_object_name = 'item'
 
     def get_queryset(self):
@@ -244,7 +234,7 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
     Create view for items
     """
     template_name_suffix = '_create_form'
-    form_class = ItemForm
+    form_class = forms.ItemForm
 
     def get_form(self, *args):
         res = super(ItemCreateView, self).get_form(*args)
@@ -261,11 +251,11 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
 
 
 class ItemUpdateView(ItemView, CompanySelected, UpdateView):
-    form_class = ItemForm
+    form_class = forms.ItemForm
 
     def get_form(self, *args, **kwargs):
         form = super(ItemUpdateView, self).get_form(*args, **kwargs)
-        item = Item.objects.get(pk=self.kwargs['pk'])
+        item = models.Item.objects.get(pk=self.kwargs['pk'])
         form.fields['iva'].initial = item.iva
         form.fields['ice'].initial = item.ice
         return form
@@ -293,7 +283,7 @@ class CustomerView(object):
     """
     Base class for an Item View
     """
-    model = Customer
+    model = models.Customer
     context_object_name = 'customer'
 
     def get_queryset(self):
@@ -316,7 +306,7 @@ class CustomerDetailView(CustomerView, CompanySelected, DetailView):
 
 class CustomerCreateView(CompanySelected, CustomerView, CreateView):
     template_name_suffix = '_create_form'
-    form_class = CustomerForm
+    form_class = forms.CustomerForm
 
     def form_valid(self, form):
         form.instance.company = self.company
@@ -324,7 +314,7 @@ class CustomerCreateView(CompanySelected, CustomerView, CreateView):
 
 
 class CustomerUpdateView(CustomerView, CompanySelected, UpdateView):
-    form_class = CustomerForm
+    form_class = forms.CustomerForm
 
 
 class CustomerDeleteView(CustomerView, CompanySelected, DeleteView):
@@ -337,9 +327,9 @@ class CustomerDeleteView(CustomerView, CompanySelected, DeleteView):
 #############################################################
 #   Proforma Bill views
 #############################################################
-class ProformaBillView(object):
-    model = ProformaBill
-    context_object_name = 'proformabill'
+class BillView(object):
+    model = models.Bill
+    context_object_name = 'bill'
 
     def get_queryset(self):
         return (self.model.objects
@@ -350,32 +340,32 @@ class ProformaBillView(object):
         return self.model.objects.get(id=self.kwargs['pk']).punto_emision.id
 
 
-class ProformaBillSelected(PuntoEmisionSelected):
-    model = ProformaBillItem
+class BillSelected(PuntoEmisionSelected):
+    model = models.BillItem
     context_object_name = 'item'
 
     @property
-    def proformabill(self):
+    def bill(self):
         """
-        Attribute that returns the current proformabill
+        Attribute that returns the current bill
         """
-        return get_object_or_404(ProformaBill,
-                                 id=self.proformabill_id)
+        return get_object_or_404(models.Bill,
+                                 id=self.bill_id)
 
     @property
-    def proformabill_id(self):
-        return self.kwargs['proformabill_id']
+    def bill_id(self):
+        return self.kwargs['bill_id']
 
     @property
     def punto_emision_id(self):
-        return self.proformabill.punto_emision.id
+        return self.bill.punto_emision.id
 
     def get_context_data(self, **kwargs):
         """
-        Adds proformabill to the context data
+        Adds bill to the context data
         """
-        context = super(ProformaBillSelected, self).get_context_data(**kwargs)
-        context['proformabill'] = self.proformabill
+        context = super(BillSelected, self).get_context_data(**kwargs)
+        context['bill'] = self.bill
         return context
 
     @property
@@ -383,55 +373,55 @@ class ProformaBillSelected(PuntoEmisionSelected):
         """
         Generic success URL, goes back to the proforma bill detail view
         """
-        return reverse("proformabill_detail",
-                       args=(self.proformabill.id,))
+        return reverse("bill_detail",
+                       args=(self.bill.id,))
 
 
-class ProformaBillItemView(object):
-    model = ProformaBillItem
+class BillItemView(object):
+    model = models.BillItem
     context_object_name = 'item'
 
     def get_queryset(self):
-        return self.model.objects.filter(proforma_bill=self.proformabill)
+        return self.model.objects.filter(bill=self.bill)
 
     @property
-    def proformabill_id(self):
-        return self.model.objects.get(id=self.kwargs['pk']).proforma_bill.id
+    def bill_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).bill.id
 
 
-class ProformaBillCompanyListView(CompanySelected,
-                                  ProformaBillView,
-                                  ListView):
-    context_object_name = "proformabill_list"
+class BillCompanyListView(CompanySelected,
+                   BillView,
+                   ListView):
+    context_object_name = "bill_list"
 
 
-class ProformaBillEstablecimientoListView(EstablecimientoSelected,
-                                          ProformaBillView,
+class BillEstablecimientoListView(EstablecimientoSelected,
+                                          BillView,
                                           ListView):
-    context_object_name = "proformabill_list"
+    context_object_name = "bill_list"
 
     def get_queryset(self):
         return self.model.objects.filter(
             punto_emision__establecimiento=self.establecimiento)
 
 
-class ProformaBillPuntoEmisionListView(PuntoEmisionSelected,
-                                       ProformaBillView,
+class BillPuntoEmisionListView(PuntoEmisionSelected,
+                                       BillView,
                                        ListView):
-    context_object_name = "proformabill_list"
+    context_object_name = "bill_list"
 
     def get_queryset(self):
         return self.model.objects.filter(punto_emision=self.punto_emision)
 
 
-class ProformaBillDetailView(ProformaBillView,
+class BillDetailView(BillView,
                              PuntoEmisionSelected,
                              DetailView):
     """
     Detail view for proforma bills
     """
     def get_context_data(self, **kwargs):
-        res = super(ProformaBillDetailView, self).get_context_data(**kwargs)
+        res = super(BillDetailView, self).get_context_data(**kwargs)
         fix_urls = {'45': ("asdf", 'Eliminar secuencial actual')}  # FIXME
         try:
             sri_errors = json.loads(self.proforma.issues)
@@ -448,7 +438,7 @@ class ProformaBillDetailView(ProformaBillView,
         return res
 
 
-class ProformaBillDetailViewTable(ProformaBillView,
+class BillDetailViewTable(BillView,
                              PuntoEmisionSelected,
                              DetailView):
     """
@@ -457,7 +447,7 @@ class ProformaBillDetailViewTable(ProformaBillView,
     template_name_suffix = '_detail_item_table'
 
 
-class ProformaBillPaymentView(ProformaBillView,
+class BillPaymentView(BillView,
                               PuntoEmisionSelected,
                               DetailView):
     """
@@ -466,7 +456,7 @@ class ProformaBillPaymentView(ProformaBillView,
     template_name_suffix = '_payment_form'
 
     def get_context_data(self, **kwargs):
-        context = super(ProformaBillPaymentView, self).get_context_data(**kwargs)
+        context = super(BillPaymentView, self).get_context_data(**kwargs)
         context['payment_kinds'] = models.FormaPago.objects.all()
         context['deferred'] = {}
         context['deferred']['payment_terms'] = models.PlazoPago.objects.exclude(tiempo=0)
@@ -490,14 +480,14 @@ class ProformaBillPaymentView(ProformaBillView,
                         forma_pago=payment_method,
                         plazo_pago=installment,
                         proforma_bill=proforma).save()
-            return redirect("proformabill_detail", proforma.id)
+            return redirect("bill_detail", proforma.id)
         elif request.POST['payment_mode'] == 'deferred':
             installment = models.PlazoPago.objects.get(pk=request.POST['payment_time_to_pay'])
             models.Pago(porcentaje=Decimal(100),
                         forma_pago=payment_method,
                         plazo_pago=installment,
                         proforma_bill=proforma).save()
-            return redirect("proformabill_detail", proforma.id)
+            return redirect("bill_detail", proforma.id)
         # elif request.POST['payment_mode'] == 'installments':
         #     return HttpResponse(str(("Cuotitas",
         #                         request.POST['payment_method'],
@@ -506,30 +496,31 @@ class ProformaBillPaymentView(ProformaBillView,
         return HttpResponse("Ok")
 
 
-class ProformaBillCreateView(PuntoEmisionSelected,
-                             ProformaBillView,
+class BillCreateView(PuntoEmisionSelected,
+                             BillView,
                              View):
     template_name_suffix = '_create_form'
-    form_class = ProformaBillForm
+    form_class = forms.BillForm
 
     def get(self, request, punto_emision_id):
         company = self.company
         proforma_no = company.siguiente_numero_proforma
         company.siguiente_numero_proforma = proforma_no + 1
         company.save()
-        new_proforma = models.ProformaBill(
+        new_bill = models.Bill(
             number='P-{:08d}'.format(proforma_no),
             date=datetime.now(tz=pytz.timezone('America/Guayaquil')),
             punto_emision=self.punto_emision,
+            company=self.company,
             issued_to=None)
-        new_proforma.save()
-        return redirect('proformabill_detail', new_proforma.id)
+        new_bill.save()
+        return redirect('bill_detail', new_bill.id)
 
 
-class ProformaBillUpdateView(ProformaBillView,
+class BillUpdateView(BillView,
                              PuntoEmisionSelected,
                              UpdateView):
-    form_class = ProformaBillForm
+    form_class = forms.BillForm
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
@@ -541,34 +532,35 @@ class ProformaBillUpdateView(ProformaBillView,
         if form.data.get("cons_final") == 'True':
             form.data = form.data.copy()
             form.data['issued_to'] = c.id
-            form.fields['issued_to'].queryset = Customer.objects.filter(
+            form.fields['issued_to'].queryset = models.Customer.objects.filter(
                 company=self.company)
         else:
-            form.fields['issued_to'].queryset = Customer.objects.filter(
+            form.fields['issued_to'].queryset = models.Customer.objects.filter(
                 company=self.company).exclude(identificacion='9999999999999')
         return form
 
-class ProformaBillNewCustomerView(ProformaBillSelected,
+
+class BillNewCustomerView(BillSelected,
                                   PuntoEmisionSelected,
                                   CreateView):
-    form_class = CustomerForm
+    form_class = forms.CustomerForm
     model = models.Customer
-    template_name = 'billing/proformabill_new_customer_form.html'
+    template_name = 'billing/bill_new_customer_form.html'
 
     def form_valid(self, form):
         form.instance.company = self.company
-        res = super(ProformaBillNewCustomerView, self).form_valid(form)
-        proforma = self.proformabill
-        proforma.issued_to = form.instance
-        proforma.save()
+        res = super(BillNewCustomerView, self).form_valid(form)
+        bill = self.bill
+        bill.issued_to = form.instance
+        bill.save()
         return res
 
     @property
     def success_url(self):
-        return reverse('proformabill_detail', args=(self.proformabill.id, ))
+        return reverse('bill_detail', args=(self.bill.id, ))
 
 
-class ProformaBillDeleteView(ProformaBillView,
+class BillDeleteView(BillView,
                              PuntoEmisionSelected,
                              DeleteView):
     @property
@@ -581,11 +573,11 @@ class ProformaBillDeleteView(ProformaBillView,
 #   Proforma Bill Emit Bill views
 #############################################################
 @licence_required('basic', 'professional', 'enterprise')
-class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
+class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_emit'
 
     def get_context_data(self, **kwargs):
-        res = super(ProformaBillEmitView, self).get_context_data(**kwargs)
+        res = super(BillEmitView, self).get_context_data(**kwargs)
         try:
             res['msgs'] = self.error_messages
         except:
@@ -635,7 +627,7 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
         if enviar_comprobante_result.estado == 'DEVUELTA' and not used_access_key_error:
             proforma.issues = json.dumps(convert_messages(enviar_msgs))
             proforma.save()
-            return redirect("proformabill_detail", proforma.id)
+            return redirect("bill_detail", proforma.id)
 
         # Check result
         def validar_comprobante(clave):
@@ -657,12 +649,12 @@ class ProformaBillEmitView(ProformaBillView, PuntoEmisionSelected, DetailView):
                                               'identificador': '',
                                               'mensaje': 'Tiempo de espera agotado'}])
             proforma.save()
-            return redirect("proformabill_detail", proforma.id)
+            return redirect("bill_detail", proforma.id)
 
         if autorizacion.estado != 'AUTORIZADO':
             proforma.issues = json.dumps(convert_messages(autorizacion.mensajes))
             proforma.save()
-            return redirect("proformabill_detail", proforma.id)
+            return redirect("bill_detail", proforma.id)
 
         # Accepted
         # convert to bill
@@ -796,7 +788,7 @@ def gen_bill_xml(request, proformabill):
 
 
 @licence_required('basic', 'professional', 'enterprise')
-class ProformaBillEmitGenXMLView(ProformaBillView,
+class BillEmitGenXMLView(BillView,
                                  PuntoEmisionSelected,
                                  View):
 
@@ -811,23 +803,23 @@ class ProformaBillEmitGenXMLView(ProformaBillView,
 #############################################################
 
 
-class ProformaBillAddItemView(ProformaBillSelected,
+class BillAddItemView(BillSelected,
                               CreateView):
     template_name_suffix = '_create_form'
-    form_class = ProformaBillAddItemForm
+    form_class = forms.BillAddItemForm
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
-        form.fields['copy_from'].queryset = Item.objects.filter(
+        form.fields['copy_from'].queryset = models.Item.objects.filter(
             company=self.company)
         return form
 
     def form_valid(self, form):
         copy_from = form.cleaned_data["copy_from"]
-        copy_from = (Item.objects
+        copy_from = (models.Item.objects
                      .filter(company=self.company)
                      .get(id=copy_from.id))
-        form.instance.proforma_bill = self.proformabill
+        form.instance.bill = self.bill
 
         item_vals = {}
         for field in copy_from.__dict__.keys():
@@ -839,33 +831,33 @@ class ProformaBillAddItemView(ProformaBillSelected,
                 continue
             item_vals[field] = getattr(copy_from, field)
 
-        current_item = ProformaBillItem.objects.filter(**item_vals)
+        current_item = models.BillItem.objects.filter(**item_vals)
         for k, v in item_vals.iteritems():
             setattr(form.instance, k, v)
         if current_item:
             form.instance.id = current_item[0].id
             form.instance.qty = current_item[0].qty + form.instance.qty
-        res = super(self.__class__, self).form_valid(form)
+        res = super(BillAddItemView, self).form_valid(form)
         form.instance.tax_items.add(copy_from.iva)
         if copy_from.ice:
             form.instance.tax_items.add(copy_from.ice)
         return res
 
 
-class ProformaBillItemUpdateView(ProformaBillItemView,
-                                 ProformaBillSelected,
-                                 UpdateView):
+class BillItemUpdateView(BillItemView,
+                         BillSelected,
+                         UpdateView):
     template_name_suffix = '_form'
-    form_class = ProformaBillItemForm
+    form_class = forms.BillItemForm
 
     def form_valid(self, form):
-        form.instance.proforma_bill = self.proformabill
-        res = super(self.__class__, self).form_valid(form)
+        form.instance.bill = self.bill
+        res = super(BillItemUpdateView, self).form_valid(form)
         return res
 
 
-class ProformaBillItemUpdateViewJS(ProformaBillItemView,
-                                   ProformaBillSelected,
+class BillItemUpdateViewJS(BillItemView,
+                                   BillSelected,
                                    View):
     def post(self, request, pk):
         proformabill_item = get_object_or_404(
@@ -887,8 +879,8 @@ class ProformaBillItemUpdateViewJS(ProformaBillItemView,
         return HttpResponse("Ok")
 
 
-class ProformaBillItemDeleteView(ProformaBillItemView,
-                                 ProformaBillSelected,
+class BillItemDeleteView(BillItemView,
+                                 BillSelected,
                                  DeleteView):
     """
     Delete view for proformabill items
@@ -899,7 +891,7 @@ class ProformaBillItemDeleteView(ProformaBillItemView,
 # Bill Reports #
 ################
 class BillView(object):
-    model = Bill
+    model = models.Bill
     context_object_name = 'bill'
 
     def get_queryset(self):
@@ -934,8 +926,3 @@ class BillListView(BillView, CompanySelected, ListView):
     @property
     def company_id(self):
         return self.kwargs['company_id']
-
-
-class BillDetailView(BillView, CompanySelected, DetailView):
-    """
-    """

@@ -11,10 +11,10 @@
 
         <div class='col-xs-12 col-md-6 even-section'>
             <h1>Facturas</h1>
-            {% include 'billing/proformabill/proformabill_list_table.html' with show_all_items_button=True %}
+            {% include 'billing/bill/bill_list_table.html' with show_all_items_button=True %}
             {% buttons %}
                 {% if single_punto_emision %}
-                    <a href="{% url 'proformabill_create' single_punto_emision.id %}" class='btn btn-primary'>Nueva proforma</a>
+                    <a href="{% url 'bill_create' single_punto_emision.id %}" class='btn btn-primary'>Nueva proforma</a>
                 {% else %}
                     {# TODO Ir a punto de emision #}
                 {% endif %}

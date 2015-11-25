@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+import datetime
 from django.conf import settings
 import company_accounts.models
-import datetime
 
 
 class Migration(migrations.Migration):
@@ -18,14 +18,14 @@ class Migration(migrations.Migration):
             name='Company',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('nombre_comercial', models.CharField(unique=True, max_length=100)),
-                ('ruc', models.CharField(unique=True, max_length=100)),
-                ('razon_social', models.CharField(unique=True, max_length=100)),
+                ('nombre_comercial', models.CharField(max_length=100)),
+                ('ruc', models.CharField(max_length=100)),
+                ('razon_social', models.CharField(max_length=100)),
                 ('direccion_matriz', models.CharField(max_length=100)),
                 ('contribuyente_especial', models.CharField(max_length=20, blank=True)),
                 ('obligado_contabilidad', models.BooleanField(default=False)),
                 ('siguiente_numero_proforma', models.IntegerField(default=1)),
-                ('logo', models.ImageField(upload_to=b'company_logos', blank=True)),
+                ('logo', models.ImageField(storage=company_accounts.models.OverwritingStorage(), upload_to=company_accounts.models.logo_path_generator, blank=True)),
                 ('cert', models.CharField(max_length=20000, blank=True)),
                 ('key', models.CharField(max_length=100, blank=True)),
             ],

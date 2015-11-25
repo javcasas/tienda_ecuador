@@ -1,7 +1,7 @@
-{% extends 'billing/l2_proformabill_selected.html' %}
+{% extends 'billing/l2_bill_selected.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Ver Factura {{ proformabill }} - {{ block.super }}{% endblock %}
+{% block title %}Ver Factura {{ bill }} - {{ block.super }}{% endblock %}
 
 
 {% block body %}
@@ -21,16 +21,16 @@
         <h3 class='spaced-top'>Cliente</h3>
         <table class='table table-bordered'>
             <tr>
-                <th>Numero</th><td>{{ proformabill.number }}</td>
+                <th>Numero</th><td>{{ bill.number }}</td>
             </tr>
             <tr>
-                <th>Cliente</th><td>({{ proformabill.issued_to.tipo_identificacion }}) {{ proformabill.issued_to.identificacion }} </td>
+                <th>Cliente</th><td>({{ bill.issued_to.tipo_identificacion }}) {{ bill.issued_to.identificacion }} </td>
             </tr>
             <tr>
-                 <th></th><td>{{ proformabill.issued_to.razon_social }}</td>
+                 <th></th><td>{{ bill.issued_to.razon_social }}</td>
             </tr>
             <tr>
-                <th>Fecha</th><td>{{ proformabill.date }}</td>
+                <th>Fecha</th><td>{{ bill.date }}</td>
             </tr>
         </table>
 
@@ -44,7 +44,7 @@
                 <th>Subtotal</th>
                 <th>Impuestos</th>
             </tr>
-        {% for item in proformabill.items %}
+        {% for item in bill.items %}
             <tr>
                 <td>{{ item.sku }}</td>
                 <td>{{ item.name }}</td>
@@ -59,24 +59,24 @@
         <h3 class='spaced-top'>Totales</h3>
         <table class='table table-bordered'>
             <tr>
-                <th>Subtotal IVA 12%</th><td>{{ proformabill.subtotal.12|floatformat:2 }}</td>
+                <th>Subtotal IVA 12%</th><td>{{ bill.subtotal.12|floatformat:2 }}</td>
             </tr>
             <tr>
-                <th>Subtotal IVA 0%</th><td>{{ proformabill.subtotal.0|floatformat:2 }}</td>
+                <th>Subtotal IVA 0%</th><td>{{ bill.subtotal.0|floatformat:2 }}</td>
             </tr>
             <tr>
-                <th>IVA 12%</th><td>{{ proformabill.iva.12|stringformat:".2f" }}</td>
+                <th>IVA 12%</th><td>{{ bill.iva.12|stringformat:".2f" }}</td>
             </tr>
             <tr>
-                <th>Total a pagar</th><td>{{ proformabill.total|stringformat:".2f" }}</td>
+                <th>Total a pagar</th><td>{{ bill.total|stringformat:".2f" }}</td>
             </tr>
         </table>
 
-        <form action='{% url 'proformabill_emit_to_bill' proformabill.id %}' method='post' class='form spaced-bottom'>
+        <form action='{% url 'bill_emit_to_bill' bill.id %}' method='post' class='form spaced-bottom'>
             {% csrf_token %}
             {% buttons %}
                 <button type='submit' class='btn btn-primary col-xs-6'>Emitir Factura</button>
-                <a href='{% url 'proformabill_detail' proformabill.id %}' class='btn btn-default col-xs-6'>Cancelar</a>
+                <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default col-xs-6'>Cancelar</a>
             {% endbuttons %}
         </form>
     </div>

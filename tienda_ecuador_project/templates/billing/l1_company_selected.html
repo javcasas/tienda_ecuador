@@ -5,7 +5,7 @@
     <li><a href="{% url 'billing_index' %}">Facturación</a></li>
     {% block left_menu %}
         {% if single_punto_emision %}
-            <li><a href="{% url 'proformabill_create' single_punto_emision.id %}" >Nueva factura</a></li>
+            <li><a href="{% url 'bill_create' single_punto_emision.id %}" >Nueva factura</a></li>
         {% else %}
             {# TODO Ir a punto de emision #}
         {% endif %}

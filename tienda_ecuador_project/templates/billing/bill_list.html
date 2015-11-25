@@ -1,17 +1,16 @@
 {% extends 'billing/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% block title %}Facturas - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}
-    <li><a href='{#% FIXME url 'report_index' company.id %#}'>Items</a></li>
+    <li><a href='{% url 'bill_company_index' company.id %}'>Facturas</a></li>
 {% endblock %}
 
 {% block body %}
     {{ block.super }}
-    <h1>Facturas emitidas: {{day}}/{{month}}/{{year}}</h1>
-    {% for bill in bill_list %}
-        Número: {{ bill.number }} <br />
-        Fecha: {{ bill.date }} <br />
-        <a href='{#% FIXME url "bill_detail" bill.id %#}'>Detalle</a>
-    {% endfor %}
-    <a href='{% url "company_index" company.id %}'>Back</a>
+    <div class='col-xs-12'>
+    <h1>Facturas</h1>
+    {% include 'billing/bill/bill_list_table.html' %}
+    </div>
 {% endblock %}

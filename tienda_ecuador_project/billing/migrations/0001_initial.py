@@ -8,37 +8,10 @@ from decimal import Decimal
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('company_accounts', '0001_initial'),
+        ('company_accounts', '__first__'),
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='BaseBill',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('number', models.CharField(max_length=20, blank=True)),
-                ('date', models.DateTimeField()),
-                ('xml_content', models.TextField(blank=True)),
-                ('ride_content', models.TextField(blank=True)),
-            ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='BaseCustomer',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('razon_social', models.CharField(max_length=100)),
-                ('tipo_identificacion', models.CharField(max_length=100, choices=[(b'cedula', b'C\xc3\xa9dula'), (b'ruc', b'RUC'), (b'pasaporte', b'Pasaporte')])),
-                ('identificacion', models.CharField(max_length=100)),
-                ('email', models.CharField(max_length=100, blank=True)),
-                ('direccion', models.CharField(max_length=100, blank=True)),
-            ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
         migrations.CreateModel(
             name='BaseItem',
             fields=[
@@ -58,25 +31,50 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Bill',
             fields=[
-                ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
-                ('numero_autorizacion', models.CharField(max_length=50)),
-                ('fecha_autorizacion', models.DateTimeField()),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('number', models.CharField(max_length=20, blank=True)),
+                ('date', models.DateTimeField()),
+                ('secuencial', models.IntegerField(default=0, blank=True)),
+                ('xml_content', models.TextField(blank=True)),
+                ('ride_content', models.TextField(blank=True)),
+                ('clave_acceso', models.CharField(max_length=50, blank=True)),
+                ('numero_autorizacion', models.CharField(max_length=50, null=True)),
+                ('fecha_autorizacion', models.DateTimeField(null=True)),
+                ('issues', models.TextField(default=b'', blank=True)),
                 ('ambiente_sri', models.CharField(max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
+                ('status', models.CharField(default=b'proforma', max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
                 ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
             },
-            bases=('billing.basebill',),
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='BillItem',
+            fields=[
+                ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
+                ('qty', models.DecimalField(max_digits=20, decimal_places=8)),
+                ('descuento', models.DecimalField(default=0, max_digits=20, decimal_places=8)),
+                ('bill', models.ForeignKey(to='billing.Bill')),
+            ],
+            options={
+            },
+            bases=('billing.baseitem',),
         ),
         migrations.CreateModel(
             name='Customer',
             fields=[
-                ('basecustomer_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseCustomer')),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('razon_social', models.CharField(max_length=100)),
+                ('tipo_identificacion', models.CharField(max_length=100, choices=[(b'cedula', b'C\xc3\xa9dula'), (b'ruc', b'RUC'), (b'pasaporte', b'Pasaporte')])),
+                ('identificacion', models.CharField(max_length=100)),
+                ('email', models.CharField(max_length=100, blank=True)),
+                ('direccion', models.CharField(max_length=100, blank=True)),
                 ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
             },
-            bases=('billing.basecustomer',),
+            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='FormaPago',
@@ -100,20 +98,11 @@ class Migration(migrations.Migration):
             bases=('billing.baseitem',),
         ),
         migrations.CreateModel(
-            name='ItemInBill',
-            fields=[
-                ('baseitem_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseItem')),
-                ('qty', models.DecimalField(max_digits=20, decimal_places=8)),
-            ],
-            options={
-            },
-            bases=('billing.baseitem',),
-        ),
-        migrations.CreateModel(
             name='Pago',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('porcentaje', models.DecimalField(max_digits=20, decimal_places=8)),
+                ('bill', models.ForeignKey(to='billing.Bill')),
                 ('forma_pago', models.ForeignKey(to='billing.FormaPago')),
             ],
             options={
@@ -131,29 +120,6 @@ class Migration(migrations.Migration):
             options={
             },
             bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='ProformaBill',
-            fields=[
-                ('basebill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.BaseBill')),
-                ('secuencial_pruebas', models.IntegerField(default=0, blank=True)),
-                ('secuencial_produccion', models.IntegerField(default=0, blank=True)),
-                ('issued_to', models.ForeignKey(blank=True, to='billing.Customer', null=True)),
-                ('punto_emision', models.ForeignKey(to='company_accounts.PuntoEmision')),
-            ],
-            options={
-            },
-            bases=('billing.basebill',),
-        ),
-        migrations.CreateModel(
-            name='ProformaBillItem',
-            fields=[
-                ('iteminbill_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='billing.ItemInBill')),
-                ('proforma_bill', models.ForeignKey(to='billing.ProformaBill')),
-            ],
-            options={
-            },
-            bases=('billing.iteminbill',),
         ),
         migrations.CreateModel(
             name='Tax',
@@ -193,9 +159,15 @@ class Migration(migrations.Migration):
             preserve_default=True,
         ),
         migrations.AddField(
-            model_name='pago',
-            name='proforma_bill',
-            field=models.ForeignKey(to='billing.ProformaBill'),
+            model_name='bill',
+            name='issued_to',
+            field=models.ForeignKey(blank=True, to='billing.Customer', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='bill',
+            name='punto_emision',
+            field=models.ForeignKey(blank=True, to='company_accounts.PuntoEmision', null=True),
             preserve_default=True,
         ),
         migrations.AddField(

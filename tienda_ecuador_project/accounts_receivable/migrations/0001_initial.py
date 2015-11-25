@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('billing', '0007_iteminbill_descuento'),
+        ('billing', '0001_initial'),
     ]
 
     operations = [

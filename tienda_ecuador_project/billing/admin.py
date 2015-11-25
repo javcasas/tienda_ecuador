@@ -5,6 +5,5 @@ import models
 admin.site.register(models.Item)
 admin.site.register(models.Customer)
 admin.site.register(models.Bill)
-admin.site.register(models.ProformaBillItem)
-admin.site.register(models.ProformaBill)
+admin.site.register(models.BillItem)
 admin.site.register(models.Pago)

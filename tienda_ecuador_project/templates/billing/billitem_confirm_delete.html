@@ -1,0 +1,10 @@
+{% extends 'billing/l2_bill_selected.html' %}
+{% block title %}Eliminar Item {{ item }} de Factura {{ bill }} - {{ block.super }}{% endblock %}
+{% block body %}
+    {{ block.super }}
+    <form action="" method="post">{% csrf_token %}
+        <p>¿Está seguro de querer eliminar "{{ item }}"?</p>
+        <input type="submit" value="Eliminar" />
+    </form>
+    <a href='{% url 'bill_detail' bill.id %}'>Cancel</a>
+{% endblock %}

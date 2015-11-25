@@ -37,66 +37,66 @@ urlpatterns = patterns(
     #######################
     # Proforma bill views #
     #######################
-    url(r'^proforma_bill/list/c/(?P<company_id>[0-9]+)/$',
-        views.ProformaBillCompanyListView.as_view(), name='proformabill_company_index'),
-    url(r'^proforma_bill/list/e/(?P<establecimiento_id>[0-9]+)/$',
-        views.ProformaBillEstablecimientoListView.as_view(), name='proformabill_establecimiento_index'),
-    url(r'^proforma_bill/list/pe/(?P<punto_emision_id>[0-9]+)/$',
-        views.ProformaBillPuntoEmisionListView.as_view(), name='proformabill_punto_emision_index'),
+    url(r'^bill/list/c/(?P<company_id>[0-9]+)/$',
+        views.BillCompanyListView.as_view(), name='bill_company_index'),
+    url(r'^bill/list/e/(?P<establecimiento_id>[0-9]+)/$',
+        views.BillEstablecimientoListView.as_view(), name='bill_establecimiento_index'),
+    url(r'^bill/list/pe/(?P<punto_emision_id>[0-9]+)/$',
+        views.BillPuntoEmisionListView.as_view(), name='bill_punto_emision_index'),
     # Solo se pueden hacer facturas en un punto de emision
     url(r'^proforma_bill/new/(?P<punto_emision_id>[0-9]+)/$',
-        views.ProformaBillCreateView.as_view(), name='proformabill_create'),
+        views.BillCreateView.as_view(), name='bill_create'),
     url(r'^proforma_bill/(?P<pk>[0-9]+)/read/$',
-        views.ProformaBillDetailView.as_view(), name='proformabill_detail'),
+        views.BillDetailView.as_view(), name='bill_detail'),
     url(r'^proforma_bill/(?P<pk>[0-9]+)/update/$',
-        views.ProformaBillUpdateView.as_view(), name='proformabill_update'),
-    url(r'^proforma_bill/(?P<proformabill_id>[0-9]+)/new_customer/$',
-        views.ProformaBillNewCustomerView.as_view(), name='proformabill_new_customer'),
+        views.BillUpdateView.as_view(), name='bill_update'),
+    url(r'^proforma_bill/(?P<bill_id>[0-9]+)/new_customer/$',
+        views.BillNewCustomerView.as_view(), name='bill_new_customer'),
     url(r'^proforma_bill/(?P<pk>[0-9]+)/delete/$',
-        views.ProformaBillDeleteView.as_view(), name='proformabill_delete'),
+        views.BillDeleteView.as_view(), name='bill_delete'),
 
     url(r'^proforma_bill/(?P<pk>[0-9]+)/item_table/$',
-        views.ProformaBillDetailView.as_view(
+        views.BillDetailView.as_view(
             template_name_suffix='_detail_item_table'),
-        name='proformabill_detail_item_table'),
+        name='bill_detail_item_table'),
 
     url(r'^proforma_bill/(?P<pk>[0-9]+)/totals_table/$',
-        views.ProformaBillDetailView.as_view(
+        views.BillDetailView.as_view(
             template_name_suffix='_detail_totals_table'),
-        name='proformabill_detail_totals_table'),
+        name='bill_detail_totals_table'),
 
     url(r'^proforma_bill/(?P<pk>[0-9]+)/payment_table/$',
-        views.ProformaBillDetailView.as_view(
+        views.BillDetailView.as_view(
             template_name_suffix='_detail_payment_table'),
-        name='proformabill_detail_payment_table'),
+        name='bill_detail_payment_table'),
 
     # Proforma bill emitting views
     url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/$',
-        views.ProformaBillEmitView.as_view(),
-        name='proformabill_emit_to_bill'),
+        views.BillEmitView.as_view(),
+        name='bill_emit_to_bill'),
     url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/gen_xml/$',
-        views.ProformaBillEmitGenXMLView.as_view(),
-        name='proformabill_emit_gen_xml'),
+        views.BillEmitGenXMLView.as_view(),
+        name='bill_emit_gen_xml'),
 
     # Proforma bill item views
-    url(r'^proforma_bill/(?P<proformabill_id>[0-9]+)/add_item/$',
-        views.ProformaBillAddItemView.as_view(),
-        name='proformabill_add_item'),
+    url(r'^proforma_bill/(?P<bill_id>[0-9]+)/add_item/$',
+        views.BillAddItemView.as_view(),
+        name='bill_add_item'),
     url(r'^proforma_bill/item/(?P<pk>[0-9]+)/edit/$',
-        views.ProformaBillItemUpdateView.as_view(),
-        name='proformabillitem_update'),
+        views.BillItemUpdateView.as_view(),
+        name='billitem_update'),
     url(r'^proforma_bill/item/(?P<pk>[0-9]+)/delete/$',
-        views.ProformaBillItemDeleteView.as_view(),
-        name='proformabillitem_delete'),
+        views.BillItemDeleteView.as_view(),
+        name='billitem_delete'),
 
     url(r'^proforma_bill/item/(?P<pk>[0-9]+)/update_js/$',
-        views.ProformaBillItemUpdateViewJS.as_view(),
-        name='proformabillitem_update_js'),
+        views.BillItemUpdateViewJS.as_view(),
+        name='billitem_update_js'),
 
     # Proforma bill payment views
     url(r'^proforma_bill/(?P<pk>[0-9]+)/payment/$',
-        views.ProformaBillPaymentView.as_view(),  # FIXME
-        name='proformabill_payment_details'),
+        views.BillPaymentView.as_view(),  # FIXME
+        name='bill_payment_details'),
 
     # Report views
     url(r'^report/(?P<company_id>[0-9]+)/bills/day/(?P<year>[0-9]+)/(?P<month>[0-9]+)/(?P<day>[0-9]+)/$',

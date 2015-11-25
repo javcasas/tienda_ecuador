@@ -1,8 +1,15 @@
 {% extends 'billing/l1_company_selected.html' %}
-{% block title %}Factura {{ bill.number }} - {{ block.super }}{% endblock %}
+{% block title %}{{ proformabill }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'bill_company_index' company.id %}'>Facturas</a></li>
+    <li><a href='{% url 'bill_detail' bill.id %}'>{{ bill.number }} - {{ bill.issued_to.razon_social }}</a></li>
+{% endblock %}
+
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-        <h1>{{ bill.number }} - {{ bill.issued_to }}</h1>
+        <h1>{{ bill }}</h1>
     </div>
 {% endblock %}

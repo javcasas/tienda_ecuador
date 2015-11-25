@@ -9,8 +9,6 @@ django.setup()
 from functools import partial
 from datetime import datetime, date
 import pytz
-from billing.models import (Item, ProformaBill, ProformaBillItem,
-                            Customer, Iva, Ice)
 from billing import models
 import company_accounts.models
 from django.contrib.auth.models import User
@@ -34,11 +32,11 @@ def add_instance(klass, **kwargs):
     return s
 
 add_Company = partial(add_instance, company_accounts.models.Company)
-add_Item = partial(add_instance, Item)
-add_Customer = partial(add_instance, Customer)
+add_Item = partial(add_instance, models.Item)
+add_Customer = partial(add_instance, models.Customer)
 add_CompanyUser = partial(add_instance, company_accounts.models.CompanyUser)
-add_ProformaBill = partial(add_instance, ProformaBill)
-add_ProformaBillItem = partial(add_instance, ProformaBillItem)
+add_ProformaBill = partial(add_instance, models.Bill)
+add_ProformaBillItem = partial(add_instance, models.BillItem)
 
 
 def add_User(**kwargs):

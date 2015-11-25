@@ -15,7 +15,7 @@
 </thead>
 
 <tbody>
-{% for item in proformabill.items %}
+{% for item in bill.items %}
     <tr>
         <td class='visible-xs-block visible-sm-block item-qty-popup-edit'
             data-id='{{ item.id }}' data-step='{{ item.increment_qty }}'>
@@ -34,9 +34,9 @@
         <td class='visible-lg-block visible-xl-block'>{{ item.total_impuestos|price2d }}</td>
         <td>
             {% buttons %}
-            <form action="{% url 'proformabillitem_delete' item.id %}" method='post'>
+            <form action="{% url 'billitem_delete' item.id %}" method='post'>
                 {% csrf_token %}
-                <a href="{% url 'proformabillitem_update' item.id %}"
+                <a href="{% url 'billitem_update' item.id %}"
                    class='btn btn-default'>
                     <span class='glyphicon glyphicon-pencil'></span>
                 </a>

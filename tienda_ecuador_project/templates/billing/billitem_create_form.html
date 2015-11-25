@@ -1,4 +1,4 @@
-{% extends 'billing/l2_proformabill_selected.html' %}
+{% extends 'billing/l2_bill_selected.html' %}
 {% block title %}Añadir Item a Factura {{ proformabill }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
@@ -7,5 +7,5 @@
         {{ form.as_p }}
         <button type='submit'>Submit</button>
     </form>
-    <a href='{% url 'proformabill_detail' proformabill.id %}'>Cancel</a>
+    <a href='{% url 'bill_detail' bill.id %}'>Cancel</a>
 {% endblock %}

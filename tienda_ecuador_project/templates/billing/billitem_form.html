@@ -1,7 +1,7 @@
-{% extends 'billing/l2_proformabill_selected.html' %}
+{% extends 'billing/l2_bill_selected.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Editar Item en Factura {{ proformabill }} - {{ block.super }}{% endblock %}
+{% block title %}Editar Item en Factura {{ bill }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
     <form method='post' action='.' class='form'>
@@ -9,7 +9,7 @@
         {% bootstrap_form form %}
         {% buttons %}
             <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'proformabill_detail' proformabill.id %}' class='btn btn-default'>Cancelar</a>
+            <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default'>Cancelar</a>
         {% endbuttons %}
     </form>
 {% endblock %}

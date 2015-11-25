@@ -51,7 +51,7 @@ class ItemForm(forms.ModelForm):
                   'description', 'decimales_qty')
 
 
-class ProformaBillForm(forms.ModelForm):
+class BillForm(forms.ModelForm):
     issued_to = forms.ModelChoiceField(
         label="Cliente",
         queryset=models.Customer.objects,
@@ -59,7 +59,7 @@ class ProformaBillForm(forms.ModelForm):
 
     class Meta:
         # Provide an association between the ModelForm and a model
-        model = models.ProformaBill
+        model = models.Bill
         fields = ('issued_to',)
 
     def clean(self):
@@ -71,7 +71,7 @@ class ProformaBillForm(forms.ModelForm):
                 identificacion='9999999999999',
                 company=self.instance.punto_emision.establecimiento.company)
             self.data['issued_to'] = str(c.id)
-        return super(ProformaBillForm, self).clean()
+        return super(BillForm, self).clean()
 
 
 class CustomerForm(forms.ModelForm):
@@ -104,7 +104,7 @@ class CustomerForm(forms.ModelForm):
                   'identificacion', 'email', 'direccion')
 
 
-class ProformaBillAddItemForm(forms.ModelForm):
+class BillAddItemForm(forms.ModelForm):
     qty = forms.DecimalField(
         decimal_places=4,
         label="Cantidad",
@@ -118,11 +118,11 @@ class ProformaBillAddItemForm(forms.ModelForm):
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
-        model = models.ProformaBillItem
+        model = models.BillItem
         fields = ('qty', 'copy_from')
 
 
-class ProformaBillItemForm(forms.ModelForm):
+class BillItemForm(forms.ModelForm):
     sku = forms.CharField(
         label='Código de stock (SKU)',
         max_length=50,
@@ -145,13 +145,13 @@ class ProformaBillItemForm(forms.ModelForm):
         help_text="Por favor teclee una descripción.")
     unit_cost = forms.DecimalField(
         widget=forms.HiddenInput())
-    proforma_bill = forms.ModelChoiceField(
-        queryset=models.ProformaBill.objects,
+    bill = forms.ModelChoiceField(
+        queryset=models.Bill.objects,
         widget=forms.HiddenInput())
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
-        model = models.ProformaBillItem
+        model = models.BillItem
         fields = ('sku', 'name', 'qty', 'unit_price', 'description',
-                  'unit_cost', 'proforma_bill')
+                  'unit_cost', 'bill')

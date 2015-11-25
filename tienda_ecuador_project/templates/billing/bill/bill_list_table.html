@@ -1,42 +1,35 @@
 {% load decimal_format %}
+{% load future %}
 
 {% if bill_list %}
     <table class='table table-hover'>
-        <thead>
-            <tr>
-                <th>Número</th>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th></th>
-            </tr>
-        </thead>
+        <thead><tr>
+          <th>Identificador</th>
+          <th>Cliente</th>
+          <th>Total</th>
+          <th></th>
+        </tr></thead>
         <tbody>
-        {% for bill in bill_list %}
+          {% for bill in bill_list %}
             <tr>
-                <td>{{ bill.numero }}</td>
-                <td>{{ bill.date }}</td>
-                <td>{{ bill.total_con_iva }}</td>
-                <td>
-                    <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default btn-block'>Detalle</a>
-                </td>
+              <td>{{ bill.number }}</td>
+              <td>{% firstof bill.issued_to '<span class="text-danger">No hay cliente establecido</span>' %}</td>
+              <td>{{ bill.total|price2d }}</td>
+              <td>
+                <a href="{{ bill.get_absolute_url }}" class='btn btn-default form-control'>Detalle</a>
+              </td>
             </tr>
-        {% endfor %}
-        {% if show_all_items_button %}
-            <tr>
-                <td colspan='10'>
-                    <a href='{% url 'bill_list' company.id %}'
-                           class='btn btn-default form-control'>Ver todas las facturas</a>
-                </td>
-            </tr>
-        {% endif %}
+          {% endfor %}
+          {% if show_all_items_button %}
+              <tr>
+                  <td colspan='10'>
+                      <a href='{% url "bill_company_index" company.id %}'
+                         class='btn btn-default form-control'>Ver todas las facturas</a>
+                  </td>
+              </tr>
+          {% endif %}
         </tbody>
     </table>
 {% else %}
-    No hay facturas. Para emitir una factura, primero cree una
-    {% if single_punto_emision %}
-        <a href='{% url 'proformabill_create' single_punto_emision.id %}'>Nueva Proforma</a>
-    {% else %}
-        {# FIXME #}
-    {% endif %}
-    , y después emita la factura.
+    No hay facturas
 {% endif %}

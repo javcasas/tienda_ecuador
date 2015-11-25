@@ -5,9 +5,6 @@ import urllib
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
-from billing import models
-import company_accounts.models
-
 
 def add_instance(klass, **kwargs):
     """
@@ -16,18 +13,6 @@ def add_instance(klass, **kwargs):
     """
     s = klass.objects.get_or_create(**kwargs)[0]
     return s
-
-
-add_Company = partial(add_instance, company_accounts.models.Company)
-add_CompanyUser = partial(add_instance, company_accounts.models.CompanyUser)
-
-add_ProformaBill = partial(add_instance, models.ProformaBill)
-add_Bill = partial(add_instance, models.Bill)
-
-add_Item = partial(add_instance, models.Item)
-add_ProformaBillItem = partial(add_instance, models.ProformaBillItem)
-
-add_Customer = partial(add_instance, models.Customer)
 
 
 def add_User(**kwargs):

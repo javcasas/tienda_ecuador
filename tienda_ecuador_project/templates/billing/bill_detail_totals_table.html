@@ -1,0 +1,13 @@
+{% load decimal_format %}
+            <tr>
+                <th>Subtotal IVA 12%</th><td>{{ bill.subtotal.12|price2d }}</td>
+            </tr>
+            <tr>
+                <th>Subtotal IVA 0%</th><td>{{ bill.subtotal.0|price2d }}</td>
+            </tr>
+            <tr>
+                <th>IVA 12%</th><td>{{ bill.iva.12|price2d }}</td>
+            </tr>
+            <tr>
+                <th>Total a pagar</th><td>{{ bill.total|price2d }}</td>
+            </tr>

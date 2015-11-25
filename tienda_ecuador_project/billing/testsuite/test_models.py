@@ -6,15 +6,13 @@ import pytz
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
-from billing.models import (ReadOnlyObject,
-                            ProformaBill,
-                            Bill,
+from billing.models import (Bill,
                             Item,
-                            ProformaBillItem,
+                            BillItem,
                             Customer,
                             Iva, Ice,
-                            ItemInBill,
                             ClaveAcceso)
+
 from company_accounts.models import (
                             Company,
                             CompanyUser,
@@ -26,10 +24,6 @@ from billing import models
 
 from helpers import (add_instance,
                      add_User,
-                     add_Company,
-                     add_ProformaBill,
-                     add_Bill,
-                     add_Customer,
                      TestHelpersMixin)
 
 
@@ -78,11 +72,14 @@ base_data = {
         'tipo': 'producto',
         'decimales_qty': 0,
     },
-    "BaseBill": {
+    "Bill": {
         'number': '33344556677',
         'date': get_date(),
         'xml_content': '',
         'ride_content': '',
+        'fecha_autorizacion': date(2015, 5, 1),
+        'numero_autorizacion': '12342423423',
+        'ambiente_sri': 'pruebas',
     },
     'Iva': {
         'descripcion': "12%",
@@ -109,12 +106,13 @@ base_data = {
 }
 
 
-class FieldsTests(TestCase, TestHelpersMixin):
+class BaseInstancesMixin(object):
     """
-    Tests that check if a given model has all the required fields
+    Some basic instances to help other tests
     """
     def setUp(self):
-        self.company = add_Company(**base_data['Company'])
+        super(BaseInstancesMixin, self).setUp()
+        self.company = add_instance(Company, **base_data['Company'])
 
         self.establecimiento = add_instance(Establecimiento,
                                             company=self.company,
@@ -126,24 +124,13 @@ class FieldsTests(TestCase, TestHelpersMixin):
 
         self.user = add_User(username="Paco", password='')
 
-        self.customer = add_Customer(
+        self.customer = add_instance(Customer,
             **dict(base_data['BaseCustomer'], company=self.company))
-
-        self.proforma_bill = add_ProformaBill(
-            **dict(base_data['BaseBill'],
-                   punto_emision=self.punto_emision,
-                   issued_to=self.customer))
 
         self.bill = add_instance(
             models.Bill,
             company=self.company,
-            fecha_autorizacion=date(2015, 5, 1),
-            numero_autorizacion='12342423423',
-            ambiente_sri='pruebas',
-            iva=Decimal(3),
-            total_sin_iva=Decimal(15),
-            iva_retenido=Decimal(0),
-            **base_data['BaseBill'])
+            **base_data['Bill'])
 
         self.iva = add_instance(Iva, **dict(base_data['Iva']))
         self.ice = add_instance(Ice, **dict(base_data['Ice']))
@@ -151,6 +138,14 @@ class FieldsTests(TestCase, TestHelpersMixin):
             models.FormaPago, **base_data['FormaPago'])
         self.plazo_pago = add_instance(
             models.PlazoPago, **base_data['PlazoPago'])
+
+
+class FieldsTest(BaseInstancesMixin, TestCase, TestHelpersMixin):
+    """
+    Tests that check if a given model has all the required fields
+    """
+    def setUp(self):
+        super(FieldsTest, self).setUp()
 
         self.tests = [
             (Company, base_data['Company'],
@@ -166,22 +161,16 @@ class FieldsTests(TestCase, TestHelpersMixin):
                 {'establecimiento': self.establecimiento}),
             (Customer, base_data['BaseCustomer'],
                 {"company": self.company}),
-            (ProformaBill, base_data['BaseBill'],
-                {'punto_emision': self.punto_emision,
-                 'issued_to': self.customer}),
-            (Bill, base_data['BaseBill'],
+            (Bill, base_data['Bill'],
                 {'company': self.company,
                  'fecha_autorizacion': datetime(2015, 5, 1, tzinfo=pytz.timezone('America/Guayaquil')),
                  'numero_autorizacion': '12342423423',
-                 'iva': Decimal(3),
-                 'total_sin_iva': Decimal(15),
-                 'iva_retenido': Decimal(0),
                  'ambiente_sri': 'pruebas'}),
             (Item, base_data['BaseItem'],
                 {"company": self.company,
                  }),
-            (ProformaBillItem, base_data['BaseItem'],
-                {"proforma_bill": self.proforma_bill,
+            (BillItem, base_data['BaseItem'],
+                {"bill": self.bill,
                  'qty': 6}),
             (models.FormaPago, base_data['FormaPago'],
                 {}),
@@ -190,7 +179,7 @@ class FieldsTests(TestCase, TestHelpersMixin):
             (models.Pago, base_data['Pago'],
                 {'forma_pago': self.forma_pago,
                  'plazo_pago': self.plazo_pago,
-                 'proforma_bill': self.proforma_bill}),
+                 'bill': self.bill}),
         ]
 
     def test_all_clases(self):
@@ -237,7 +226,7 @@ class UnicodeTests(TestCase, TestHelpersMixin):
 
 class CompanyUserTests(TestCase, TestHelpersMixin):
     def setUp(self):
-        self.company = add_Company(**base_data['Company'])
+        self.company = add_instance(Company, **base_data['Company'])
         self.user = add_User(username="Paco", password='')
         self.company_user = add_instance(CompanyUser,
                                          company=self.company,
@@ -248,48 +237,7 @@ class CompanyUserTests(TestCase, TestHelpersMixin):
                           self.company_user.user.username)
 
 
-class ProformaToFinalTests(TestCase, TestHelpersMixin):
-    """
-    Tests that check converting a proforma into a final
-    """
-    def setUp(self):
-        self.company = add_Company(
-            nombre_comercial="Tienda 1", ruc='1234567890001',
-            razon_social="Paco Pil", direccion_matriz="C del pepino",
-            contribuyente_especial="")
-        self.establecimiento = add_instance(Establecimiento,
-                                            company=self.company,
-                                            **base_data['Establecimiento'])
-        self.punto_emision = add_instance(PuntoEmision,
-                                          establecimiento=self.establecimiento,
-                                          **base_data['PuntoEmision'])
-        self.user = add_User(username="Paco", password='')
-
-    def test_ProformaBill_to_Bill(self):
-        proforma = ProformaBill(
-            issued_to=Customer.objects.get_or_create(
-                company=self.company,
-                **base_data['BaseCustomer'])[0],
-            date=get_date(),
-            punto_emision=self.punto_emision,
-            xml_content='bleh' * 1000,     # 4KB
-            ride_content='blah' * 100000,  # 400KB
-            number='3')
-        proforma.save()
-        bill = Bill.fromProformaBill(proforma)
-        for field in ['date', ]:
-            v1 = getattr(proforma, field)
-            v2 = getattr(bill, field)
-            self.assertEquals(
-                v1, v2,
-                "Field '{}' is different: {} != {}".format(
-                    field, repr(v1), repr(v2)))
-        self.assertEquals(
-            bill.company,
-            proforma.punto_emision.establecimiento.company)
-
-
-class ItemTests(TestCase, TestHelpersMixin):
+class ItemTests(BaseInstancesMixin, TestCase, TestHelpersMixin):
     """
     Tests for the Item classes
     """
@@ -299,35 +247,32 @@ class ItemTests(TestCase, TestHelpersMixin):
         que devuelve el total correspondiente a un item
         sin contar los impuestos
         """
-        item = ItemInBill(sku="1234", name="asdf", description="asdf",
-                          unit_cost=10, unit_price=14, qty=6)
+        item = BillItem(sku="1234", name="asdf", description="asdf",
+                        unit_cost=10, unit_price=14, qty=6)
         self.assertEquals(item.total_sin_impuestos, 6 * 14)
 
     def test_bill_item_iva_ice(self):
         """
         Prueba los calculos de iva e ice
         """
-        iva = add_instance(Iva, descripcion="12%", codigo="12", porcentaje=12)
-        ice = add_instance(Ice, descripcion="Gaseosas",
-                           codigo="145", porcentaje=50)
-        proforma = ItemInBill(
+        item = BillItem(
             sku="1234", name="asdf", description="asdf", unit_cost=10,
-            unit_price=10, qty=6)
-        proforma.save()
-        proforma.tax_items.add(iva, ice)
+            unit_price=10, qty=6, bill=self.bill)
+        item.save()
+        item.tax_items.add(self.iva, self.ice)
 
         # ICE
-        self.assertEquals(proforma.base_imponible_ice,
-                          proforma.total_sin_impuestos)
-        valor_ice = proforma.base_imponible_ice * Decimal("0.5")
-        self.assertEquals(proforma.valor_ice, valor_ice)
+        self.assertEquals(item.base_imponible_ice,
+                          item.total_sin_impuestos)
+        valor_ice = item.base_imponible_ice * Decimal("0.5")
+        self.assertEquals(item.valor_ice, valor_ice)
 
         # IVA
-        self.assertEquals(proforma.base_imponible_iva,
-                          proforma.total_sin_impuestos + valor_ice)
-        valor_iva = proforma.base_imponible_iva * Decimal("0.12")
-        self.assertEquals(proforma.valor_iva, valor_iva)
-        self.assertEquals(proforma.total_impuestos, valor_iva + valor_ice)
+        self.assertEquals(item.base_imponible_iva,
+                          item.total_sin_impuestos + valor_ice)
+        valor_iva = item.base_imponible_iva * Decimal("0.12")
+        self.assertEquals(item.valor_iva, valor_iva)
+        self.assertEquals(item.total_impuestos, valor_iva + valor_ice)
 
     def test_unicode(self):
         """
@@ -339,7 +284,6 @@ class ItemTests(TestCase, TestHelpersMixin):
 
     def test_increment(self):
         """
-        Prueba str() y unicode()
         """
         ob = Item(sku="1234", name="asdf", description="asdf",
                   unit_cost=10, unit_price=10, decimales_qty=2)
@@ -347,16 +291,15 @@ class ItemTests(TestCase, TestHelpersMixin):
 
     def test_increment_no_decimals(self):
         """
-        Prueba str() y unicode()
         """
-        ob = ProformaBillItem(sku="1234", name="asdf", description="asdf",
-                              unit_cost=10, unit_price=10, decimales_qty=0)
+        ob = BillItem(sku="1234", name="asdf", description="asdf",
+                      unit_cost=10, unit_price=10, decimales_qty=0)
         self.assertEquals(ob.increment_qty, "1")
 
 
 class IdentificacionTests(TestCase):
     def setUp(self):
-        self.company = add_Company(
+        self.company = add_instance(Company,
             nombre_comercial="Tienda 1", ruc='1234567890001',
             razon_social="Paco Pil", direccion_matriz="C del pepino",
             contribuyente_especial="")
@@ -459,14 +402,15 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
             company=self.company, **base_data['BaseCustomer'])[0]
         self.iva = add_instance(Iva, **base_data['Iva'])
         self.ice = add_instance(Ice, **base_data['Ice'])
-        self.proforma = add_instance(ProformaBill,
-                                     punto_emision=self.punto_emision,
-                                     number='3',
-                                     date=get_date(),
-                                     issued_to=self.customer)
+        self.bill = add_instance(Bill,
+                                 punto_emision=self.punto_emision,
+                                 number='3',
+                                 date=get_date(),
+                                 company=self.company,
+                                 issued_to=self.customer)
         for i in range(1, 5):
-            ob = add_instance(ProformaBillItem,
-                              proforma_bill=self.proforma,
+            ob = add_instance(BillItem,
+                              bill=self.bill,
                               sku='T123{}'.format(i),
                               name='Widget{}'.format(i),
                               description='Widget description',
@@ -477,7 +421,7 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         self.payment = add_instance(
             models.Pago,
             porcentaje=Decimal(100),
-            proforma_bill=self.proforma,
+            bill=self.bill,
             forma_pago=add_instance(
                 models.FormaPago,
                 codigo='01',
@@ -489,21 +433,21 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                 tiempo=30))
 
     def test_subtotal(self):
-        self.assertEquals(self.proforma.subtotal,
+        self.assertEquals(self.bill.subtotal,
                           {12: (1 + 2 + 3 + 4) * (10 + 5),
                            0: 0})
-        for k, v in self.proforma.subtotal.iteritems():
+        for k, v in self.bill.subtotal.iteritems():
             self.assertEquals(type(v), Decimal)
 
     def test_total_sin_impuestos(self):
-        self.assertEquals(self.proforma.total_sin_impuestos,
+        self.assertEquals(self.bill.total_sin_impuestos,
                           (1 + 2 + 3 + 4) * 10)
-        self.assertEquals(type(self.proforma.total_sin_impuestos), Decimal)
+        self.assertEquals(type(self.bill.total_sin_impuestos), Decimal)
 
     def test_total_con_impuestos(self):
-        self.assertEquals(self.proforma.total_con_impuestos,
+        self.assertEquals(self.bill.total_con_impuestos,
                           (1 + 2 + 3 + 4) * (10 + 5) * Decimal("1.12"))
-        self.assertEquals(type(self.proforma.total_con_impuestos), Decimal)
+        self.assertEquals(type(self.bill.total_con_impuestos), Decimal)
 
     def test_impuestos(self):
         expected = [
@@ -522,7 +466,7 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
                 'valor': (1 + 2 + 3 + 4) * 10 * Decimal("0.5"),
             },
         ]
-        self.assertEquals(self.proforma.impuestos, expected)
+        self.assertEquals(self.bill.impuestos, expected)
 
     def test_iva(self):
         unidades = 1 + 2 + 3 + 4
@@ -531,13 +475,13 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
         factor_iva = 0.12
         total = (unidades * precio_unitario) * factor_ice * factor_iva
         self.assertEquals(
-            self.proforma.iva,
+            self.bill.iva,
             {
                 Decimal(0): Decimal(0),
                 Decimal(12): Decimal(total),
             })
-        self.assertEquals(type(self.proforma.iva[0]), Decimal)
-        self.assertEquals(type(self.proforma.iva[12]), Decimal)
+        self.assertEquals(type(self.bill.iva[0]), Decimal)
+        self.assertEquals(type(self.bill.iva[12]), Decimal)
 
     def test_clave_acceso_encode(self):
         c = ClaveAcceso()
@@ -570,12 +514,12 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
             c.fecha_emision = (2015, 17, 3)
 
     def test_attached_payments(self):
-        self.assertEquals(list(self.proforma.payment),
+        self.assertEquals(list(self.bill.payment),
                           [self.payment])
 
     def test_payment_qty(self):
-        self.assertEquals(self.proforma.payment[0].cantidad,
-                          self.proforma.total_con_impuestos)
+        self.assertEquals(self.bill.payment[0].cantidad,
+                          self.bill.total_con_impuestos)
 
 
 class IceTests(TestCase, TestHelpersMixin):
