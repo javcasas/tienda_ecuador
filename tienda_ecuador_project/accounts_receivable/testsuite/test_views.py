@@ -22,13 +22,7 @@ class ReceivableTests(LoggedInTests):
         self.cu = company_accounts.models.CompanyUser.objects.get_or_create(company=self.company, user=self.user)[0]
         self.bill = billing.models.Bill.objects.get_or_create(
             company=self.company,
-            fecha_autorizacion=date(2015, 5, 1),
-            numero_autorizacion='12342423423',
-            ambiente_sri='pruebas',
-            iva=Decimal(12),
-            iva_retenido=Decimal(0),
-            total_sin_iva=Decimal(100),
-            **billing_base_data['BaseBill'])[0]
+            **billing_base_data['Bill'])[0]
         self.payment_method = billing.models.FormaPago.objects.get_or_create(codigo="33", descripcion="Efectivo")[0]
 
     def test_index_empty(self):

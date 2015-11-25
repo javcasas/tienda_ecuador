@@ -8,6 +8,7 @@ from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 
 import billing.models
+import billing.testsuite.test_models
 
 from util.testsuite.helpers import add_instance, TestHelpersMixin
 
@@ -36,10 +37,8 @@ class ReceiptViewTests(TestCase, TestHelpersMixin):
             xml_content='xml',
             numero_autorizacion='12342423423',
             ambiente_sri='pruebas',
-            iva=Decimal(3),
-            total_sin_iva=Decimal(15),
             clave_acceso='4545454545',
-            iva_retenido=Decimal(0))
+            )
 
         self.bill = add_instance(
             billing.models.Bill,

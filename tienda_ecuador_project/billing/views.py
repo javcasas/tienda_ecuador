@@ -339,6 +339,10 @@ class BillView(object):
     def punto_emision_id(self):
         return self.model.objects.get(id=self.kwargs['pk']).punto_emision.id
 
+    @property
+    def company_id(self):
+        return self.model.objects.get(id=self.kwargs['pk']).company.id
+
 
 class BillSelected(PuntoEmisionSelected):
     model = models.BillItem
