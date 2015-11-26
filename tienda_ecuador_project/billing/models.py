@@ -578,6 +578,18 @@ class BillItem(BaseItem):
     descuento = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     bill = models.ForeignKey(Bill)
 
+    def save(self, **kwargs):
+        if self.bill.can_be_modified:
+            super(BillItem, self).save(**kwargs)
+        else:
+            raise ValidationError("No se puede modificar la factura")
+
+    def delete(self, **kwargs):
+        if self.bill.can_be_modified:
+            super(BillItem, self).delete(**kwargs)
+        else:
+            raise ValidationError("No se puede modificar la factura")
+
     @property
     def total_sin_impuestos(self):
         return self.qty * self.unit_price
@@ -649,3 +661,15 @@ class Pago(models.Model):
     def cantidad(self):
         return ((self.porcentaje * self.bill.total_con_impuestos)
                 / Decimal(100))
+
+    def save(self, **kwargs):
+        if self.bill.can_be_modified:
+            super(Pago, self).save(**kwargs)
+        else:
+            raise ValidationError("No se puede modificar la factura")
+
+    def delete(self, **kwargs):
+        if self.bill.can_be_modified:
+            super(Pago, self).delete(**kwargs)
+        else:
+            raise ValidationError("No se puede modificar la factura")

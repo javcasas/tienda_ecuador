@@ -572,6 +572,43 @@ class BillTest(TestCase, TestHelpersMixin):
             bill.save()
         self.assertEquals(get_bill_from_db().xml_content, data['xml_content'][0])
 
+    def test_cant_modify_bill_not_proforma(self):
+        """
+        No se puede modificar una factura que no este en status='proforma'
+        """
+        bill = self.bill
+
+        def get_bill_from_db():
+            return models.Bill.objects.get(id=bill.id)
+
+        self.assertEquals(bill.status, 'proforma')
+        bill.clave_acceso = '1234512345'
+        bill.xml_content = '<xml></xml>'
+        bill.punto_emision = self.punto_emision
+        bill.status = 'a enviar'
+        bill.save()
+
+        with self.assertRaises(ValidationError):
+            bill.clave_acceso = '333333'
+            bill.save()
+
+        with self.assertRaises(ValidationError):
+            item = bill.items[0]
+            item.qty = 4
+            item.save()
+
+        with self.assertRaises(ValidationError):
+            bill.items[0].delete()
+
+        with self.assertRaises(ValidationError):
+            payment = bill.payment[0]
+            payment.porcentaje = 4
+            payment.save()
+
+        with self.assertRaises(ValidationError):
+            bill.payment[0].delete()
+
+
 
 class IceTests(TestCase, TestHelpersMixin):
     def setUp(self):
