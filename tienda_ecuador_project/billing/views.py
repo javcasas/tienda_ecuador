@@ -175,17 +175,20 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {}
         context.update({
-            'item_list': (models.Item.objects
-                          .filter(company=company)
-                          .order_by('sku')[:5]),
-            'bill_list': models.Bill.objects.filter(company=company),  # FIXME, separate bills and proformas
-            'proformabill_list':
-                models.Bill.objects  # FIXME, separate bills and proformas
-                .filter(punto_emision__establecimiento__company=company)
-                .order_by("number")[:5],
-            'customer_list':
-                models.Customer.objects
-                .filter(company=company).order_by('identificacion')[:5],
+            'item_list': models.Item.objects
+                         .filter(company=company)
+                         .order_by('sku')[:5],
+            'bill_list': models.Bill.objects
+                         .filter(company=company)
+                         .filter(status='aceptada')[:5],
+            'prebill_list': models.Bill.objects
+                            .filter(punto_emision__establecimiento__company=company)
+                            .filter(status='proforma')
+                            .order_by("number")[:5],
+            'customer_list': models.Customer.objects
+                             .filter(company=company)
+                             .exclude(identificacion='9999999999999')
+                             .order_by('identificacion')[:5],
             'company': company,
             'single_punto_emision': self.single_punto_emision,
             'user': self.request.user,
@@ -330,10 +333,12 @@ class CustomerDeleteView(CustomerView, CompanySelected, DeleteView):
 class BillView(object):
     model = models.Bill
     context_object_name = 'bill'
+    queryset_filters = {}
 
     def get_queryset(self):
         return (self.model.objects
-                .filter(punto_emision__establecimiento__company=self.company))
+                .filter(punto_emision__establecimiento__company=self.company)
+                .filter(**self.queryset_filters))
 
     @property
     def punto_emision_id(self):
@@ -577,6 +582,54 @@ class BillDeleteView(BillView,
 #   Proforma Bill Emit Bill views
 #############################################################
 @licence_required('basic', 'professional', 'enterprise')
+class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
+    """
+    Confirms acceptance of bill, moves it to the 'a enviar' status
+    """
+    template_name_suffix = '_emit'
+
+    def get_context_data(self, **kwargs):
+        res = super(BillEmitAcceptView, self).get_context_data(**kwargs)
+        try:
+            res['msgs'] = self.error_messages
+        except:
+            pass
+        return res
+
+    def post(self, request, pk):
+        # Local vars
+        bill = self.get_object()
+        punto_emision = bill.punto_emision
+        establecimiento = punto_emision.establecimiento
+        company = establecimiento.company
+
+        ambiente = punto_emision.ambiente_sri
+        secuencial = {
+            'pruebas': punto_emision.siguiente_secuencial_pruebas,
+            'produccion': punto_emision.siguiente_secuencial_produccion,
+        }[ambiente]
+
+        numero_comprobante = "{}-{}-{:09d}".format(establecimiento.codigo,
+                                                   punto_emision.codigo,
+                                                   secuencial)
+
+        # Generate and sign XML
+        xml_data, clave_acceso = gen_bill_xml(request, bill)
+        # assert(clave_acceso == proforma.clave_acceso) FIXME: Is this needed?
+        # print "Claves de acceso coinciden"
+
+        bill.xml_content = xml_data
+        bill.clave_acceso = clave_acceso
+        bill.issues = ''
+        bill.secuencial = secuencial
+        bill.ambiente = ambiente
+        bill.number = numero_comprobante
+        bill.status = 'a enviar'
+        bill.save()
+        return HttpResponse('Ok')
+
+
+@licence_required('basic', 'professional', 'enterprise')
 class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_emit'
 
@@ -591,7 +644,7 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
     def post(self, request, pk):
         # Local vars
         proforma = self.get_object()
-        punto_emision = proforma.punto_emision
+        punto_emision = bill.punto_emision
         establecimiento = punto_emision.establecimiento
         company = establecimiento.company
 
@@ -704,12 +757,13 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
         return redirect("bill_detail", new.id)
 
 
-def gen_bill_xml(request, proformabill):
+def gen_bill_xml(request, proformabill, codigo=None):
 
     def get_code_from_proforma_number(number):
         for i in range(len(number)):
             try:
                 assert(int(number[i:]) >= 0)
+                assert(int(number[i:]) < 10 ** 8)
                 return int(number[i:])
             except (ValueError, AssertionError):
                 pass
@@ -746,7 +800,7 @@ def gen_bill_xml(request, proformabill):
                                         # 05: nota de debito
                                         # 06: guia de remision
                                         # 07: comprobante de retencion
-    c = ClaveAcceso()
+    c = models.ClaveAcceso()
     proformabill.date = proformabill.date.astimezone(
         pytz.timezone('America/Guayaquil'))
     c.fecha_emision = (proformabill.date.year,
@@ -758,7 +812,7 @@ def gen_bill_xml(request, proformabill):
     c.establecimiento = int(proformabill.punto_emision.establecimiento.codigo)
     c.punto_emision = int(proformabill.punto_emision.codigo)
     c.numero = secuencial
-    c.codigo = get_code_from_proforma_number(proformabill.number)
+    c.codigo = codigo or get_code_from_proforma_number(proformabill.number)
     c.tipo_emision = "normal"
     clave_acceso = unicode(c)
     info_tributaria['clave_acceso'] = clave_acceso

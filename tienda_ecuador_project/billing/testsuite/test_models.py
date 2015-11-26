@@ -385,7 +385,7 @@ class IdentificacionTests(TestCase):
                      identificacion="173831153")
 
 
-class ProformaBillTest(TestCase, TestHelpersMixin):
+class BillTest(TestCase, TestHelpersMixin):
     """
     Test that checks that a final model can be created,
     but not modified
@@ -520,6 +520,57 @@ class ProformaBillTest(TestCase, TestHelpersMixin):
     def test_payment_qty(self):
         self.assertEquals(self.bill.payment[0].cantidad,
                           self.bill.total_con_impuestos)
+
+    def test_proforma_to_send_field_checks(self):
+        """
+        Una proforma para ser enviada al SRI debe tener
+            clave de acceso
+            XML
+            punto de emision
+            Pasa a ser no editable
+        """
+        bill = self.bill
+
+        def get_bill_from_db():
+            return models.Bill.objects.get(id=bill.id)
+
+        self.assertEquals(bill.status, 'proforma')
+        data = {
+            'clave_acceso':  ('1234512345', ''),
+            'xml_content':      ('<xml></xml>', ''),
+            'punto_emision': (self.punto_emision, None),
+        }
+        for key in data.keys():
+            bill.status = 'proforma'
+            to_test = data.copy()
+            to_test.pop(key)
+            for nonempty_key, value in to_test.iteritems():
+                setattr(bill, nonempty_key, value[0])
+            setattr(bill, key, data[key][1])
+            bill.status = 'a enviar'
+            with self.assertRaises(ValidationError):  # Save everything with the status change
+                bill.save()
+            self.assertEquals(get_bill_from_db().status, 'proforma')
+
+            bill.status = 'proforma'  # Save everything, then the status change
+            bill.save()
+            bill.status = 'a enviar'
+            with self.assertRaises(ValidationError):
+                bill.save()
+            self.assertEquals(get_bill_from_db().status, 'proforma')
+
+        # Success
+        for key, value in data.iteritems():
+            setattr(bill, key, value[0])
+        bill.status = 'a enviar'
+        bill.save()
+        self.assertEquals(get_bill_from_db().status, 'a enviar')
+
+        # Test non-writable
+        bill.xml_data = 'No data'
+        with self.assertRaises(ValidationError):
+            bill.save()
+        self.assertEquals(get_bill_from_db().xml_content, data['xml_content'][0])
 
 
 class IceTests(TestCase, TestHelpersMixin):

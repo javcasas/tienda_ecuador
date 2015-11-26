@@ -35,10 +35,21 @@ urlpatterns = patterns(
         views.CustomerDeleteView.as_view(), name='customer_delete'),
 
     #######################
-    # Proforma bill views #
+    # Bill views          #
     #######################
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/$',
-        views.BillCompanyListView.as_view(), name='bill_company_index'),
+        views.BillCompanyListView.as_view(
+            queryset_filters={'status': 'proforma'}
+        ), name='bill_company_index'),
+    url(r'^bill/list/c/(?P<company_id>[0-9]+)/sent/$',
+        views.BillCompanyListView.as_view(
+            queryset_filters={'status': 'enviada'}
+        ), name='bill_company_index.sent'),
+    url(r'^bill/list/c/(?P<company_id>[0-9]+)/accepted/$',
+        views.BillCompanyListView.as_view(
+            queryset_filters={'status': 'aceptada'}
+        ), name='bill_company_index.accepted'),
+
     url(r'^bill/list/e/(?P<establecimiento_id>[0-9]+)/$',
         views.BillEstablecimientoListView.as_view(), name='bill_establecimiento_index'),
     url(r'^bill/list/pe/(?P<punto_emision_id>[0-9]+)/$',
@@ -71,9 +82,9 @@ urlpatterns = patterns(
         name='bill_detail_payment_table'),
 
     # Proforma bill emitting views
-    url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/$',
-        views.BillEmitView.as_view(),
-        name='bill_emit_to_bill'),
+    url(r'^bill/(?P<pk>[0-9]+)/emit/accept/$',
+        views.BillEmitAcceptView.as_view(),
+        name='bill_emit_accept'),
     url(r'^proforma_bill/(?P<pk>[0-9]+)/emit/gen_xml/$',
         views.BillEmitGenXMLView.as_view(),
         name='bill_emit_gen_xml'),

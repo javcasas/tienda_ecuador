@@ -169,7 +169,7 @@
     </div>
     <div class='panel-body'>
       {% if company.can_sign %}
-      <a href="{% url "bill_emit_to_bill" bill.id %}"
+      <a href="{% url "bill_emit_accept" bill.id %}"
          class='btn btn-primary col-xs-12'>Emitir Factura</a>
       {% else %}
       <p>No hay certificado de firma. No es posible emitir facturas hasta que no se suba un certificado de firma</p>

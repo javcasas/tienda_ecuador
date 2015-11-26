@@ -99,6 +99,7 @@ class Customer(models.Model):
 #####################################
 Bill_status_OPTIONS = (
     ('proforma', 'Prefactura'),
+    ('a enviar', 'Enviando al SRI'),
     ('enviada', 'Enviada al SRI'),
     ('aceptada', 'Aceptada por el SRI'),
 )
@@ -117,9 +118,9 @@ class Bill(models.Model):
     xml_content = models.TextField(blank=True)
     ride_content = models.TextField(blank=True)
 
-    clave_acceso = models.CharField(max_length=50, blank=True)
-    numero_autorizacion = models.CharField(max_length=50, null=True)
-    fecha_autorizacion = models.DateTimeField(null=True)
+    clave_acceso = models.CharField(max_length=50, blank=True, default='')
+    numero_autorizacion = models.CharField(max_length=50, blank=True, default='')
+    fecha_autorizacion = models.DateTimeField(null=True, blank=True)
     issues = models.TextField(default='', blank=True)
 
     ambiente_sri = models.CharField(
@@ -140,7 +141,7 @@ class Bill(models.Model):
             # Not saved yet
             return True
         prev = Bill.objects.get(id=self.id)
-        return prev.status not in ["enviada", 'aceptada']
+        return prev.status == 'proforma'
 
 
     def save(self, **kwargs):
@@ -153,7 +154,19 @@ class Bill(models.Model):
                     self.company
                 except:
                     self.company = self.punto_emision.establecimiento.company
+            if self.status == 'a enviar':
+                errors = []
+                if self.clave_acceso == '':
+                    errors.append("No hay clave de acceso")
+                if self.xml_content == '':
+                    errors.append("No hay XML")
+                if not self.punto_emision:
+                    errors.append("No hay punto de emision")
+                if errors:
+                    raise ValidationError(". ".join(errors))
             return super(Bill, self).save(**kwargs)
+        else:
+             raise ValidationError("Factura no puede modificarse")
 
     def secret_save(self, **kwargs):
         """
@@ -295,12 +308,18 @@ class ClaveAcceso(ProtectedSetattr):
         except Exception:
             return False
 
+    def max_digits_validator(number):
+        def validator(v):
+            limit = 10 ** number
+            return v < limit
+        return validator
+
     fecha_emision = Property(fecha_emision_validator)
     ruc = Property()
     establecimiento = Property()
     punto_emision = Property()
-    numero = Property()
-    codigo = Property()
+    numero = Property(max_digits_validator(9))
+    codigo = Property(max_digits_validator(8))
 
     tipo_comprobante = ConvertedProperty(factura='01')
     ambiente = ConvertedProperty(pruebas='1', produccion='2')

@@ -984,7 +984,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                                           codigo='013',
                                           siguiente_secuencial_pruebas=10,
                                           siguiente_secuencial_produccion=14)
-        self.proformabill = add_instance(
+        self.bill = add_instance(
             models.Bill,
             punto_emision=self.punto_emision,
             issued_to=self.customer,
@@ -1014,11 +1014,151 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             unit_cost=9.1,
             unit_price=16,
             qty=3)
-        self.proformabill_item = add_instance(
+        self.bill_item = add_instance(
             models.BillItem,
-            proforma_bill=self.proformabill,
+            bill=self.bill,
             **self.proformabill_item_data)
-        self.proformabill_item.tax_items.add(self.iva, self.ice)
+        self.bill_item.tax_items.add(self.iva, self.ice)
+
+    def test_emitir_factura_prepare_to_send(self):
+        """
+        Prueba la emision de facturas
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        r = self.c.get(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+        self.assertContains(  # same link as POST
+            r,
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+        # Ok, emitir
+        r = self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        bill = models.Bill.objects.get(id=self.bill.id)
+        # La factura ha sido convertida a 'a enviar'
+        self.assertEquals(bill.status, 'a enviar')
+
+        # Comprobar XML
+        d2 = lambda v: "{:.2f}".format(v)
+        d6 = lambda v: "{:.6f}".format(v)
+        z9 = lambda v: "{:09}".format(v)
+
+        to_test = {
+            # Info Tributaria
+            "./infoTributaria/ambiente": '1',  # pruebas
+            "./infoTributaria/tipoEmision": '1',  # online
+            "./infoTributaria/razonSocial": self.company.razon_social,
+            "./infoTributaria/nombreComercial": self.company.nombre_comercial,
+            "./infoTributaria/ruc": self.company.ruc,
+            "./infoTributaria/claveAcceso": "".join([
+                self.bill.date.strftime("%d%m%Y"),
+                '01',
+                self.company.ruc,
+                '1',
+                "023013",
+                "{:09}".format(bill.secuencial),
+                "34567890",
+                "1",
+                "0"]),
+            "./infoTributaria/codDoc": "01",  # factura
+            "./infoTributaria/estab": "023",
+            "./infoTributaria/ptoEmi": "013",
+            "./infoTributaria/secuencial":
+                z9(bill.secuencial),
+            "./infoTributaria/dirMatriz": self.company.direccion_matriz,
+
+            # Info Factura
+            "./infoFactura/fechaEmision":
+                self.bill.date.strftime("%d/%m/%Y"),
+            "./infoFactura/obligadoContabilidad":
+                "SI" if self.company.obligado_contabilidad else "NO",
+            "./infoFactura/tipoIdentificacionComprador":
+                "05",
+            "./infoFactura/razonSocialComprador":
+                self.bill.issued_to.razon_social,
+            "./infoFactura/identificacionComprador":
+                self.bill.issued_to.identificacion,
+            "./infoFactura/totalSinImpuestos":
+                d2(self.bill.total_sin_impuestos),
+            "./infoFactura/totalDescuento":
+                "0.00",
+
+            # Impuestos
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/codigo": "2",
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/codigoPorcentaje":
+                self.bill.items[0].iva.codigo,
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/descuentoAdicional": '0.00',
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/baseImponible":
+                d2(self.bill.items[0].base_imponible_iva),
+            "./infoFactura/totalConImpuestos/totalImpuesto[1]/valor":
+                d2(self.bill.items[0].valor_iva),
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/codigo": "3",
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/codigoPorcentaje":
+                self.bill.items[0].ice.codigo,
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/descuentoAdicional": '0.00',
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/baseImponible":
+                d2(self.bill.items[0].base_imponible_ice),
+            "./infoFactura/totalConImpuestos/totalImpuesto[0]/valor":
+                d2(self.bill.items[0].valor_ice),
+
+            "./infoFactura/propina": "0.00",
+            "./infoFactura/importeTotal":
+                d2(self.bill.total_con_impuestos),
+            "./infoFactura/moneda": "DOLAR",
+
+            # Detalle
+            "./detalles/detalle[0]/descripcion":
+                self.bill.items[0].description,
+            "./detalles/detalle[0]/cantidad":
+                d6(self.bill.items[0].qty),
+            "./detalles/detalle[0]/precioUnitario":
+                d6(self.bill.items[0].unit_price),
+            "./detalles/detalle[0]/descuento": "0.00",
+            "./detalles/detalle[0]/precioTotalSinImpuesto":
+                d2(self.bill.items[0].total_sin_impuestos),
+            # IVA item 1
+            "./detalles/detalle[0]/impuestos/impuesto[1]/codigo": "2",
+            "./detalles/detalle[0]/impuestos/impuesto[1]/codigoPorcentaje":
+                self.bill.items[0].iva.codigo,
+            "./detalles/detalle[0]/impuestos/impuesto[1]/tarifa":
+                d2(self.bill.items[0].iva.porcentaje),
+            "./detalles/detalle[0]/impuestos/impuesto[1]/baseImponible":
+                d2(self.bill.items[0].base_imponible_iva),
+            "./detalles/detalle[0]/impuestos/impuesto[1]/valor":
+                d2(self.bill.items[0].valor_iva),
+            # ICE item 1
+            "./detalles/detalle[0]/impuestos/impuesto[0]/codigo": "3",
+            "./detalles/detalle[0]/impuestos/impuesto[0]/codigoPorcentaje":
+                self.bill.items[0].ice.codigo,
+            "./detalles/detalle[0]/impuestos/impuesto[0]/tarifa":
+                d2(self.bill.items[0].ice.porcentaje),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/baseImponible":
+                d2(self.bill.items[0].base_imponible_ice),
+            "./detalles/detalle[0]/impuestos/impuesto[0]/valor":
+                d2(self.bill.items[0].valor_ice),
+        }
+
+        tree = ET.fromstring(bill.xml_content)
+        for k, v in to_test.iteritems():
+            node = tree.find(k)
+            self.assertNotEquals(node, None,
+                                 "Node {} does not exist".format(k))
+            differences = []
+            msg = "Bad value for node {}: \n'{}' (should be \n'{}')".format(
+                k, node.text, v)
+            if "claveAcceso" in k:
+                for i, (a, b) in enumerate(zip(node.text, v)):
+                    if a != b:
+                        differences.append(
+                            "Difference at char {}: '{}' != '{}'".format(i, a, b))
+                msg = msg + "\n" + "\n".join(differences)
+            self.assertEquals(node.text, v, msg)
+
+        self.assertIn("<ds:Signature", bill.xml_content)  # Ensure there is a signature on the file
+
 
     def DISABLED_test_emitir_factura(self):
         """

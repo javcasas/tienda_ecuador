@@ -8,7 +8,7 @@ from decimal import Decimal
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('company_accounts', '__first__'),
+        ('company_accounts', '0001_initial'),
     ]
 
     operations = [
@@ -37,12 +37,12 @@ class Migration(migrations.Migration):
                 ('secuencial', models.IntegerField(default=0, blank=True)),
                 ('xml_content', models.TextField(blank=True)),
                 ('ride_content', models.TextField(blank=True)),
-                ('clave_acceso', models.CharField(max_length=50, blank=True)),
-                ('numero_autorizacion', models.CharField(max_length=50, null=True)),
-                ('fecha_autorizacion', models.DateTimeField(null=True)),
+                ('clave_acceso', models.CharField(default=b'', max_length=50, blank=True)),
+                ('numero_autorizacion', models.CharField(default=b'', max_length=50, blank=True)),
+                ('fecha_autorizacion', models.DateTimeField(null=True, blank=True)),
                 ('issues', models.TextField(default=b'', blank=True)),
                 ('ambiente_sri', models.CharField(max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
-                ('status', models.CharField(default=b'proforma', max_length=20, choices=[(b'pruebas', b'Pruebas'), (b'produccion', b'Producci\xc3\xb3n')])),
+                ('status', models.CharField(default=b'proforma', max_length=20, choices=[(b'proforma', b'Prefactura'), (b'a enviar', b'Enviando al SRI'), (b'enviada', b'Enviada al SRI'), (b'aceptada', b'Aceptada por el SRI')])),
                 ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
