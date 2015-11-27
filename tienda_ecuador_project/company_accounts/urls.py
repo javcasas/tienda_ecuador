@@ -26,6 +26,9 @@ urlpatterns = patterns(
     url(r'^(?P<pk>[0-9]+)/cert/$',
         views.CompanyUploadCertView.as_view(), name='company_upload_cert'),
 
+    url(r'^(?P<pk>[0-9]+)/pay_licence/$',
+        views.CompanyPayLicenceView.as_view(), name='pay_licence'),
+
     # Company Structure view
     url(r'^(?P<pk>[0-9]+)/structure/$',
         views.CompanyProfileView.as_view(

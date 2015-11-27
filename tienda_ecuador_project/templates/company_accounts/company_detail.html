@@ -50,23 +50,21 @@
                     <td>{{ company.licence }}</td>
                     <td><a href='{% url 'company_accounts:company_profile_select_plan' company.id %}' class='btn btn-default'>Elegir Plan</a></td>
                 </tr>
-                {% if company.licence.licence != 'demo' %}
                 <tr>
                     <th>Validez de la licencia</th>
-                    {% if company.licence.expired %}
-                        <td class='bg-danger text-danger'>
-                            Licencia caducada
-                        </td>
-                        <td>
-                            {# FIXME Payment options & payment #}
-                        </td>
+                    {% if company.licence.licence == 'demo' %}
+                        <td class='bg-dange text-danger'>Modo Demo</td>
+                    {% elif company.licence.expired %}
+                        <td class='bg-dange text-danger'>Licencia Caducada</td>
                     {% else %}
                         <td class='bg-success'>
                             Licencia válida hasta {{ company.licence.expiration }} ({{ company.licence.days_to_expiration}} días)
                         </td>
                     {% endif %}
+                    <td>
+                        <a href='{% url 'company_accounts:pay_licence' company.id %}' class='btn btn-default'>Renovar Licencia</a>
+                    </td>
                 </tr>
-                {% endif %}
                 <tr class='hidden'>
                     <th>Control de Contador</th><td>{# FIXME Mostrar estado #}</td><td>{# FIXME Boton 'agregar contador' #}</td>
                 </tr>

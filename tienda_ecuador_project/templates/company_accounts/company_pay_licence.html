@@ -1,0 +1,59 @@
+{% extends 'company_accounts/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Pagar Licencia - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_profile' company.id %}'>Perfil</a></li>
+{% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12 even-section'>
+        <h1>Pagar Licencia</h1>
+        <h3>Usted ha seleccionado el plan <strong>{{ licence_name }}</strong></h3>
+        <h3>El coste de su licencia es ${{ price_to_pay }} por mes (IVA incluído)</h3>
+        <h1>Formas de pago</h1>
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion"
+           href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          Western Union
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne"
+         class="panel-collapse collapse"
+         role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+        <p>Puede pagar con Western Union.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingTwo">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion"
+           href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+          Ingreso Bancario
+        </a>
+      </h4>
+    </div>
+    <div id="collapseTwo"
+         class="panel-collapse collapse"
+         role="tabpanel" aria-labelledby="headingTwo">
+      <div class="panel-body">
+        <p>Puede pagar haciendo un ingreso bancario.</p>
+      </div>
+    </div>
+  </div>
+    </div>
+
+{% endblock %}

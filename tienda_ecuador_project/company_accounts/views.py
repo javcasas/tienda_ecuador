@@ -232,6 +232,23 @@ class CompanyUploadCertView(CompanyView, CompanySelected, FormView):
         return super(CompanyUploadCertView, self).form_valid(form)
 
 
+class CompanyPayLicenceView(CompanyView, CompanySelected, LicenceControlMixin, DetailView):
+    """
+    View that shows a general index for a given company
+    """
+    template_name_suffix = '_pay_licence'
+
+    def get_context_data(self, **kwargs):
+        res = super(CompanyPayLicenceView, self).get_context_data(**kwargs)
+        res['licence_name'] = unicode(self.company.licence).capitalize()
+        res['price_to_pay'] = {
+            'basic': 29,
+            'professional': 69,
+            'enterprise': 295,
+        }[self.company.licence.licence]
+        return res
+
+
 ######################
 # PuntoEmision views #
 ######################

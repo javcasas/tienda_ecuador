@@ -1,3 +1,4 @@
+# * encoding: utf-8 *
 from datetime import datetime, date
 from decimal import Decimal
 import base64
@@ -508,3 +509,57 @@ class LicenceTests(TestCase):
         with self.assertRaises(Exception):
             print t.dispatch(r)
 
+
+class LicenceActivateViewTests(LoggedInWithCompanyTests):
+    """
+    Tests for testing automated licence approval
+    """
+    def test_demo_licence(self):
+        """
+        A demo licence is properly shown on the profile page
+        """
+        r = self.c.get(reverse("company_accounts:company_profile", args=(self.company.id,)))
+        self.assertContains(r, "Modo Demo")
+
+    def test_nonpaid_basic_licence(self):
+        """
+        We select a licence, but do not pay it
+        """
+        r = self.c.get(reverse("company_accounts:company_profile_select_plan", args=(self.company.id,)))
+        self.assertContains(r, "Basic")
+        self.assertContains(r, "Professional")
+        self.assertContains(r, "Enterprise")
+
+        r = self.c.post(
+            reverse("company_accounts:company_profile_select_plan", args=(self.company.id,)),
+            {'selected_plan': 'basic'})
+        self.assertRedirects(r, reverse("company_accounts:company_profile", args=(self.company.id,)))
+
+        r = self.c.get(reverse("company_accounts:company_profile", args=(self.company.id,)))
+        self.assertContains(r, "<td>Basic</td>")
+        self.assertContains(r, "Licencia Caducada")
+
+    def test_paid_basic_licence(self):
+        """
+        We select a licence and pay it
+        """
+        r = self.c.get(reverse("company_accounts:company_profile_select_plan", args=(self.company.id,)))
+        self.assertContains(r, "Basic")
+        self.assertContains(r, "Professional")
+        self.assertContains(r, "Enterprise")
+
+        r = self.c.post(
+            reverse("company_accounts:company_profile_select_plan", args=(self.company.id,)),
+            {'selected_plan': 'basic'})
+        self.assertRedirects(r, reverse("company_accounts:company_profile", args=(self.company.id,)))
+
+        r = self.c.get(reverse("company_accounts:company_profile", args=(self.company.id,)))
+        self.assertContains(r, "<td>Basic</td>")
+        self.assertContains(r, "Licencia Caducada")
+        self.assertContains(r, "Renovar Licencia")  # Link to payment
+        self.assertContains(r, reverse("company_accounts:pay_licence", args=(self.company.id,)))
+
+        r = self.c.get(reverse("company_accounts:pay_licence", args=(self.company.id,)))
+        self.assertContains(r, "Pagar Licencia")
+        self.assertContains(r, "Usted ha seleccionado el plan <strong>Basic</strong>")
+        self.assertContains(r, "El coste de su licencia es $29 por mes (IVA incluído)")
