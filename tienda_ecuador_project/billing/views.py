@@ -1,10 +1,7 @@
-import tempfile
-import os
-import base64
 import pytz
 import time
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -28,7 +25,7 @@ from company_accounts.licence_helpers import licence_required
 
 from util import signature
 from util import sri_sender
-from util.sri_models import SRIStatus, AmbienteSRI
+from util.sri_models import SRIStatus
 import accounts_receivable.models
 
 tz = pytz.timezone('America/Guayaquil')
@@ -176,20 +173,24 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {}
         context.update({
-            'item_list': models.Item.objects
-                         .filter(company=company)
-                         .order_by('sku')[:5],
-            'bill_list': models.Bill.objects
-                         .filter(company=company)
-                         .filter(status='aceptada')[:5],
-            'prebill_list': models.Bill.objects
-                            .filter(punto_emision__establecimiento__company=company)
-                            .filter(status='no enviado')
-                            .order_by("number")[:5],
-            'customer_list': models.Customer.objects
-                             .filter(company=company)
-                             .exclude(identificacion='9999999999999')
-                             .order_by('identificacion')[:5],
+            'item_list':
+                models.Item.objects
+                           .filter(company=company)
+                           .order_by('sku')[:5],
+            'bill_list':
+                models.Bill.objects
+                           .filter(company=company)
+                           .filter(status='aceptada')[:5],
+            'prebill_list':
+                models.Bill.objects
+                           .filter(punto_emision__establecimiento__company=company)
+                           .filter(status='no enviado')
+                           .order_by("number")[:5],
+            'customer_list':
+                models.Customer.objects
+                               .filter(company=company)
+                               .exclude(identificacion='9999999999999')
+                               .order_by('identificacion')[:5],
             'company': company,
             'single_punto_emision': self.single_punto_emision,
             'user': self.request.user,
@@ -400,14 +401,14 @@ class BillItemView(object):
 
 
 class BillCompanyListView(CompanySelected,
-                   BillView,
-                   ListView):
+                          BillView,
+                          ListView):
     context_object_name = "bill_list"
 
 
 class BillEstablecimientoListView(EstablecimientoSelected,
-                                          BillView,
-                                          ListView):
+                                  BillView,
+                                  ListView):
     context_object_name = "bill_list"
 
     def get_queryset(self):
@@ -416,8 +417,8 @@ class BillEstablecimientoListView(EstablecimientoSelected,
 
 
 class BillPuntoEmisionListView(PuntoEmisionSelected,
-                                       BillView,
-                                       ListView):
+                               BillView,
+                               ListView):
     context_object_name = "bill_list"
 
     def get_queryset(self):
@@ -425,8 +426,8 @@ class BillPuntoEmisionListView(PuntoEmisionSelected,
 
 
 class BillDetailView(BillView,
-                             PuntoEmisionSelected,
-                             DetailView):
+                     PuntoEmisionSelected,
+                     DetailView):
     """
     Detail view for proforma bills
     """
@@ -449,8 +450,8 @@ class BillDetailView(BillView,
 
 
 class BillDetailViewTable(BillView,
-                             PuntoEmisionSelected,
-                             DetailView):
+                          PuntoEmisionSelected,
+                          DetailView):
     """
     Detail view for proforma bills
     """
@@ -458,8 +459,8 @@ class BillDetailViewTable(BillView,
 
 
 class BillPaymentView(BillView,
-                              PuntoEmisionSelected,
-                              DetailView):
+                      PuntoEmisionSelected,
+                      DetailView):
     """
     Payment view for proforma bills
     """
@@ -483,7 +484,9 @@ class BillPaymentView(BillView,
             payment.delete()
 
         # Add new payment terms
-        payment_method = models.FormaPago.objects.get(id=request.POST['payment_method'])
+        payment_method = models.FormaPago.objects.get(
+            id=request.POST['payment_method'])
+
         if request.POST['payment_mode'] == 'immediate':
             installment = models.PlazoPago.objects.get(tiempo=0)
             models.Pago(porcentaje=Decimal(100),
@@ -492,7 +495,8 @@ class BillPaymentView(BillView,
                         proforma_bill=proforma).save()
             return redirect("bill_detail", proforma.id)
         elif request.POST['payment_mode'] == 'deferred':
-            installment = models.PlazoPago.objects.get(pk=request.POST['payment_time_to_pay'])
+            installment = models.PlazoPago.objects.get(
+                pk=request.POST['payment_time_to_pay'])
             models.Pago(porcentaje=Decimal(100),
                         forma_pago=payment_method,
                         plazo_pago=installment,
@@ -507,8 +511,8 @@ class BillPaymentView(BillView,
 
 
 class BillCreateView(PuntoEmisionSelected,
-                             BillView,
-                             View):
+                     BillView,
+                     View):
     template_name_suffix = '_create_form'
     form_class = forms.BillForm
 
@@ -528,8 +532,8 @@ class BillCreateView(PuntoEmisionSelected,
 
 
 class BillUpdateView(BillView,
-                             PuntoEmisionSelected,
-                             UpdateView):
+                     PuntoEmisionSelected,
+                     UpdateView):
     form_class = forms.BillForm
 
     def get_form(self, *args, **kwargs):
@@ -551,8 +555,8 @@ class BillUpdateView(BillView,
 
 
 class BillNewCustomerView(BillSelected,
-                                  PuntoEmisionSelected,
-                                  CreateView):
+                          PuntoEmisionSelected,
+                          CreateView):
     form_class = forms.CustomerForm
     model = models.Customer
     template_name = 'billing/bill_new_customer_form.html'
@@ -571,8 +575,8 @@ class BillNewCustomerView(BillSelected,
 
 
 class BillDeleteView(BillView,
-                             PuntoEmisionSelected,
-                             DeleteView):
+                     PuntoEmisionSelected,
+                     DeleteView):
     @property
     def success_url(self):
         view_name = "{}_company_index".format(self.context_object_name)
@@ -601,10 +605,10 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         # Local vars
         bill = self.get_object()
         if bill.status != SRIStatus.options.NotSent:
-            return HttpResponse("Bill status is not 'a enviar'", status=412, reason='Precondition Failed')
+            return HttpResponse("Bill status is not 'a enviar'",
+                                status=412, reason='Precondition Failed')
         punto_emision = bill.punto_emision
         establecimiento = punto_emision.establecimiento
-        company = establecimiento.company
 
         ambiente = punto_emision.ambiente_sri
         secuencial = {
@@ -643,15 +647,18 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
         # Local vars
         bill = self.get_object()
         if bill.status != SRIStatus.options.ReadyToSend:
-            return HttpResponse("Bill status is not 'a enviar'", status=412, reason='Precondition Failed')
+            return HttpResponse("Bill status is not 'a enviar'",
+                                status=412, reason='Precondition Failed')
 
-        enviar_comprobante_result = sri_sender.enviar_comprobante(bill.xml_content, entorno=bill.ambiente_sri)
+        enviar_comprobante_result = sri_sender.enviar_comprobante(
+            bill.xml_content, entorno=bill.ambiente_sri)
         enviar_msgs = enviar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
 
         def convert_messages(messages):
             def convert_msg(msg):
                 converted = {}
-                for key in ['tipo', 'identificador', 'mensaje', 'informacionAdicional']:
+                for key in ['tipo', 'identificador',
+                            'mensaje', 'informacionAdicional']:
                     converted[key] = getattr(msg, key, None)
             return map(convert_msg, messages)
 
@@ -683,10 +690,9 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
 
     def post(self, request, pk):
         # Local vars
-        proforma = self.get_object()
+        bill = self.get_object()
         punto_emision = bill.punto_emision
         establecimiento = punto_emision.establecimiento
-        company = establecimiento.company
 
         ambiente = punto_emision.ambiente_sri
         secuencial = {
@@ -699,32 +705,36 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
                                                    secuencial)
 
         # Generate and sign XML
-        xml_data, clave_acceso = gen_bill_xml(request, proforma)
+        xml_data, clave_acceso = gen_bill_xml(request, bill)
         # assert(clave_acceso == proforma.clave_acceso) FIXME: Is this needed?
         # print "Claves de acceso coinciden"
 
-        proforma.xml_content = xml_data
-        proforma.clave_acceso = clave_acceso
-        proforma.save()
+        bill.xml_content = xml_data
+        bill.clave_acceso = clave_acceso
+        bill.save()
 
-        # Send XML to SRI 
+        # Send XML to SRI
         enviar_comprobante_result = sri_sender.enviar_comprobante(xml_data)
-        enviar_msgs = enviar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
+        enviar_msgs = (enviar_comprobante_result.comprobantes.comprobante[0]
+                                                .mensajes.mensaje)
 
         def convert_messages(messages):
             def convert_msg(msg):
                 converted = {}
-                for key in ['tipo', 'identificador', 'mensaje', 'informacionAdicional']:
+                for key in ['tipo', 'identificador',
+                            'mensaje', 'informacionAdicional']:
                     converted[key] = getattr(msg, key, None)
             return map(convert_msg, messages)
 
         # True if any of the error messages is 43: repeated access key
-        used_access_key_error = any(map(lambda x: x.identificador == '43', enviar_msgs))
+        used_access_key_error = any(
+            map(lambda x: x.identificador == '43', enviar_msgs))
 
-        if enviar_comprobante_result.estado == 'DEVUELTA' and not used_access_key_error:
-            proforma.issues = json.dumps(convert_messages(enviar_msgs))
-            proforma.save()
-            return redirect("bill_detail", proforma.id)
+        if (enviar_comprobante_result.estado == 'DEVUELTA'
+                and not used_access_key_error):
+            bill.issues = json.dumps(convert_messages(enviar_msgs))
+            bill.save()
+            return redirect("bill_detail", bill.id)
 
         # Check result
         def validar_comprobante(clave):
@@ -732,7 +742,8 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
                 print "Validando", i
                 validar_result = sri_sender.validar_comprobante(clave)
                 try:
-                    if validar_result.autorizaciones[0][0].estado in ['AUTORIZADO', 'NO AUTORIZADO']:
+                    if (validar_result.autorizaciones[0][0].estado
+                            in ['AUTORIZADO', 'NO AUTORIZADO']):
                         return validar_result.autorizaciones[0][0]
                 except Exception, e:
                     print e
@@ -742,41 +753,42 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
         autorizacion = validar_comprobante(clave_acceso)
 
         if not autorizacion:
-            proforma.issues = json.dumps([{'tipo': 'ERROR',
-                                              'identificador': '',
-                                              'mensaje': 'Tiempo de espera agotado'}])
-            proforma.save()
-            return redirect("bill_detail", proforma.id)
+            bill.issues = json.dumps([{'tipo': 'ERROR',
+                                       'identificador': '',
+                                       'mensaje': 'Tiempo de espera agotado'}])
+            bill.save()
+            return redirect("bill_detail", bill.id)
 
         if autorizacion.estado != 'AUTORIZADO':
-            proforma.issues = json.dumps(convert_messages(autorizacion.mensajes))
-            proforma.save()
-            return redirect("bill_detail", proforma.id)
+            bill.issues = json.dumps(convert_messages(autorizacion.mensajes))
+            bill.save()
+            return redirect("bill_detail", bill.id)
 
         # Accepted
         # convert to bill
-        new = models.Bill.fromProformaBill(proforma)
+        new = models.Bill.fromProformaBill(bill)
         new.numero_autorizacion = autorizacion.numeroAutorizacion
         new.fecha_autorizacion = autorizacion.fechaAutorizacion
         new.xml_content = autorizacion.comprobante
         new.clave_acceso = clave_acceso
-        new.iva = sum(proforma.iva.values())
+        new.iva = sum(bill.iva.values())
         new.iva_retenido = 0
-        new.total_sin_iva = sum(proforma.subtotal.values())
+        new.total_sin_iva = sum(bill.subtotal.values())
         new.ambiente_sri = autorizacion.ambiente.lower()
         new.number = numero_comprobante
         new.issues = json.dumps(convert_messages(autorizacion.mensajes))
         new.save()
 
         # Generate Receivables
-        for payment in proforma.payment:
+        for payment in bill.payment:
             if payment.plazo_pago.unidad_tiempo == 'dias':
-                payment_date = date.today() + timedelta(days=payment.plazo_pago.tiempo)
+                payment_date = (date.today()
+                                + timedelta(days=payment.plazo_pago.tiempo))
             r = accounts_receivable.models.Receivable(
-                    bill=new,
-                    qty=payment.cantidad,
-                    date=payment_date,
-                    method=payment.forma_pago)
+                bill=new,
+                qty=payment.cantidad,
+                date=payment_date,
+                method=payment.forma_pago)
             r.save()
 
         # update sequence numbers
@@ -788,11 +800,11 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
 
         # generate RIDE
         # FIXME
-        
+
         # Remove proforma
-        for item in proforma.items:
+        for item in bill.items:
             item.delete()
-        proforma.delete()
+        bill.delete()
         # redirect to bill
         return redirect("bill_detail", new.id)
 
@@ -821,8 +833,10 @@ def gen_bill_xml(request, proformabill, codigo=None):
 
     ambiente_sri = proformabill.punto_emision.ambiente_sri
     secuencial = {
-        'pruebas': proformabill.punto_emision.siguiente_secuencial_pruebas,
-        'produccion': proformabill.punto_emision.siguiente_secuencial_produccion
+        'pruebas':
+            proformabill.punto_emision.siguiente_secuencial_pruebas,
+        'produccion':
+            proformabill.punto_emision.siguiente_secuencial_produccion
     }[ambiente_sri]
 
     context['secuencial'] = secuencial
@@ -887,8 +901,8 @@ def gen_bill_xml(request, proformabill, codigo=None):
 
 @licence_required('basic', 'professional', 'enterprise')
 class BillEmitGenXMLView(BillView,
-                                 PuntoEmisionSelected,
-                                 View):
+                         PuntoEmisionSelected,
+                         View):
 
     def get(self, request, pk):
         proformabill = self.get_queryset().get(id=pk)
@@ -902,7 +916,7 @@ class BillEmitGenXMLView(BillView,
 
 
 class BillAddItemView(BillSelected,
-                              CreateView):
+                      CreateView):
     template_name_suffix = '_create_form'
     form_class = forms.BillAddItemForm
 
@@ -955,8 +969,8 @@ class BillItemUpdateView(BillItemView,
 
 
 class BillItemUpdateViewJS(BillItemView,
-                                   BillSelected,
-                                   View):
+                           BillSelected,
+                           View):
     def post(self, request, pk):
         proformabill_item = get_object_or_404(
             self.model, proforma_bill=self.proformabill, pk=pk)
@@ -978,8 +992,8 @@ class BillItemUpdateViewJS(BillItemView,
 
 
 class BillItemDeleteView(BillItemView,
-                                 BillSelected,
-                                 DeleteView):
+                         BillSelected,
+                         DeleteView):
     """
     Delete view for proformabill items
     """
@@ -1017,6 +1031,7 @@ class BillDayListReport(BillView, CompanySelected, ListView):
         for key in ['year', 'month', 'day']:
             context[key] = self.kwargs[key]
         return context
+
 
 class BillListView(BillView, CompanySelected, ListView):
     context_object_name = "bill_list"

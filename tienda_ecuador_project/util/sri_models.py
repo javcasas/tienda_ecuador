@@ -2,6 +2,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
+
 class SRIStatus(object):
     class options(object):
         NotSent = 'NotSent'
@@ -20,6 +21,7 @@ class SRIStatus(object):
         ('Accepted', 'Aceptada por el SRI'),
     )
 
+
 class AmbienteSRI(object):
     class options(object):
         pruebas = 'pruebas'
@@ -34,6 +36,7 @@ class AmbienteSRI(object):
         ('produccion', 'Producción')
     )
 
+
 class ComprobanteSRIMixin(models.Model):
     """
     Mixin that checks if the bill can be modified before saving it
@@ -43,10 +46,14 @@ class ComprobanteSRIMixin(models.Model):
 
     xml_content = models.TextField(blank=True)
 
-    clave_acceso = models.CharField(max_length=50, blank=True, default='')
-    numero_autorizacion = models.CharField(max_length=50, blank=True, default='')
-    fecha_autorizacion = models.DateTimeField(null=True, blank=True)
-    issues = models.TextField(default='', blank=True)
+    clave_acceso = models.CharField(
+        max_length=50, blank=True, default='')
+    numero_autorizacion = models.CharField(
+        max_length=50, blank=True, default='')
+    fecha_autorizacion = models.DateTimeField(
+        null=True, blank=True)
+    issues = models.TextField(
+        default='', blank=True)
 
     ambiente_sri = models.CharField(
         max_length=20,
@@ -64,7 +71,6 @@ class ComprobanteSRIMixin(models.Model):
             return True
         prev = self.__class__.objects.get(id=self.id)
         return prev.status == SRIStatus.options.NotSent
-
 
     def save(self, **kwargs):
         """
@@ -84,7 +90,8 @@ class ComprobanteSRIMixin(models.Model):
                     errors.append("No hay clave de acceso")
                 if self.xml_content == '':
                     errors.append("No hay XML")
-                if self.ambiente_sri not in ['pruebas', 'produccion']:
+                if self.ambiente_sri not in [AmbienteSRI.options.pruebas,
+                                             AmbienteSRI.options.produccion]:
                     errors.append("No hay ambiente SRI")
                 if errors:
                     raise ValidationError(". ".join(errors))
