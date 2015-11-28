@@ -10,6 +10,7 @@ from util.property import Property, ConvertedProperty, ProtectedSetattr
 from util.validators import IsCedula, IsRuc
 
 from company_accounts.models import Company, PuntoEmision, ambiente_sri_OPTIONS
+from util.sri_models import ComprobanteSRIMixin
 
 
 class ReadOnlyObject(Exception):
@@ -97,14 +98,7 @@ class Customer(models.Model):
 #####################################
 # Bill
 #####################################
-Bill_status_OPTIONS = (
-    ('proforma', 'Prefactura'),
-    ('a enviar', 'Enviando al SRI'),
-    ('enviada', 'Enviada al SRI'),
-    ('aceptada', 'Aceptada por el SRI'),
-)
-
-class Bill(models.Model):
+class Bill(ComprobanteSRIMixin, models.Model):
     """
     Represents a generic bill
     """
@@ -115,77 +109,8 @@ class Bill(models.Model):
     punto_emision = models.ForeignKey(PuntoEmision, null=True, blank=True)
     secuencial = models.IntegerField(default=0, blank=True)
 
-    xml_content = models.TextField(blank=True)
-    ride_content = models.TextField(blank=True)
-
-    clave_acceso = models.CharField(max_length=50, blank=True, default='')
-    numero_autorizacion = models.CharField(max_length=50, blank=True, default='')
-    fecha_autorizacion = models.DateTimeField(null=True, blank=True)
-    issues = models.TextField(default='', blank=True)
-
-    ambiente_sri = models.CharField(
-        max_length=20,
-        choices=ambiente_sri_OPTIONS)
-
-    status = models.CharField(
-        max_length=20,
-        choices=Bill_status_OPTIONS,
-        default='proforma')
-
     def __unicode__(self):
         return u"{} - {}".format(self.number, self.date)
-
-    @property
-    def can_be_modified(self):
-        if not self.id:
-            # Not saved yet
-            return True
-        prev = Bill.objects.get(id=self.id)
-        return prev.status == 'proforma'
-
-
-    def save(self, **kwargs):
-        """
-        Checks if the bill can be modified, based on the status
-        """
-        if self.can_be_modified:
-            if self.punto_emision:
-                try:
-                    self.company
-                except:
-                    self.company = self.punto_emision.establecimiento.company
-            if self.status == 'a enviar':
-                errors = []
-                if self.clave_acceso == '':
-                    errors.append("No hay clave de acceso")
-                if self.xml_content == '':
-                    errors.append("No hay XML")
-                if not self.punto_emision:
-                    errors.append("No hay punto de emision")
-                if errors:
-                    raise ValidationError(". ".join(errors))
-            return super(Bill, self).save(**kwargs)
-        else:
-             raise ValidationError("Factura no puede modificarse")
-
-    def secret_save(self, **kwargs):
-        """
-        Always saves, ignoring checks
-        """
-        return super(Bill, self).save(**kwargs)
-
-    def delete(self, **kwargs):
-        """
-        Checks if the bill can be modified, based on the status
-        """
-        if self.can_be_modified:
-            return super(Bill, self).delete(**kwargs)
-
-    def secret_delete(self, **kwargs):
-        """
-        Always saves, ignoring checks
-        """
-        return super(Bill, self).save(**kwargs)
 
     @property
     def items(self):

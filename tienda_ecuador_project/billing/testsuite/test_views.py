@@ -15,6 +15,8 @@ from helpers import (add_User,
                      add_instance,
                      make_post)
 
+from util.sri_models import SRIStatus, AmbienteSRI
+
 
 def get_date():
     now = datetime.now(tz=pytz.timezone('America/Guayaquil'))
@@ -582,8 +584,6 @@ class BillTests(LoggedInWithCompanyTests):
             "email": "a@d.com",
             "direccion": "pupu street",
         }
-        self.data = {}
-        self.new_data = {}
         self.customer = add_instance(
             models.Customer,
             company=self.company,
@@ -606,8 +606,7 @@ class BillTests(LoggedInWithCompanyTests):
             issued_to=self.customer,
             punto_emision=self.punto_emision,
             date=get_date(),
-            company=self.company,
-            **self.data)
+            company=self.company)
 
         iva = add_instance(models.Iva,
                            descripcion="12%", codigo="2", porcentaje=12.0)
@@ -660,8 +659,7 @@ class BillTests(LoggedInWithCompanyTests):
             models.Bill,
             issued_to=self.customer,
             punto_emision=punto_emision2,
-            date=get_date(),
-            **self.data)
+            date=get_date())
         r = self.c.get(reverse('bill_establecimiento_index',
                                args=(establecimiento2.id,)))
         self.assertContainsObject(
@@ -685,8 +683,7 @@ class BillTests(LoggedInWithCompanyTests):
             models.Bill,
             issued_to=self.customer,
             punto_emision=punto_emision2,
-            date=get_date(),
-            **self.data)
+            date=get_date())
 
         r = self.c.get(reverse('bill_punto_emision_index',
                        args=(punto_emision2.id,)))
@@ -707,8 +704,7 @@ class BillTests(LoggedInWithCompanyTests):
         r = self.c.get(
             reverse('bill_detail',
                     args=(self.bill.id,)))
-        self.assertContainsObject(r, self.bill,
-                                  fix_keys(self.data.keys()))
+
         for item in self.items:
             self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
             self.assertContains(
@@ -746,8 +742,6 @@ class BillTests(LoggedInWithCompanyTests):
                     args=(self.bill.id,)))
         self.assertContainsObject(r, self.customer,
                                   ['razon_social', 'identificacion'])
-        self.assertContainsObject(r, self.bill,
-                                  fix_keys(self.data.keys()))
 
     def test_bill_update_submit(self):
         """
@@ -756,14 +750,11 @@ class BillTests(LoggedInWithCompanyTests):
         r = self.simulate_post(
             reverse('bill_update',
                     args=(self.bill.id,)),
-            dict(self.new_data, issued_to=self.new_customer.id),
+            dict(issued_to=self.new_customer.id),
             form_index=1)
         self.assertRedirects(
             r, reverse('bill_detail',
                        args=(self.bill.id,)))
-        self.assertObjectMatchesData(
-            models.Bill.objects.get(id=self.bill.id),
-            self.new_data)
 
     def test_bill_delete_show_form(self):
         """
@@ -1039,7 +1030,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
         bill = models.Bill.objects.get(id=self.bill.id)
         # La factura ha sido convertida a 'a enviar'
-        self.assertEquals(bill.status, 'a enviar')
+        self.assertEquals(bill.status, SRIStatus.options.ReadyToSend)
 
         # Comprobar XML
         d2 = lambda v: "{:.2f}".format(v)

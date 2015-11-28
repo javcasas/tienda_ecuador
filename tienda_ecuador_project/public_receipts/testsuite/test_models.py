@@ -9,6 +9,8 @@ from util.testsuite.helpers import add_instance
 import billing.models
 import billing.testsuite.test_models
 
+from util.sri_models import AmbienteSRI
+
 
 current_ruc = count(10)
 get_ruc = lambda: str(current_ruc.next())
@@ -36,10 +38,9 @@ class FieldsTests(TestCase):
             number='33344556677',
             date=get_date(),
             xml_content='xml',
-            ride_content='ride',
             fecha_autorizacion=date(2015, 5, 1),
             numero_autorizacion='12342423423',
-            ambiente_sri='pruebas',
+            ambiente_sri=AmbienteSRI.options.pruebas,
             clave_acceso='4545454545',
             issues='asdf',
             )
@@ -47,12 +48,11 @@ class FieldsTests(TestCase):
         self.assertEquals(bill.number, '33344556677')
 
         self.assertEquals(bill.xml_content, 'xml')
-        self.assertEquals(bill.ride_content, 'ride')
 
         self.assertEquals(bill.fecha_autorizacion, date(2015, 5, 1))
         self.assertEquals(bill.numero_autorizacion, '12342423423')
 
-        self.assertEquals(bill.ambiente_sri, 'pruebas')
+        self.assertEquals(bill.ambiente_sri, AmbienteSRI.options.pruebas)
 
         self.assertEquals(bill.clave_acceso, '4545454545')
         self.assertEquals(bill.issues, 'asdf')

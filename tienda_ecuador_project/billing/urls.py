@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, url
 from billing import views
+from util.sri_models import SRIStatus, AmbienteSRI
 
 urlpatterns = patterns(
     '',
@@ -39,15 +40,15 @@ urlpatterns = patterns(
     #######################
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': 'proforma'}
+            queryset_filters={'status': SRIStatus.options.NotSent}
         ), name='bill_company_index'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/sent/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': 'enviada'}
+            queryset_filters={'status': SRIStatus.options.Sent}
         ), name='bill_company_index.sent'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/accepted/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': 'aceptada'}
+            queryset_filters={'status': SRIStatus.options.Accepted}
         ), name='bill_company_index.accepted'),
 
     url(r'^bill/list/e/(?P<establecimiento_id>[0-9]+)/$',

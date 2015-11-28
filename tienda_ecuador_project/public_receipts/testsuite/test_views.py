@@ -45,7 +45,6 @@ class ReceiptViewTests(TestCase, TestHelpersMixin):
             company=self.company,
             date=get_date(),
             fecha_autorizacion=date(2015, 5, 1),
-            ride_content='ride',  # FIXME, should be in response
             issues='asdf',  # FIXME, should be in response
             **self.bill_data)
 

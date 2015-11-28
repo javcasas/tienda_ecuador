@@ -26,6 +26,8 @@ from helpers import (add_instance,
                      add_User,
                      TestHelpersMixin)
 
+from util.sri_models import SRIStatus, AmbienteSRI
+
 
 current_ruc = count(10)
 get_ruc = lambda: str(current_ruc.next())
@@ -76,7 +78,7 @@ base_data = {
         'number': '33344556677',
         'date': get_date(),
         'xml_content': '',
-        'ride_content': '',
+        #'ride_content': '',
         'fecha_autorizacion': date(2015, 5, 1),
         'numero_autorizacion': '12342423423',
         'ambiente_sri': 'pruebas',
@@ -432,6 +434,10 @@ class BillTest(TestCase, TestHelpersMixin):
                 unidad_tiempo='dias',
                 tiempo=30))
 
+        def get_bill_from_db():
+            return models.Bill.objects.get(id=self.bill.id)
+        self.get_bill_from_db = get_bill_from_db
+
     def test_subtotal(self):
         self.assertEquals(self.bill.subtotal,
                           {12: (1 + 2 + 3 + 4) * (10 + 5),
@@ -521,72 +527,77 @@ class BillTest(TestCase, TestHelpersMixin):
         self.assertEquals(self.bill.payment[0].cantidad,
                           self.bill.total_con_impuestos)
 
-    def test_proforma_to_send_field_checks(self):
+    def test_bill_default_status(self):
+        """
+        The default status for a bill is 'no enviada'
+        """
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.NotSent)
+
+    def test_proforma_to_send_incomplete_fields_checks(self):
         """
         Una proforma para ser enviada al SRI debe tener
             clave de acceso
             XML
-            punto de emision
+            ambiente
             Pasa a ser no editable
         """
-        bill = self.bill
-
-        def get_bill_from_db():
-            return models.Bill.objects.get(id=bill.id)
-
-        self.assertEquals(bill.status, 'proforma')
-        data = {
-            'clave_acceso':  ('1234512345', ''),
-            'xml_content':      ('<xml></xml>', ''),
-            'punto_emision': (self.punto_emision, None),
-        }
-        for key in data.keys():
-            bill.status = 'proforma'
-            to_test = data.copy()
-            to_test.pop(key)
-            for nonempty_key, value in to_test.iteritems():
-                setattr(bill, nonempty_key, value[0])
-            setattr(bill, key, data[key][1])
-            bill.status = 'a enviar'
-            with self.assertRaises(ValidationError):  # Save everything with the status change
-                bill.save()
-            self.assertEquals(get_bill_from_db().status, 'proforma')
-
-            bill.status = 'proforma'  # Save everything, then the status change
-            bill.save()
-            bill.status = 'a enviar'
-            with self.assertRaises(ValidationError):
-                bill.save()
-            self.assertEquals(get_bill_from_db().status, 'proforma')
-
-        # Success
-        for key, value in data.iteritems():
-            setattr(bill, key, value[0])
-        bill.status = 'a enviar'
-        bill.save()
-        self.assertEquals(get_bill_from_db().status, 'a enviar')
-
-        # Test non-writable
-        bill.xml_data = 'No data'
+        # No ambiente_sri
+        bill = self.get_bill_from_db()
+        bill.clave_acceso = '1234512345'
+        bill.xml_content = '<xml></xml>'
+        bill.punto_emision = None
+        bill.ambiente_sri = None
+        bill.status = SRIStatus.options.ReadyToSend
         with self.assertRaises(ValidationError):
             bill.save()
-        self.assertEquals(get_bill_from_db().xml_content, data['xml_content'][0])
+        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
+
+        # No clave_acceso
+        bill = self.get_bill_from_db()
+        bill.ambiente_sri = self.punto_emision.ambiente_sri
+        bill.xml_content = '<xml></xml>'
+        bill.status = SRIStatus.options.ReadyToSend
+        with self.assertRaises(ValidationError):
+            bill.save()
+        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
+
+        # No xml_content
+        bill = self.get_bill_from_db()
+        bill.ambiente_sri = self.punto_emision.ambiente_sri
+        bill.clave_acceso = '1234512345'
+        bill.status = SRIStatus.options.ReadyToSend
+        with self.assertRaises(ValidationError):
+            bill.save()
+        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
+
+    def test_proforma_to_send_complete_fields_checks(self):
+        """
+        Una proforma para ser enviada al SRI debe tener
+            clave de acceso
+            XML
+            ambiente
+            Pasa a ser no editable
+        """
+        bill = self.get_bill_from_db()
+        bill.ambiente_sri = self.punto_emision.ambiente_sri
+        bill.clave_acceso = '1234512345'
+        bill.xml_content = '<xml></xml>'
+        bill.status = SRIStatus.options.ReadyToSend
+        bill.save()
+        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.ReadyToSend)
 
     def test_cant_modify_bill_not_proforma(self):
         """
         No se puede modificar una factura que no este en status='proforma'
         """
-        bill = self.bill
-
-        def get_bill_from_db():
-            return models.Bill.objects.get(id=bill.id)
-
-        self.assertEquals(bill.status, 'proforma')
+        bill = self.get_bill_from_db()
+        bill.ambiente_sri = self.punto_emision.ambiente_sri
         bill.clave_acceso = '1234512345'
         bill.xml_content = '<xml></xml>'
-        bill.punto_emision = self.punto_emision
-        bill.status = 'a enviar'
+        bill.status = SRIStatus.options.ReadyToSend
         bill.save()
+        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.ReadyToSend)
 
         with self.assertRaises(ValidationError):
             bill.clave_acceso = '333333'

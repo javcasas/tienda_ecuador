@@ -28,6 +28,7 @@ from company_accounts.licence_helpers import licence_required
 
 from util import signature
 from util import sri_sender
+from util.sri_models import SRIStatus, AmbienteSRI
 import accounts_receivable.models
 
 tz = pytz.timezone('America/Guayaquil')
@@ -183,7 +184,7 @@ class CompanyIndex(CompanySelected, View):
                          .filter(status='aceptada')[:5],
             'prebill_list': models.Bill.objects
                             .filter(punto_emision__establecimiento__company=company)
-                            .filter(status='proforma')
+                            .filter(status='no enviado')
                             .order_by("number")[:5],
             'customer_list': models.Customer.objects
                              .filter(company=company)
@@ -599,6 +600,8 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
     def post(self, request, pk):
         # Local vars
         bill = self.get_object()
+        if bill.status != SRIStatus.options.NotSent:
+            return HttpResponse("Bill status is not 'a enviar'", status=412, reason='Precondition Failed')
         punto_emision = bill.punto_emision
         establecimiento = punto_emision.establecimiento
         company = establecimiento.company
@@ -624,9 +627,46 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         bill.secuencial = secuencial
         bill.ambiente = ambiente
         bill.number = numero_comprobante
-        bill.status = 'a enviar'
+        bill.status = SRIStatus.options.ReadyToSend
         bill.save()
         return HttpResponse('Ok')
+
+
+@licence_required('basic', 'professional', 'enterprise')
+class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
+    """
+    Sends an 'a enviar' bill to SRI
+    """
+    template_name_suffix = '_disabled'
+
+    def post(self, request, pk):
+        # Local vars
+        bill = self.get_object()
+        if bill.status != SRIStatus.options.ReadyToSend:
+            return HttpResponse("Bill status is not 'a enviar'", status=412, reason='Precondition Failed')
+
+        enviar_comprobante_result = sri_sender.enviar_comprobante(bill.xml_content, entorno=bill.ambiente_sri)
+        enviar_msgs = enviar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
+
+        def convert_messages(messages):
+            def convert_msg(msg):
+                converted = {}
+                for key in ['tipo', 'identificador', 'mensaje', 'informacionAdicional']:
+                    converted[key] = getattr(msg, key, None)
+            return map(convert_msg, messages)
+
+        bill.issues = json.dumps(convert_messages(enviar_msgs))
+        bill.secret_save()
+
+        if enviar_comprobante_result.estado == 'DEVUELTA':
+            bill.status = 'proforma'
+            bill.secret_save()
+            return HttpResponse("Bill was rejected", status=412, reason='Precondition Failed')
+        else:
+            print enviar_comprobante_result.estado
+            bill.status = 'enviada'
+            bill.secret_save()
+            return HttpResponse("Ok")
 
 
 @licence_required('basic', 'professional', 'enterprise')
