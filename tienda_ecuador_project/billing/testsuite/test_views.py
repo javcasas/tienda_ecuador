@@ -1013,7 +1013,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
     def test_emitir_factura_prepare_to_send(self):
         """
-        Prueba la emision de facturas
+        Prueba generacion de la factura para emitirla
         """
         self.company.licence.approve('professional', date(2020, 1, 1))
         r = self.c.get(
