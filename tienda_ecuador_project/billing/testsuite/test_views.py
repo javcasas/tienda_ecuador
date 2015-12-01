@@ -1,6 +1,5 @@
 from datetime import datetime, date, timedelta
 from decimal import Decimal
-import base64
 import pytz
 import json
 import xml.etree.ElementTree as ET
@@ -17,10 +16,11 @@ from helpers import (add_User,
                      make_post)
 
 from util.sri_models import SRIStatus, AmbienteSRI
-from util.testsuite.test_sri_sender_mock import (MockAutorizarComprobante,
-                                                 MockEnviarComprobante,
-                                                 gen_respuesta_solicitud_ok,
-                                                 gen_respuesta_solicitud_invalid_xml)
+from util.testsuite.test_sri_sender_mock import (
+    MockAutorizarComprobante,
+    MockEnviarComprobante,
+    gen_respuesta_solicitud_ok,
+    gen_respuesta_solicitud_invalid_xml)
 
 
 def get_date():
@@ -58,7 +58,8 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         self.c = Client()
         r = self.c.post("/accounts/login/",
                         {'username': username, 'password': password})
-        #self.assertRedirects(r, reverse('company_accounts:company_index'))
+        # FIXME
+        # self.assertRedirects(r, reverse('company_accounts:company_index'))
 
     def tearDown(self):
         self.assert_no_broken_urls()
@@ -140,15 +141,20 @@ class LoggedInWithCompanyTests(LoggedInTests):
     """
     def setUp(self):
         super(LoggedInWithCompanyTests, self).setUp()
-        self.company = add_instance(models.Company,
+        self.company = add_instance(
+            models.Company,
             nombre_comercial='Tienda 1',
             ruc='1234567890',
             razon_social='Paco Pil',
             direccion_matriz="C del pepino")
-        self.company_user = add_instance(company_accounts.models.CompanyUser,
-                                         user=self.user,
-                                         company=self.company)
-        self.company2 = add_instance(models.Company,
+
+        self.company_user = add_instance(
+            company_accounts.models.CompanyUser,
+            user=self.user,
+            company=self.company)
+
+        self.company2 = add_instance(
+            models.Company,
             nombre_comercial='Tienda 2',
             ruc='1234567892',
             razon_social='Paca Pil',
@@ -159,8 +165,7 @@ class LoggedInWithCompanyTests(LoggedInTests):
             company=self.company,
             descripcion="Matriz",
             direccion='C del pepino',
-            codigo="001",
-        )
+            codigo="001")
 
         self.punto_emision = add_instance(
             company_accounts.models.PuntoEmision,
@@ -382,12 +387,17 @@ class GenericObjectCRUDTest(object):
         """
         username, password = 'wisa', 'wis_pwa'
         user = add_User(username=username, password=password)
-        company3 = add_instance(models.Company,
+        company3 = add_instance(
+            models.Company,
             nombre_comercial='Tienda 3',
             ruc='1234567842',
             razon_social='Pace Pil',
             direccion_matriz="C del pepeno")
-        add_instance(company_accounts.models.CompanyUser, user=user, company=company3)
+
+        add_instance(
+            company_accounts.models.CompanyUser,
+            user=user, company=company3)
+
         c = Client()
         r = c.post("/accounts/login/",
                    {'username': username, 'password': password})
@@ -412,14 +422,17 @@ class GenericObjectCRUDTest(object):
         """
         username, password = 'wisa', 'wis_pwa'
         user = add_User(username=username, password=password)
-        company3 = add_instance(models.Company,
+        company3 = add_instance(
+            models.Company,
             nombre_comercial='Tienda 3',
             ruc='1234567842',
             razon_social='Pace Pil',
             direccion_matriz="C del pepeno")
+
         add_instance(
             company_accounts.models.CompanyUser,
             user=user, company=company3)
+
         establecimiento3 = add_instance(
             company_accounts.models.Establecimiento,
             company=company3,
@@ -1049,10 +1062,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         Prueba la generacion del XML
         """
         self.company.licence.approve('professional', date(2020, 1, 1))
-        #self.punto_emision.ambiente_sri = 'test'
-        self.punto_emision.save()
         # Ok, emitir
-        r = self.c.post(
+        self.c.post(
             reverse('bill_emit_accept',
                     args=(self.bill.id,)))
 
@@ -1062,7 +1073,9 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                              tzinfo=pytz.timezone('America/Guayaquil'))
         bill.secret_save()
 
-        with MockEnviarComprobante(gen_respuesta_solicitud_invalid_xml(self.get_bill_from_db().clave_acceso)) as request:
+        response = gen_respuesta_solicitud_invalid_xml(
+            self.get_bill_from_db().clave_acceso)
+        with MockEnviarComprobante(response) as request:
             r = self.c.post(
                 reverse('bill_emit_send_to_sri',
                         args=(self.bill.id,)))
@@ -1191,10 +1204,8 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         Prueba el envio de facturas
         """
         self.company.licence.approve('professional', date(2020, 1, 1))
-        #self.punto_emision.ambiente_sri = 'test'
-        self.punto_emision.save()
         # Ok, emitir
-        r = self.c.post(
+        self.c.post(
             reverse('bill_emit_accept',
                     args=(self.bill.id,)))
 
@@ -1203,16 +1214,21 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 reverse('bill_emit_send_to_sri',
                         args=(self.bill.id,)))
 
+        self.assertEquals(r.status_code, 412)
+        self.assertEquals(r.reason_phrase, "Precondition Failed")
+
         # Got an error, bill is 'not sent' again
         bill = self.get_bill_from_db()
         self.assertEquals(bill.status, SRIStatus.options.NotSent)
         self.assertTrue(bill.issues)  # There are issues
         issues = json.loads(bill.issues)
         for issue in issues:
-            self.assertTrue(issues[0]['identificador'])  # The issues are really issues
-            self.assertTrue(issues[0]['mensaje'])  # The issues are really issues
-            self.assertTrue(issues[0]['tipo'])  # The issues are really issues
-        self.assertTrue(any([issue['tipo'] == 'ERROR' for issue in issues]))  # There is at least an error
+            # The issues are really issues
+            self.assertTrue(issues[0]['identificador'])
+            self.assertTrue(issues[0]['mensaje'])
+            self.assertTrue(issues[0]['tipo'])
+        # There is at least an error
+        self.assertTrue(any([issue['tipo'] == 'ERROR' for issue in issues]))
 
     def test_emitir_factura_send_to_sri_accepted(self):
         """
@@ -1220,7 +1236,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         """
         self.company.licence.approve('professional', date(2020, 1, 1))
         # Ok, emitir
-        r = self.c.post(
+        self.c.post(
             reverse('bill_emit_accept',
                     args=(self.bill.id,)))
 
@@ -1231,6 +1247,9 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             r = self.c.post(
                 reverse('bill_emit_send_to_sri',
                         args=(self.bill.id,)))
+
+        self.assertEquals(r.status_code, 200)
+        self.assertEquals(r.content, "Ok")
 
         # All OK
         bill = self.get_bill_from_db()
@@ -1244,237 +1263,11 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                               new_punto_emision.siguiente_secuencial_pruebas)
             self.assertEquals(prev_secuencial_produccion,
                               new_punto_emision.siguiente_secuencial_produccion)
-        else: 
+        else:
             self.assertEquals(prev_secuencial_produccion + 1,
                               new_punto_emision.siguiente_secuencial_produccion)
             self.assertEquals(prev_secuencial_pruebas,
                               new_punto_emision.siguiente_comprobante_pruebas)
-
-    def DISABLED_test_emitir_factura(self):
-        """
-        Prueba la emision de facturas
-        """
-        self.company.cert = base64.b64encode(
-            open("billing/testsuite/keystore.PKCS12").read())
-        self.company.key = "123456"
-        self.company.licence.approve('professional', date(2020, 1, 1))
-        # Confirmar la emision de la factura
-        r = self.c.get(
-            reverse('proformabill_emit_to_bill',
-                    args=(self.proformabill.id,)))
-        self.assertContains(  # same link as POST
-            r,
-            reverse('proformabill_emit_to_bill',
-                    args=(self.proformabill.id,)))
-        # Ok, emitir
-        r = self.c.post(
-            reverse('proformabill_emit_to_bill',
-                    args=(self.proformabill.id,)))
-
-        # Generar XML
-        #   Generar claves para el XML
-        #       Guardar secuencial para el XML
-        #       Incrementar secuencial de punto emision
-        #   Firmar XML
-        #   Guardar XML en proforma
-        proforma = models.Bill.objects.get(id=self.bill.id)
-        self.assertEquals(
-            proforma.secuencial_pruebas,
-            10)
-        self.assertEquals(
-            models.PuntoEmision.objects
-            .get(id=self.punto_emision.id)
-            .siguiente_secuencial_pruebas,
-            11)
-        r = self.c.get(
-            reverse('proformabill_emit_gen_xml',
-                    args=(self.proformabill.id,)))
-        tree = ET.fromstring(r.content)
-
-        d2 = lambda v: "{:.2f}".format(v)
-        d6 = lambda v: "{:.6f}".format(v)
-        z9 = lambda v: "{:09}".format(v)
-
-        to_test = {
-            # Info Tributaria
-            "./infoTributaria/ambiente": '1',  # pruebas
-            "./infoTributaria/tipoEmision": '1',  # online
-            "./infoTributaria/razonSocial": self.company.razon_social,
-            "./infoTributaria/nombreComercial": self.company.nombre_comercial,
-            "./infoTributaria/ruc": self.company.ruc,
-            "./infoTributaria/claveAcceso": "".join([
-                self.proformabill.date.strftime("%d%m%Y"),
-                '01',
-                self.company.ruc,
-                '1',
-                "023013",
-                "{:09}".format(proforma.secuencial_pruebas),
-                "17907461",
-                "1",
-                "7"]),
-            "./infoTributaria/codDoc": "01",  # factura
-            "./infoTributaria/estab": "023",
-            "./infoTributaria/ptoEmi": "013",
-            "./infoTributaria/secuencial":
-                z9(proforma.secuencial_pruebas),
-            "./infoTributaria/dirMatriz": self.company.direccion_matriz,
-
-            # Info Factura
-            "./infoFactura/fechaEmision":
-                self.proformabill.date.strftime("%d/%m/%Y"),
-            "./infoFactura/obligadoContabilidad":
-                "SI" if self.company.obligado_contabilidad else "NO",
-            "./infoFactura/tipoIdentificacionComprador":
-                "05",
-            "./infoFactura/razonSocialComprador":
-                self.proformabill.issued_to.razon_social,
-            "./infoFactura/identificacionComprador":
-                self.proformabill.issued_to.identificacion,
-            "./infoFactura/totalSinImpuestos":
-                d2(self.proformabill.total_sin_impuestos),
-            "./infoFactura/totalDescuento":
-                "0.00",
-
-            # Impuestos
-            "./infoFactura/totalConImpuestos/totalImpuesto[1]/codigo": "2",
-            "./infoFactura/totalConImpuestos/totalImpuesto[1]/codigoPorcentaje":
-                self.proformabill.items[0].iva.codigo,
-            "./infoFactura/totalConImpuestos/totalImpuesto[1]/descuentoAdicional": '0.00',
-            "./infoFactura/totalConImpuestos/totalImpuesto[1]/baseImponible":
-                d2(self.proformabill.items[0].base_imponible_iva),
-            "./infoFactura/totalConImpuestos/totalImpuesto[1]/valor":
-                d2(self.proformabill.items[0].valor_iva),
-            "./infoFactura/totalConImpuestos/totalImpuesto[0]/codigo": "3",
-            "./infoFactura/totalConImpuestos/totalImpuesto[0]/codigoPorcentaje":
-                self.proformabill.items[0].ice.codigo,
-            "./infoFactura/totalConImpuestos/totalImpuesto[0]/descuentoAdicional": '0.00',
-            "./infoFactura/totalConImpuestos/totalImpuesto[0]/baseImponible":
-                d2(self.proformabill.items[0].base_imponible_ice),
-            "./infoFactura/totalConImpuestos/totalImpuesto[0]/valor":
-                d2(self.proformabill.items[0].valor_ice),
-
-            "./infoFactura/propina": "0.00",
-            "./infoFactura/importeTotal":
-                d2(self.proformabill.total_con_impuestos),
-            "./infoFactura/moneda": "DOLAR",
-
-            # Detalle
-            "./detalles/detalle[0]/descripcion":
-                self.proformabill.items[0].description,
-            "./detalles/detalle[0]/cantidad":
-                d6(self.proformabill.items[0].qty),
-            "./detalles/detalle[0]/precioUnitario":
-                d6(self.proformabill.items[0].unit_price),
-            "./detalles/detalle[0]/descuento": "0.00",
-            "./detalles/detalle[0]/precioTotalSinImpuesto":
-                d2(self.proformabill.items[0].total_sin_impuestos),
-            # IVA item 1
-            "./detalles/detalle[0]/impuestos/impuesto[1]/codigo": "2",
-            "./detalles/detalle[0]/impuestos/impuesto[1]/codigoPorcentaje":
-                self.proformabill.items[0].iva.codigo,
-            "./detalles/detalle[0]/impuestos/impuesto[1]/tarifa":
-                d2(self.proformabill.items[0].iva.porcentaje),
-            "./detalles/detalle[0]/impuestos/impuesto[1]/baseImponible":
-                d2(self.proformabill.items[0].base_imponible_iva),
-            "./detalles/detalle[0]/impuestos/impuesto[1]/valor":
-                d2(self.proformabill.items[0].valor_iva),
-            # ICE item 1
-            "./detalles/detalle[0]/impuestos/impuesto[0]/codigo": "3",
-            "./detalles/detalle[0]/impuestos/impuesto[0]/codigoPorcentaje":
-                self.proformabill.items[0].ice.codigo,
-            "./detalles/detalle[0]/impuestos/impuesto[0]/tarifa":
-                d2(self.proformabill.items[0].ice.porcentaje),
-            "./detalles/detalle[0]/impuestos/impuesto[0]/baseImponible":
-                d2(self.proformabill.items[0].base_imponible_ice),
-            "./detalles/detalle[0]/impuestos/impuesto[0]/valor":
-                d2(self.proformabill.items[0].valor_ice),
-        }
-        for k, v in to_test.iteritems():
-            node = tree.find(k)
-            self.assertNotEquals(node, None,
-                                 "Node {} does not exist".format(k))
-            differences = []
-            msg = "Bad value for node {}: \n'{}' (should be \n'{}')".format(
-                k, node.text, v)
-            if "claveAcceso" in k:
-                for i, (a, b) in enumerate(zip(node.text, v)):
-                    if a != b:
-                        differences.append(
-                            "Difference at char {}: '{}' != '{}'".format(i, a, b))
-                msg = msg + "\n" + "\n".join(differences)
-            self.assertEquals(node.text, v, msg)
-
-        # Enviar XML al SRI
-        #   Esperar respuesta
-        #   Si respuesta positiva
-        #       Convertir proforma en final
-        #       Emitir correo electronico al cliente
-        #   Si no
-        #       Mostrar errores
-
-
-class ReportViews(LoggedInWithCompanyTests):
-    """
-    Checks several report views
-    """
-    def setUp(self):
-        super(ReportViews, self).setUp()
-        self.bill1 = add_instance(
-            models.Bill,
-            company=self.company,
-            date=datetime(2015, 5, 9, 11, 30),
-            fecha_autorizacion=datetime(2015, 5, 9, 11, 34),
-            number='001-001-123456789',
-            xml_content='blah'*20,
-            ride_content='blih'*50,
-            total_sin_iva=Decimal(10),
-            iva=Decimal("1.2"),
-            iva_retenido=Decimal(0),
-            )
-        self.bill2 = add_instance(
-            models.Bill,
-            company=self.company,
-            date=datetime(2015, 5, 10, 11, 30),
-            fecha_autorizacion=datetime(2015, 5, 9, 11, 34),
-            number='001-001-123456790',
-            xml_content='blah'*20,
-            ride_content='blih'*50,
-            total_sin_iva=Decimal(10),
-            iva=Decimal("1.2"),
-            iva_retenido=Decimal(0),
-            )
-
-    def DISABLED_test_daily_bills_SRI(self):
-        """
-        Shows a list of all the bills emitted on a day
-        """
-        y, m, d = 2015, 5, 9
-        r = self.c.get(
-            reverse('report_daily_bills',
-                    args=(self.company.id, y, m, d)))
-        self.assertEquals(
-            list(r.context_data['bill_list']),
-            [self.bill1])
-        self.assertContains(r, "{}/{}/{}".format(d, m, y))
-
-#    def test_weekly_bills(self):
-#        """
-#        Shows a list of all the bills emitted on a week
-#        """
-#        self.fail("TODO")
-
-#    def test_monthly_bills(self):
-#        """
-#        Shows a list of all the bills emitted on a month
-#        """
-#        self.fail("TODO")
-
-#    def test_monthly_ATS_annex_SRI(self):
-#        """
-#        Shows a helper list
-#            * Anexo Transaccional Simplificado (ATS)
-#        """
-#        self.fail("TODO")
 
 
 class PopulateBillingTest(TestCase):
@@ -1495,10 +1288,10 @@ class PopulateBillingTest(TestCase):
         # It seems I can view customers and items for a different company
         # FIXME: re-enable tests
         urls = [
-            #reverse("customer_detail", args=(data['c3'].id,)),
-            #reverse("item_detail", args=(data['i22'].id,)),
-            #reverse("bill_detail",
-            #        args=(data['b3'].id,)),
+            # reverse("customer_detail", args=(data['c3'].id,)),
+            # reverse("item_detail", args=(data['i22'].id,)),
+            # reverse("bill_detail",
+            #         args=(data['b3'].id,)),
         ]
         for url in urls:
             r = c.get(url)

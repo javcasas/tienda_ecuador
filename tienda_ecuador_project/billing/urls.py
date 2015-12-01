@@ -116,11 +116,6 @@ urlpatterns = patterns(
         views.BillPaymentView.as_view(),  # FIXME
         name='bill_payment_details'),
 
-    # Report views
-    url(r'^report/(?P<company_id>[0-9]+)/bills/day/(?P<year>[0-9]+)/(?P<month>[0-9]+)/(?P<day>[0-9]+)/$',
-        views.BillDayListReport.as_view(),
-        name='report_daily_bills'),
-
     # Bill Views
     url(r'^bill/(?P<pk>[0-9]+)/read/$',
         views.BillDetailView.as_view(), name='bill_detail'),

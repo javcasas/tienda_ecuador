@@ -616,37 +616,6 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         return HttpResponse('<html>Ok</html>')
 
 
-
-
-
-        punto_emision = bill.punto_emision
-        establecimiento = punto_emision.establecimiento
-
-        ambiente = punto_emision.ambiente_sri
-        secuencial = {
-            'pruebas': punto_emision.siguiente_secuencial_pruebas,
-            'produccion': punto_emision.siguiente_secuencial_produccion,
-            'test': 4,
-        }[ambiente]
-
-        numero_comprobante = "{}-{}-{:09d}".format(establecimiento.codigo,
-                                                   punto_emision.codigo,
-                                                   secuencial)
-
-        # Generate and sign XML
-        xml_data, clave_acceso = gen_bill_xml(request, bill)
-
-        bill.xml_content = xml_data
-        bill.clave_acceso = clave_acceso
-        bill.issues = ''
-        bill.secuencial = secuencial
-        bill.ambiente = ambiente
-        bill.number = numero_comprobante
-        bill.status = SRIStatus.options.ReadyToSend
-        bill.save()
-        return HttpResponse('<html>Ok</html>')
-
-
 @licence_required('basic', 'professional', 'enterprise')
 class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
     """
@@ -655,14 +624,12 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_disabled'
 
     def post(self, request, pk):
-        # Local vars
         bill = self.get_object()
         if bill.status != SRIStatus.options.ReadyToSend:
             return HttpResponse("Bill status is not 'a enviar'",
                                 status=412, reason='Precondition Failed')
 
         punto_emision = bill.punto_emision
-        establecimiento = punto_emision.establecimiento
 
         bill.ambiente_sri = punto_emision.ambiente_sri
         bill.secuencial = {
@@ -707,7 +674,8 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
         bill.issues = json.dumps(convert_messages(enviar_msgs))
         bill.status = SRIStatus.options.NotSent
         bill.secret_save()
-        return HttpResponse("Bill was rejected", status=412, reason='Precondition Failed')
+        return HttpResponse("Bill was rejected",
+                            status=412, reason='Precondition Failed')
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -718,7 +686,7 @@ class BillValidateInSRIView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_disabled'
 
     def post(self, request, pk):
-        # Local vars
+        # FIXME Implement it
         bill = self.get_object()
         if bill.status != SRIStatus.options.Sent:
             return HttpResponse("Bill status is not 'sent'",
@@ -886,7 +854,7 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
 def gen_bill_xml(request, bill, codigo=None):
     """
     Generates XML content and clave de acceso
-    Requires bill with:    
+    Requires bill with:
         punto_emision
         ambiente_sri
         secuencial
@@ -1077,40 +1045,6 @@ class BillItemDeleteView(BillItemView,
     """
     Delete view for proformabill items
     """
-
-
-################
-# Bill Reports #
-################
-class BillView(object):
-    model = models.Bill
-    context_object_name = 'bill'
-
-    def get_queryset(self):
-        return self.model.objects.filter(company=self.company)
-
-    @property
-    def company_id(self):
-        return self.model.objects.get(id=self.kwargs['pk']).company.id
-
-
-class BillDayListReport(BillView, CompanySelected, ListView):
-    context_object_name = "bill_list"
-
-    def get_queryset(self):
-        start_date = datetime(int(self.kwargs['year']),
-                              int(self.kwargs['month']),
-                              int(self.kwargs['day']))
-        end_date = start_date + timedelta(days=1)
-        return (self.model.objects
-                .filter(company=self.company)
-                .filter(date__gte=start_date, date__lt=end_date))
-
-    def get_context_data(self, **kwargs):
-        context = super(BillDayListReport, self).get_context_data(**kwargs)
-        for key in ['year', 'month', 'day']:
-            context[key] = self.kwargs[key]
-        return context
 
 
 class BillListView(BillView, CompanySelected, ListView):

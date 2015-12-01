@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from util.property import Property, ConvertedProperty, ProtectedSetattr
 from util.validators import IsCedula, IsRuc
 
-from company_accounts.models import Company, PuntoEmision, ambiente_sri_OPTIONS
+from company_accounts.models import Company, PuntoEmision
 from util.sri_models import ComprobanteSRIMixin
 
 
@@ -17,38 +17,6 @@ class ReadOnlyObject(Exception):
     """
     Exception for when trying to write read-only objects
     """
-
-
-# class ReadOnlyMixin(object):
-#     """
-#     A mixin that disables overwriting or deleting objects
-#     """
-#     def save(self, *args, **kwargs):
-#         """
-#         Disable save
-#         """
-#         if self.id:
-#             raise ReadOnlyObject("{} can't be saved".format(self.__class__))
-#         else:
-#             return models.Model.save(self, *args, **kwargs)
-# 
-#     def secret_save(self, *args, **kwargs):
-#         """
-#         Secret save does save
-#         """
-#         return models.Model.save(self, *args, **kwargs)
-# 
-#     def delete(self, *args, **kwargs):
-#         """
-#         Disable delete
-#         """
-#         raise ReadOnlyObject("{} can't be deleted".format(self.__class__))
-# 
-#     def secret_delete(self, *args, **kwargs):
-#         """
-#         Secret delete does delete
-#         """
-#         return models.Model.delete(self, *args, **kwargs)
 
 
 ##################################
@@ -190,40 +158,6 @@ class Bill(ComprobanteSRIMixin, models.Model):
                        kwargs={'pk': self.pk})
 
 
-
-
-
-
-
-
-
-
-
-
-
-# class Bill(BaseBill):
-#     """
-#     Represents a bill
-#     """
-#     total_sin_iva = models.DecimalField(max_digits=20, decimal_places=8)
-#     iva = models.DecimalField(max_digits=20, decimal_places=8)
-#     iva_retenido = models.DecimalField(max_digits=20, decimal_places=8)
-# 
-#     @classmethod
-#     def fromProformaBill(cls, proforma):
-#         copy_from_fields = ['date', ]
-#         data = {}
-#         for field in copy_from_fields:
-#             data[field] = getattr(proforma, field)
-#         data['company'] = proforma.punto_emision.establecimiento.company
-#         new = cls(**data)
-#         return new
-# 
-#     @property
-#     def total_con_iva(self):
-#         return self.total_sin_iva + self.iva
-
-
 class ClaveAcceso(ProtectedSetattr):
     def fecha_emision_validator(v):
         try:
@@ -278,111 +212,6 @@ class ClaveAcceso(ProtectedSetattr):
 
         res = codigo + self.comprobante(codigo)
         return res
-
-
-# class ProformaBill(BaseBill):
-#     """
-#     Represents a proforma bill
-#     """
-#     @property
-#     def items(self):
-#         return ProformaBillItem.objects.filter(proforma_bill=self)
-# 
-#     @property
-#     def subtotal(self):
-#         res = {0: Decimal(0),
-#                12: Decimal(0)}
-#         for i in self.items:
-#             res[i.iva.porcentaje] = (res.get(i.iva.porcentaje, 0) +
-#                                      i.total_sin_impuestos + i.valor_ice)
-#         return res
-# 
-#     @property
-#     def iva(self):
-#         res = {
-#             Decimal(12): Decimal(0),
-#             Decimal(0): Decimal(0),
-#         }
-#         for item in self.items:
-#             iva = item.iva.porcentaje
-#             res[iva] = res[iva] + item.valor_iva
-#         return res
-# 
-#     @property
-#     def total_sin_impuestos(self):
-#         return sum([i.total_sin_impuestos for i in self.items])
-# 
-#     @property
-#     def total_con_impuestos(self):
-#         return sum([(i.total_sin_impuestos + i.valor_ice + i.valor_iva)
-#                     for i in self.items])
-# 
-#     @property
-#     def impuestos(self):
-#         # key: (codigo, codigo_porcentaje, porcentaje)
-#         # value: (base_imponible, valor)
-#         accum = {}
-#         for item in self.items:
-#             k = ("2", item.iva.codigo, item.iva.porcentaje)
-#             accum[k] = map(sum,
-#                            zip(accum.get(k, (0, 0)),
-#                                (item.base_imponible_iva, item.valor_iva)))
-#             if item.ice:
-#                 k = ("3", item.ice.codigo, item.ice.porcentaje)
-#                 accum[k] = map(sum,
-#                                zip(accum.get(k, (0, 0)),
-#                                    (item.base_imponible_ice, item.valor_ice)))
-# 
-#         return [
-#             {
-#                 "codigo": codigo,
-#                 "codigo_porcentaje": codigo_porcentaje,
-#                 "porcentaje": porcentaje,
-#                 "base_imponible": base_imponible,
-#                 "valor": valor,
-#             } for ((codigo, codigo_porcentaje, porcentaje),
-#                    (base_imponible, valor))
-#             in sorted(accum.iteritems())
-#         ]
-# 
-#     @property
-#     def total(self):
-#         iva = self.iva
-#         total_impuestos = sum([iva[k] for k in iva])
-#         subtotal = self.subtotal
-#         total_subtotales = sum([subtotal[k] for k in self.subtotal])
-#         return total_subtotales + total_impuestos
-# 
-#     @property
-#     def payment(self):
-#         return Pago.objects.filter(proforma_bill_id=self.id)
-# 
-#     @property
-#     def secuencial(self):
-#         ambiente = self.punto_emision.ambiente_sri
-#         if ambiente == 'pruebas':
-#             return self.secuencial_pruebas
-#         elif ambiente == 'produccion':
-#             return self.secuencial_produccion
-#         else:
-#             raise Exception("Unknown ambiente_sri: {}".format(ambiente))
-# 
-#     @secuencial.setter
-#     def secuencial(self, newval):
-#         ambiente = self.punto_emision.ambiente_sri
-#         if ambiente == 'pruebas':
-#             self.secuencial_pruebas = newval
-#         elif ambiente == 'produccion':
-#             self.secuencial_produccion = newval
-#         else:
-#             raise Exception("Unknown ambiente_sri: {}".format(ambiente))
-# 
-#     def get_absolute_url(self):
-#         return reverse('bill_detail',
-#                        kwargs={'pk': self.pk})
-# 
-#     def __unicode__(self):
-#         return u"{} - {}".format(self.number, self.issued_to)
 
 
 ##########################
