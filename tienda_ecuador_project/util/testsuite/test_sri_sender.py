@@ -44,7 +44,7 @@ class SRISenderTests(TestCase):
         self.assertEquals(res.comprobantes.comprobante[0].mensajes.mensaje[0].mensaje, 'ARCHIVO NO CUMPLE ESTRUCTURA XML')
 
     def test_pruebas_autorizacion(self):
-        res = sri_sender.validar_comprobante("123456")
+        res = sri_sender.autorizar_comprobante("123456")
         self.assertEquals(res.claveAccesoConsultada, '123456')
         self.assertEquals(res.autorizaciones.autorizacion[0].estado, 'RECHAZADA')
         self.assertEquals(res.autorizaciones.autorizacion[0].mensajes.mensaje[0].identificador, 'null')
@@ -56,7 +56,7 @@ class SRISenderTests(TestCase):
         self.assertEquals(res.comprobantes.comprobante[0].mensajes.mensaje[0].mensaje, 'ARCHIVO NO CUMPLE ESTRUCTURA XML')
 
     def test_produccion_autorizacion(self):
-        res = sri_sender.validar_comprobante("123456", entorno='produccion')
+        res = sri_sender.autorizar_comprobante("123456", entorno='produccion')
         self.assertEquals(res.claveAccesoConsultada, '123456')
         self.assertEquals(res.autorizaciones.autorizacion[0].estado, 'RECHAZADA')
         self.assertEquals(res.autorizaciones.autorizacion[0].mensajes.mensaje[0].identificador, 'null')
