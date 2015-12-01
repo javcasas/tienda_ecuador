@@ -1,7 +1,10 @@
 # * coding: utf-8 *
 import datetime
+from contextlib import contextmanager
 
 from django.test import TestCase
+
+from util import sri_sender
 
 
 class ReadOnlyMixin(object):
@@ -27,6 +30,21 @@ class ReadOnlyMixin(object):
         else:
             raise Exception("Read Only Object")
 
+    def indented_str(self, indent=0):
+        spaces = "  " * indent
+        res = []
+        for item_name, item_value in self.__dict__.iteritems():
+            if item_name == '_is_read_only':
+                continue
+            try:
+                res.extend(item_value.indented_str(indent+1))
+            except:
+                res.append("{}{} = {}".format(spaces, item_name, item_value))
+        return res
+
+    def __repr__(self):
+        return "\n".join(self.indented_str()) + "\n"
+
 
 class GenericObject(ReadOnlyMixin):
     pass
@@ -43,6 +61,16 @@ class GenericList(ReadOnlyMixin, list):
         return self._op_if_not_read_only(
             lambda: super(GenericList, self).append(*args)
         )
+
+    def indented_str(self, indent=0):
+        spaces = "  " * indent
+        res = []
+        res.append("{}[".format(spaces))
+        for i, item in enumerate(self):
+            res.append("{}Index: {}".format(spaces, i))
+            res.extend(item.indented_str(indent+1))
+        res.append("{}]".format(spaces))
+        return res
 
 
 def gen_respuesta_solicitud_invalid_xml(clave_acceso):
@@ -79,6 +107,20 @@ def gen_respuesta_solicitud_invalid_xml(clave_acceso):
     mock.comprobantes.comprobante[0].mensajes.mensaje[0].mensaje = 'ARCHIVO NO CUMPLE ESTRUCTURA XML'
     mock.comprobantes.comprobante[0].mensajes.mensaje[0].informacionAdicional = 'El ambiente de la solicitud PRODUCCIÓN no coincide con el de ejecución PRUEBAS'
     mock.comprobantes.comprobante[0].mensajes.mensaje[0].tipo = 'ERROR'
+    mock._turn_read_only()
+    return mock
+
+
+def gen_respuesta_solicitud_ok():
+    """
+    (respuestaSolicitud){
+       estado = "RECIBIDA"
+       comprobantes = ""
+     }
+    """
+    mock = GenericObject()
+    mock.estado = 'RECIBIDA'
+    mock.comprobantes = ""
     mock._turn_read_only()
     return mock
 
@@ -167,6 +209,30 @@ class AutorizarComprobanteMock(object):
         return self.response
 
 
+@contextmanager
+def MockEnviarComprobante(response):
+    """
+    Mocks the call
+    """
+    orig_call = sri_sender.enviar_comprobante
+    mock = EnviarComprobanteMock(response)
+    sri_sender.enviar_comprobante = mock
+    yield mock
+    sri_sender.enviar_comprobante = orig_call
+
+
+@contextmanager
+def MockAutorizarComprobante(response):
+    """
+    Mocks the call
+    """
+    orig_call = sri_sender.autorizar_comprobante
+    mock = AutorizarComprobanteMock(response)
+    sri_sender.autorizar_comprobante = mock
+    yield mock
+    sri_sender.autorizar_comprobante = orig_call
+
+
 class SRISendMockTests(TestCase):
     def test_invalid_xml_response(self):
         clave_acceso = '2209201501170439497000120021000000146680001466819'
@@ -190,6 +256,19 @@ class SRISendMockTests(TestCase):
         self.assertEquals(res, response)
         self.assertEquals(mock_call.request_args['xml_data'], xml_data)
         self.assertEquals(mock_call.request_args['entorno'], entorno)
+
+    def test_EnviarComprobanteMock_context_manager(self):
+        clave_acceso = '2209201501170439497000120021000000146680001466819'
+        xml_data = '<xml></xml>'
+        response = gen_respuesta_solicitud_invalid_xml(clave_acceso)
+        entorno = 'produccion'
+
+        with MockEnviarComprobante(response) as mock:
+            res = sri_sender.enviar_comprobante(xml_data, entorno=entorno)
+
+        self.assertEquals(res, response)
+        self.assertEquals(mock.request_args['xml_data'], xml_data)
+        self.assertEquals(mock.request_args['entorno'], entorno)
 
 
 class SRIAuthoriseMockTests(TestCase):
@@ -237,3 +316,16 @@ class SRIAuthoriseMockTests(TestCase):
         self.assertEquals(res, response)
         self.assertEquals(mock_call.request_args['clave_acceso'], clave_acceso)
         self.assertEquals(mock_call.request_args['entorno'], entorno)
+
+    def test_MockValidarComprobante(self):
+        clave_acceso = '2209201501170439497000120021000000146680001466819'
+        xml_data = '<xml></xml>'
+        entorno = 'produccion'
+        response = gen_respuesta_comprobante_valido(clave_acceso, xml_data, ambiente=entorno)
+
+        with MockAutorizarComprobante(response) as mock:
+            res = sri_sender.autorizar_comprobante(clave_acceso, entorno=entorno)
+
+        self.assertEquals(res, response)
+        self.assertEquals(mock.request_args['clave_acceso'], clave_acceso)
+        self.assertEquals(mock.request_args['entorno'], entorno)

@@ -79,7 +79,7 @@ base_data = {
         'date': get_date(),
         'xml_content': '',
         #'ride_content': '',
-        'fecha_autorizacion': date(2015, 5, 1),
+        'fecha_autorizacion': datetime(2015, 5, 1, tzinfo=pytz.timezone('America/Guayaquil')),
         'numero_autorizacion': '12342423423',
         'ambiente_sri': 'pruebas',
     },
@@ -537,35 +537,26 @@ class BillTest(TestCase, TestHelpersMixin):
     def test_proforma_to_send_incomplete_fields_checks(self):
         """
         Una proforma para ser enviada al SRI debe tener
-            clave de acceso
-            XML
-            ambiente
+            date
+            punto_emision
+                -> secuencial
+                -> ambiente SRI
+            datos
             Pasa a ser no editable
         """
-        # No ambiente_sri
+        # No date
         bill = self.get_bill_from_db()
-        bill.clave_acceso = '1234512345'
-        bill.xml_content = '<xml></xml>'
+        bill.date = None
+        bill.punto_emision = self.punto_emision
+        bill.status = SRIStatus.options.ReadyToSend
+        with self.assertRaises(ValidationError):
+            bill.save()
+        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
+
+        # No punto_emision
+        bill = self.get_bill_from_db()
+        bill.date = get_date()
         bill.punto_emision = None
-        bill.ambiente_sri = None
-        bill.status = SRIStatus.options.ReadyToSend
-        with self.assertRaises(ValidationError):
-            bill.save()
-        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
-
-        # No clave_acceso
-        bill = self.get_bill_from_db()
-        bill.ambiente_sri = self.punto_emision.ambiente_sri
-        bill.xml_content = '<xml></xml>'
-        bill.status = SRIStatus.options.ReadyToSend
-        with self.assertRaises(ValidationError):
-            bill.save()
-        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
-
-        # No xml_content
-        bill = self.get_bill_from_db()
-        bill.ambiente_sri = self.punto_emision.ambiente_sri
-        bill.clave_acceso = '1234512345'
         bill.status = SRIStatus.options.ReadyToSend
         with self.assertRaises(ValidationError):
             bill.save()
@@ -574,15 +565,17 @@ class BillTest(TestCase, TestHelpersMixin):
     def test_proforma_to_send_complete_fields_checks(self):
         """
         Una proforma para ser enviada al SRI debe tener
-            clave de acceso
-            XML
-            ambiente
+            date
+            punto_emision
+                -> secuencial
+                -> ambiente SRI
+            datos
             Pasa a ser no editable
         """
+        d = get_date()
         bill = self.get_bill_from_db()
-        bill.ambiente_sri = self.punto_emision.ambiente_sri
-        bill.clave_acceso = '1234512345'
-        bill.xml_content = '<xml></xml>'
+        bill.date = d
+        bill.punto_emision = self.punto_emision
         bill.status = SRIStatus.options.ReadyToSend
         bill.save()
         self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.ReadyToSend)

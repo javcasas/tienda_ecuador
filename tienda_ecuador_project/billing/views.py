@@ -605,8 +605,20 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         # Local vars
         bill = self.get_object()
         if bill.status != SRIStatus.options.NotSent:
-            return HttpResponse("Bill status is not 'a enviar'",
+            return HttpResponse("<html>Bill status is not 'NotSent'</html>",
                                 status=412, reason='Precondition Failed')
+        if not bill.punto_emision:
+            return HttpResponse("<html>Bill has no 'punto_emision'</html>",
+                                status=412, reason='Precondition Failed')
+        bill.date = datetime.now(tz=pytz.timezone('America/Guayaquil'))
+        bill.status = SRIStatus.options.ReadyToSend
+        bill.save()
+        return HttpResponse('<html>Ok</html>')
+
+
+
+
+
         punto_emision = bill.punto_emision
         establecimiento = punto_emision.establecimiento
 
@@ -614,6 +626,7 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         secuencial = {
             'pruebas': punto_emision.siguiente_secuencial_pruebas,
             'produccion': punto_emision.siguiente_secuencial_produccion,
+            'test': 4,
         }[ambiente]
 
         numero_comprobante = "{}-{}-{:09d}".format(establecimiento.codigo,
@@ -622,8 +635,6 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
 
         # Generate and sign XML
         xml_data, clave_acceso = gen_bill_xml(request, bill)
-        # assert(clave_acceso == proforma.clave_acceso) FIXME: Is this needed?
-        # print "Claves de acceso coinciden"
 
         bill.xml_content = xml_data
         bill.clave_acceso = clave_acceso
@@ -633,7 +644,7 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         bill.number = numero_comprobante
         bill.status = SRIStatus.options.ReadyToSend
         bill.save()
-        return HttpResponse('Ok')
+        return HttpResponse('<html>Ok</html>')
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -650,9 +661,72 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
             return HttpResponse("Bill status is not 'a enviar'",
                                 status=412, reason='Precondition Failed')
 
+        punto_emision = bill.punto_emision
+        establecimiento = punto_emision.establecimiento
+
+        bill.ambiente_sri = punto_emision.ambiente_sri
+        bill.secuencial = {
+            'pruebas': punto_emision.siguiente_secuencial_pruebas,
+            'produccion': punto_emision.siguiente_secuencial_produccion,
+        }[bill.ambiente_sri]
+        bill.secret_save()
+
+        # Generate and sign XML
+        xml_data, clave_acceso = gen_bill_xml(request, bill)
+
+        bill.xml_content = xml_data
+        bill.clave_acceso = clave_acceso
+        bill.issues = ''
+        bill.secret_save()
+
         enviar_comprobante_result = sri_sender.enviar_comprobante(
             bill.xml_content, entorno=bill.ambiente_sri)
+        if enviar_comprobante_result.estado == 'RECIBIDA':
+            if bill.ambiente_sri == 'pruebas':
+                punto_emision.siguiente_secuencial_pruebas += 1
+            elif bill.ambiente_sri == 'produccion':
+                punto_emision.siguiente_secuencial_produccion += 1
+            else:
+                raise Exception("Unknown entorno")
+            punto_emision.save()
+            bill.status = SRIStatus.options.Sent
+            bill.secret_save()
+            return HttpResponse("Ok")
+
         enviar_msgs = enviar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
+
+        def convert_messages(messages):
+            def convert_msg(msg):
+                converted = {}
+                for key in ['tipo', 'identificador',
+                            'mensaje', 'informacionAdicional']:
+                    converted[key] = getattr(msg, key, None)
+                return converted
+            return [convert_msg(msg) for msg in messages]
+
+        bill.issues = json.dumps(convert_messages(enviar_msgs))
+        bill.status = SRIStatus.options.NotSent
+        bill.secret_save()
+        return HttpResponse("Bill was rejected", status=412, reason='Precondition Failed')
+
+
+@licence_required('basic', 'professional', 'enterprise')
+class BillValidateInSRIView(BillView, PuntoEmisionSelected, DetailView):
+    """
+    Sends an 'a enviar' bill to SRI
+    """
+    template_name_suffix = '_disabled'
+
+    def post(self, request, pk):
+        # Local vars
+        bill = self.get_object()
+        if bill.status != SRIStatus.options.Sent:
+            return HttpResponse("Bill status is not 'sent'",
+                                status=412, reason='Precondition Failed')
+
+        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
+            bill.clave_acceso, entorno=bill.ambiente_sri)
+        autorizar_msgs = autorizar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
 
         def convert_messages(messages):
             def convert_msg(msg):
@@ -809,8 +883,16 @@ class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
         return redirect("bill_detail", new.id)
 
 
-def gen_bill_xml(request, proformabill, codigo=None):
-
+def gen_bill_xml(request, bill, codigo=None):
+    """
+    Generates XML content and clave de acceso
+    Requires bill with:    
+        punto_emision
+        ambiente_sri
+        secuencial
+        date
+    @returns: signed_xml_content, clave_acceso
+    """
     def get_code_from_proforma_number(number):
         for i in range(len(number)):
             try:
@@ -822,30 +904,27 @@ def gen_bill_xml(request, proformabill, codigo=None):
         else:
             return 0
 
-    company = proformabill.punto_emision.establecimiento.company
+    assert bill.punto_emision
+    assert bill.ambiente_sri
+    assert bill.secuencial
+    assert bill.date
+
+    company = bill.punto_emision.establecimiento.company
 
     context = {
-        'proformabill': proformabill,
-        'punto_emision': proformabill.punto_emision,
-        'establecimiento': proformabill.punto_emision.establecimiento,
+        'proformabill': bill,
+        'punto_emision': bill.punto_emision,
+        'establecimiento': bill.punto_emision.establecimiento,
         'company': company,
     }
 
-    ambiente_sri = proformabill.punto_emision.ambiente_sri
-    secuencial = {
-        'pruebas':
-            proformabill.punto_emision.siguiente_secuencial_pruebas,
-        'produccion':
-            proformabill.punto_emision.siguiente_secuencial_produccion
-    }[ambiente_sri]
-
-    context['secuencial'] = secuencial
+    context['secuencial'] = bill.secuencial
 
     info_tributaria = {}
     info_tributaria['ambiente'] = {
         'pruebas': '1',
         'produccion': '2'
-    }[ambiente_sri]
+    }[bill.ambiente_sri]
 
     info_tributaria['tipo_emision'] = '1'   # 1: normal
                                             # 2: indisponibilidad sistema
@@ -855,18 +934,18 @@ def gen_bill_xml(request, proformabill, codigo=None):
                                         # 06: guia de remision
                                         # 07: comprobante de retencion
     c = models.ClaveAcceso()
-    proformabill.date = proformabill.date.astimezone(
-        pytz.timezone('America/Guayaquil'))
-    c.fecha_emision = (proformabill.date.year,
-                       proformabill.date.month,
-                       proformabill.date.day)
+    # proformabill.date = proformabill.date.astimezone(
+    #     pytz.timezone('America/Guayaquil'))  # FIXME
+    c.fecha_emision = (bill.date.year,
+                       bill.date.month,
+                       bill.date.day)
     c.tipo_comprobante = "factura"
     c.ruc = str(company.ruc)
-    c.ambiente = proformabill.punto_emision.ambiente_sri
-    c.establecimiento = int(proformabill.punto_emision.establecimiento.codigo)
-    c.punto_emision = int(proformabill.punto_emision.codigo)
-    c.numero = secuencial
-    c.codigo = codigo or get_code_from_proforma_number(proformabill.number)
+    c.ambiente = bill.ambiente_sri
+    c.establecimiento = int(bill.punto_emision.establecimiento.codigo)
+    c.punto_emision = int(bill.punto_emision.codigo)
+    c.numero = bill.secuencial
+    c.codigo = codigo or get_code_from_proforma_number(bill.number)
     c.tipo_emision = "normal"
     clave_acceso = unicode(c)
     info_tributaria['clave_acceso'] = clave_acceso
@@ -881,7 +960,7 @@ def gen_bill_xml(request, proformabill, codigo=None):
         'consumidor_final': '07',
         'exterior': '08',
         'placa': '09',
-    }[proformabill.issued_to.tipo_identificacion]
+    }[bill.issued_to.tipo_identificacion]
     info_factura['total_descuento'] = 0     # No hay descuentos
     info_factura['propina'] = 0             # No hay propinas
     info_factura['moneda'] = 'DOLAR'
@@ -896,7 +975,8 @@ def gen_bill_xml(request, proformabill, codigo=None):
 
     xml_content = response.content
     # sign xml_content
-    return signature.sign(company.ruc, company.id, xml_content), clave_acceso
+    signed_xml_content = signature.sign(company.ruc, company.id, xml_content)
+    return signed_xml_content, clave_acceso
 
 
 @licence_required('basic', 'professional', 'enterprise')

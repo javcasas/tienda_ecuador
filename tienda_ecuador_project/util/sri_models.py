@@ -16,7 +16,10 @@ class SRIStatus(object):
 
     __OPTIONS__ = (
         ('NotSent', 'No enviado al SRI'),
+            # Invalido o no enviado
         ('ReadyToSend', 'Enviando al SRI'),
+            # Tiene fecha y punto de emision
+            # al enviar se genera XML, clave de acceso y se incrementan secuenciales
         ('Sent', 'Enviada al SRI'),
         ('Accepted', 'Aceptada por el SRI'),
     )
@@ -86,13 +89,10 @@ class ComprobanteSRIMixin(models.Model):
                     self.ambiente_sri = self.punto_emision.ambiente_sri
             if self.status == SRIStatus.options.ReadyToSend:
                 errors = []
-                if self.clave_acceso == '':
-                    errors.append("No hay clave de acceso")
-                if self.xml_content == '':
-                    errors.append("No hay XML")
-                if self.ambiente_sri not in [AmbienteSRI.options.pruebas,
-                                             AmbienteSRI.options.produccion]:
-                    errors.append("No hay ambiente SRI")
+                if not self.punto_emision:
+                    errors.append("No hay punto de emision")
+                if not self.date:
+                    errors.append("No hay fecha de emision")
                 if errors:
                     raise ValidationError(". ".join(errors))
             return super(ComprobanteSRIMixin, self).save(**kwargs)

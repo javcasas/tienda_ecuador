@@ -15,7 +15,7 @@ def enviar_comprobante(xml_data, entorno='pruebas'):
     result = client.service.validarComprobante(xml_data.encode('base64'))
     return result
 
-def validar_comprobante(clave_acceso, entorno='pruebas'):
+def autorizar_comprobante(clave_acceso, entorno='pruebas'):
     client = Client(urls[entorno]['autorizacion'])
     result = client.service.autorizacionComprobante(clave_acceso)
     return result

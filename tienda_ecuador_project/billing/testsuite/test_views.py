@@ -1,7 +1,8 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 import base64
 import pytz
+import json
 import xml.etree.ElementTree as ET
 
 from django.test import TestCase, Client
@@ -16,6 +17,10 @@ from helpers import (add_User,
                      make_post)
 
 from util.sri_models import SRIStatus, AmbienteSRI
+from util.testsuite.test_sri_sender_mock import (MockAutorizarComprobante,
+                                                 MockEnviarComprobante,
+                                                 gen_respuesta_solicitud_ok,
+                                                 gen_respuesta_solicitud_invalid_xml)
 
 
 def get_date():
@@ -1011,9 +1016,13 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             **self.proformabill_item_data)
         self.bill_item.tax_items.add(self.iva, self.ice)
 
+        def get_bill_from_db():
+            return models.Bill.objects.get(id=self.bill.id)
+        self.get_bill_from_db = get_bill_from_db
+
     def test_emitir_factura_prepare_to_send(self):
         """
-        Prueba generacion de la factura para emitirla
+        Prueba la aceptacion de la factura para ser enviada
         """
         self.company.licence.approve('professional', date(2020, 1, 1))
         r = self.c.get(
@@ -1031,12 +1040,39 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         bill = models.Bill.objects.get(id=self.bill.id)
         # La factura ha sido convertida a 'a enviar'
         self.assertEquals(bill.status, SRIStatus.options.ReadyToSend)
+        self.assertEquals(bill.punto_emision, self.punto_emision)
+        # La fecha acaba de ser generada
+        self.assertTrue(get_date() - bill.date < timedelta(seconds=3))
+
+    def test_emitir_factura_send_to_sri_xml_generation(self):
+        """
+        Prueba la generacion del XML
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        #self.punto_emision.ambiente_sri = 'test'
+        self.punto_emision.save()
+        # Ok, emitir
+        r = self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        # overwrite date to make it coincide
+        bill = self.get_bill_from_db()
+        bill.date = datetime(2015, 7, 29, 10, 1, 44,
+                             tzinfo=pytz.timezone('America/Guayaquil'))
+        bill.secret_save()
+
+        with MockEnviarComprobante(gen_respuesta_solicitud_invalid_xml(self.get_bill_from_db().clave_acceso)) as request:
+            r = self.c.post(
+                reverse('bill_emit_send_to_sri',
+                        args=(self.bill.id,)))
 
         # Comprobar XML
         d2 = lambda v: "{:.2f}".format(v)
         d6 = lambda v: "{:.6f}".format(v)
         z9 = lambda v: "{:09}".format(v)
 
+        bill = self.get_bill_from_db()
         to_test = {
             # Info Tributaria
             "./infoTributaria/ambiente": '1',  # pruebas
@@ -1150,6 +1186,69 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
         self.assertIn("<ds:Signature", bill.xml_content)  # Ensure there is a signature on the file
 
+    def test_emitir_factura_send_to_sri_invalid_xml(self):
+        """
+        Prueba el envio de facturas
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        #self.punto_emision.ambiente_sri = 'test'
+        self.punto_emision.save()
+        # Ok, emitir
+        r = self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        with MockEnviarComprobante(gen_respuesta_solicitud_invalid_xml(self.get_bill_from_db().clave_acceso)) as request:
+            r = self.c.post(
+                reverse('bill_emit_send_to_sri',
+                        args=(self.bill.id,)))
+
+        # Got an error, bill is 'not sent' again
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.NotSent)
+        self.assertTrue(bill.issues)  # There are issues
+        issues = json.loads(bill.issues)
+        for issue in issues:
+            self.assertTrue(issues[0]['identificador'])  # The issues are really issues
+            self.assertTrue(issues[0]['mensaje'])  # The issues are really issues
+            self.assertTrue(issues[0]['tipo'])  # The issues are really issues
+        self.assertTrue(any([issue['tipo'] == 'ERROR' for issue in issues]))  # There is at least an error
+
+    def test_emitir_factura_send_to_sri_accepted(self):
+        """
+        Prueba el envio de facturas
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        # Ok, emitir
+        r = self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        prev_secuencial_pruebas = self.punto_emision.siguiente_secuencial_pruebas
+        prev_secuencial_produccion = self.punto_emision.siguiente_secuencial_produccion
+
+        with MockEnviarComprobante(gen_respuesta_solicitud_ok()) as request:
+            r = self.c.post(
+                reverse('bill_emit_send_to_sri',
+                        args=(self.bill.id,)))
+
+        # All OK
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.Sent)
+        self.assertFalse(bill.issues)  # There are no issues
+        new_punto_emision = models.PuntoEmision.objects.get(id=self.punto_emision.id)
+
+        # The counters are incremented
+        if bill.ambiente_sri == 'pruebas':
+            self.assertEquals(prev_secuencial_pruebas + 1,
+                              new_punto_emision.siguiente_secuencial_pruebas)
+            self.assertEquals(prev_secuencial_produccion,
+                              new_punto_emision.siguiente_secuencial_produccion)
+        else: 
+            self.assertEquals(prev_secuencial_produccion + 1,
+                              new_punto_emision.siguiente_secuencial_produccion)
+            self.assertEquals(prev_secuencial_pruebas,
+                              new_punto_emision.siguiente_comprobante_pruebas)
 
     def DISABLED_test_emitir_factura(self):
         """
