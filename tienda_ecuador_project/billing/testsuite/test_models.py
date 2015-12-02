@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime
 from itertools import count
 from decimal import Decimal
 import pytz
@@ -13,12 +13,10 @@ from billing.models import (Bill,
                             Iva, Ice,
                             ClaveAcceso)
 
-from company_accounts.models import (
-                            Company,
-                            CompanyUser,
-                            Establecimiento,
-                            PuntoEmision,
-                            )
+from company_accounts.models import (Company,
+                                     CompanyUser,
+                                     Establecimiento,
+                                     PuntoEmision)
 
 from billing import models
 
@@ -78,10 +76,10 @@ base_data = {
         'number': '33344556677',
         'date': get_date(),
         'xml_content': '',
-        #'ride_content': '',
-        'fecha_autorizacion': datetime(2015, 5, 1, tzinfo=pytz.timezone('America/Guayaquil')),
+        'fecha_autorizacion':
+            datetime(2015, 5, 1, tzinfo=pytz.timezone('America/Guayaquil')),
         'numero_autorizacion': '12342423423',
-        'ambiente_sri': 'pruebas',
+        'ambiente_sri': AmbienteSRI.options.pruebas,
     },
     'Iva': {
         'descripcion': "12%",
@@ -126,8 +124,10 @@ class BaseInstancesMixin(object):
 
         self.user = add_User(username="Paco", password='')
 
-        self.customer = add_instance(Customer,
-            **dict(base_data['BaseCustomer'], company=self.company))
+        self.customer = add_instance(
+            Customer,
+            company=self.company,
+            **base_data['BaseCustomer'])
 
         self.bill = add_instance(
             models.Bill,
@@ -165,9 +165,11 @@ class FieldsTest(BaseInstancesMixin, TestCase, TestHelpersMixin):
                 {"company": self.company}),
             (Bill, base_data['Bill'],
                 {'company': self.company,
-                 'fecha_autorizacion': datetime(2015, 5, 1, tzinfo=pytz.timezone('America/Guayaquil')),
+                 'fecha_autorizacion':
+                    datetime(2015, 5, 1,
+                             tzinfo=pytz.timezone('America/Guayaquil')),
                  'numero_autorizacion': '12342423423',
-                 'ambiente_sri': 'pruebas'}),
+                 'ambiente_sri': AmbienteSRI.options.pruebas}),
             (Item, base_data['BaseItem'],
                 {"company": self.company,
                  }),
@@ -301,7 +303,8 @@ class ItemTests(BaseInstancesMixin, TestCase, TestHelpersMixin):
 
 class IdentificacionTests(TestCase):
     def setUp(self):
-        self.company = add_instance(Company,
+        self.company = add_instance(
+            Company,
             nombre_comercial="Tienda 1", ruc='1234567890001',
             razon_social="Paco Pil", direccion_matriz="C del pepino",
             contribuyente_especial="")
@@ -494,7 +497,7 @@ class BillTest(TestCase, TestHelpersMixin):
         c.fecha_emision = (2015, 7, 3)
         c.tipo_comprobante = "factura"
         c.ruc = "1790746119001"
-        c.ambiente = "produccion"
+        c.ambiente = AmbienteSRI.options.produccion
         c.establecimiento = 23
         c.punto_emision = 13
         c.numero = 174
@@ -551,7 +554,8 @@ class BillTest(TestCase, TestHelpersMixin):
         bill.status = SRIStatus.options.ReadyToSend
         with self.assertRaises(ValidationError):
             bill.save()
-        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
+        self.assertEquals(self.get_bill_from_db().status,
+                          SRIStatus.options.NotSent)
 
         # No punto_emision
         bill = self.get_bill_from_db()
@@ -560,7 +564,8 @@ class BillTest(TestCase, TestHelpersMixin):
         bill.status = SRIStatus.options.ReadyToSend
         with self.assertRaises(ValidationError):
             bill.save()
-        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.NotSent)
+        self.assertEquals(self.get_bill_from_db().status,
+                          SRIStatus.options.NotSent)
 
     def test_proforma_to_send_complete_fields_checks(self):
         """
@@ -578,7 +583,8 @@ class BillTest(TestCase, TestHelpersMixin):
         bill.punto_emision = self.punto_emision
         bill.status = SRIStatus.options.ReadyToSend
         bill.save()
-        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.ReadyToSend)
+        self.assertEquals(self.get_bill_from_db().status,
+                          SRIStatus.options.ReadyToSend)
 
     def test_cant_modify_bill_not_proforma(self):
         """
@@ -590,7 +596,8 @@ class BillTest(TestCase, TestHelpersMixin):
         bill.xml_content = '<xml></xml>'
         bill.status = SRIStatus.options.ReadyToSend
         bill.save()
-        self.assertEquals(self.get_bill_from_db().status, SRIStatus.options.ReadyToSend)
+        self.assertEquals(self.get_bill_from_db().status,
+                          SRIStatus.options.ReadyToSend)
 
         with self.assertRaises(ValidationError):
             bill.clave_acceso = '333333'
@@ -611,7 +618,6 @@ class BillTest(TestCase, TestHelpersMixin):
 
         with self.assertRaises(ValidationError):
             bill.payment[0].delete()
-
 
 
 class IceTests(TestCase, TestHelpersMixin):

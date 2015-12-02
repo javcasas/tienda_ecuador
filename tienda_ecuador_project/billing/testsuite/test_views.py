@@ -58,9 +58,9 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         self.user = add_User(username=username, password=password)
         self.c = Client()
         r = self.c.post("/accounts/login/",
-                        {'username': username, 'password': password})
-        # FIXME
-        # self.assertRedirects(r, reverse('company_accounts:company_index'))
+                        {'username': username, 'password': password},
+                        follow=True)
+        self.assertRedirects(r, reverse('company_accounts:create_company'))
 
     def tearDown(self):
         self.assert_no_broken_urls()
@@ -1159,6 +1159,10 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 reverse('bill_emit_send_to_sri',
                         args=(self.bill.id,)))
 
+        bill = self.get_bill_from_db()
+        self.assertEquals(request.request_args['xml_data'], bill.xml_content)
+        self.assertEquals(r.content, "Bill was rejected")
+
         # Comprobar XML
         d2 = lambda v: "{:.2f}".format(v)
         d6 = lambda v: "{:.6f}".format(v)
@@ -1355,9 +1359,9 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         Prueba el envio de facturas
         """
         self.company.licence.approve('professional', date(2020, 1, 1))
-        self.punto_emision.ambiente_sri = 'produccion'
+        self.punto_emision.ambiente_sri = AmbienteSRI.options.produccion
         self.punto_emision.save()
-        self.assertEquals(models.PuntoEmision.objects.get(id=self.punto_emision.id).ambiente_sri, 'produccion')
+        self.assertEquals(models.PuntoEmision.objects.get(id=self.punto_emision.id).ambiente_sri, AmbienteSRI.options.produccion)
         # Ok, emitir
         self.c.post(
             reverse('bill_emit_accept',
@@ -1373,7 +1377,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
         bill = self.get_bill_from_db()
         self.assertEquals(request.request_args['xml_data'], bill.xml_content)
-        self.assertEquals(request.request_args['entorno'], 'produccion')
+        self.assertEquals(request.request_args['entorno'], AmbienteSRI.options.produccion)
 
         self.assertEquals(r.status_code, 200)
         self.assertEquals(r.content, "Ok")
@@ -1382,7 +1386,7 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         bill = self.get_bill_from_db()
         self.assertEquals(bill.status, SRIStatus.options.Sent)
         self.assertFalse(bill.issues)  # There are no issues
-        self.assertEquals(bill.ambiente_sri, 'produccion')
+        self.assertEquals(bill.ambiente_sri, AmbienteSRI.options.produccion)
         new_punto_emision = models.PuntoEmision.objects.get(id=self.punto_emision.id)
 
         # The counters are incremented
@@ -1400,10 +1404,6 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.c.post(
             reverse('bill_emit_accept',
                     args=(self.bill.id,)))
-
-        bill = self.get_bill_from_db()
-        prev_secuencial_pruebas = self.punto_emision.siguiente_secuencial_pruebas
-        prev_secuencial_produccion = self.punto_emision.siguiente_secuencial_produccion
 
         # Enviar factura
         with MockEnviarComprobante(gen_respuesta_solicitud_ok()) as request:
@@ -1450,7 +1450,7 @@ class PopulateBillingTest(TestCase):
 
         c = Client()
         r = c.post("/accounts/login/",
-                   {'username': 'javier', 'password': 'tiaputa'})
+                   {'username': 'test', 'password': 'test'})
         self.assertEquals(r['location'],
                           "http://testserver" + reverse('company_accounts:company_select'))
 
@@ -1458,7 +1458,7 @@ class PopulateBillingTest(TestCase):
         # FIXME: re-enable tests
         urls = [
             # reverse("customer_detail", args=(data['c3'].id,)),
-            # reverse("item_detail", args=(data['i22'].id,)),
+            reverse("item_detail", args=(data['i1'].id,)),
             # reverse("bill_detail",
             #         args=(data['b3'].id,)),
         ]
