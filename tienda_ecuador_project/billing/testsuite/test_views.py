@@ -20,7 +20,8 @@ from util.testsuite.test_sri_sender_mock import (
     MockAutorizarComprobante,
     MockEnviarComprobante,
     gen_respuesta_solicitud_ok,
-    gen_respuesta_solicitud_invalid_xml)
+    gen_respuesta_solicitud_invalid_xml,
+    gen_respuesta_autorizacion_comprobante_valido)
 
 
 def get_date():
@@ -1214,6 +1215,10 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 reverse('bill_emit_send_to_sri',
                         args=(self.bill.id,)))
 
+        bill = self.get_bill_from_db()
+        self.assertEquals(request.request_args['xml_data'], bill.xml_content)
+        self.assertEquals(request.request_args['entorno'], bill.ambiente_sri)
+
         self.assertEquals(r.status_code, 412)
         self.assertEquals(r.reason_phrase, "Precondition Failed")
 
@@ -1248,6 +1253,10 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
                 reverse('bill_emit_send_to_sri',
                         args=(self.bill.id,)))
 
+        bill = self.get_bill_from_db()
+        self.assertEquals(request.request_args['xml_data'], bill.xml_content)
+        self.assertEquals(request.request_args['entorno'], bill.ambiente_sri)
+
         self.assertEquals(r.status_code, 200)
         self.assertEquals(r.content, "Ok")
 
@@ -1258,16 +1267,95 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         new_punto_emision = models.PuntoEmision.objects.get(id=self.punto_emision.id)
 
         # The counters are incremented
-        if bill.ambiente_sri == 'pruebas':
-            self.assertEquals(prev_secuencial_pruebas + 1,
-                              new_punto_emision.siguiente_secuencial_pruebas)
-            self.assertEquals(prev_secuencial_produccion,
-                              new_punto_emision.siguiente_secuencial_produccion)
-        else:
-            self.assertEquals(prev_secuencial_produccion + 1,
-                              new_punto_emision.siguiente_secuencial_produccion)
-            self.assertEquals(prev_secuencial_pruebas,
-                              new_punto_emision.siguiente_comprobante_pruebas)
+        self.assertEquals(prev_secuencial_pruebas + 1,
+                          new_punto_emision.siguiente_secuencial_pruebas)
+        self.assertEquals(prev_secuencial_produccion,
+                          new_punto_emision.siguiente_secuencial_produccion)
+
+    def test_emitir_factura_send_to_sri_accepted_produccion(self):
+        """
+        Prueba el envio de facturas
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        self.punto_emision.ambiente_sri = 'produccion'
+        self.punto_emision.save()
+        self.assertEquals(models.PuntoEmision.objects.get(id=self.punto_emision.id).ambiente_sri, 'produccion')
+        # Ok, emitir
+        self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        prev_secuencial_pruebas = self.punto_emision.siguiente_secuencial_pruebas
+        prev_secuencial_produccion = self.punto_emision.siguiente_secuencial_produccion
+
+        with MockEnviarComprobante(gen_respuesta_solicitud_ok()) as request:
+            r = self.c.post(
+                reverse('bill_emit_send_to_sri',
+                        args=(self.bill.id,)))
+
+        bill = self.get_bill_from_db()
+        self.assertEquals(request.request_args['xml_data'], bill.xml_content)
+        self.assertEquals(request.request_args['entorno'], 'produccion')
+
+        self.assertEquals(r.status_code, 200)
+        self.assertEquals(r.content, "Ok")
+
+        # All OK
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.Sent)
+        self.assertFalse(bill.issues)  # There are no issues
+        self.assertEquals(bill.ambiente_sri, 'produccion')
+        new_punto_emision = models.PuntoEmision.objects.get(id=self.punto_emision.id)
+
+        # The counters are incremented
+        self.assertEquals(prev_secuencial_produccion + 1,
+                          new_punto_emision.siguiente_secuencial_produccion)
+        self.assertEquals(prev_secuencial_pruebas,
+                          new_punto_emision.siguiente_secuencial_pruebas)
+
+    def test_emitir_factura_validation_accepted(self):
+        """
+        Prueba la validacion de una factura enviada
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        # Ok, emitir
+        self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        bill = self.get_bill_from_db()
+        prev_secuencial_pruebas = self.punto_emision.siguiente_secuencial_pruebas
+        prev_secuencial_produccion = self.punto_emision.siguiente_secuencial_produccion
+
+        # Enviar factura
+        with MockEnviarComprobante(gen_respuesta_solicitud_ok()) as request:
+            r = self.c.post(
+                reverse('bill_emit_send_to_sri',
+                        args=(self.bill.id,)))
+
+        bill = self.get_bill_from_db()
+        self.assertEquals(request.request_args['xml_data'], bill.xml_content)
+        self.assertEquals(request.request_args['entorno'], bill.ambiente_sri)
+
+        # Factura aceptada
+        response = gen_respuesta_autorizacion_comprobante_valido(self.bill.clave_acceso,
+                                                                 self.bill.xml_content)
+        with MockAutorizarComprobante(response) as request:
+            r = self.c.post(
+                reverse('bill_emit_validate',
+                        args=(self.bill.id,)))
+
+        self.assertEquals(request.request_args['clave_acceso'], bill.clave_acceso)
+        self.assertEquals(request.request_args['entorno'], bill.ambiente_sri)
+
+        self.assertEquals(r.status_code, 200)
+        self.assertEquals(r.content, "Ok")
+
+        # All OK
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.Accepted)
+        for issue in json.loads(bill.issues):
+            self.assertFalse(issue)  # There are no issues
 
 
 class PopulateBillingTest(TestCase):

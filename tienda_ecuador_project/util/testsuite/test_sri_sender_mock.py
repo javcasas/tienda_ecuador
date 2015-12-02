@@ -9,6 +9,7 @@ from util import sri_sender
 
 class ReadOnlyMixin(object):
     _is_read_only = False
+
     def _turn_read_only(self):
         self._is_read_only = True
         for item_name in dir(self):
@@ -73,6 +74,9 @@ class GenericList(ReadOnlyMixin, list):
         return res
 
 
+################################################
+# respuestaSolicitud                           #
+################################################
 def gen_respuesta_solicitud_invalid_xml(clave_acceso):
     """
     (respuestaSolicitud){
@@ -125,6 +129,43 @@ def gen_respuesta_solicitud_ok():
     return mock
 
 
+################################################
+# respuestaComprobante                         #
+################################################
+def gen_respuesta_autorizacion_clave_invalida(clave_acceso):
+    """
+    Si la clave no tiene los digitos necesarios
+
+    (respuestaComprobante){
+       claveAccesoConsultada = "123"
+       autorizaciones =
+          (autorizaciones){
+             autorizacion[] =
+                (autorizacion){
+                   estado = "RECHAZADA"
+                   mensajes =
+                      (mensajes){
+                         mensaje[] =
+                            (mensaje){
+                               identificador = "null"
+                            },
+                      }
+                },
+          }
+     }
+    """
+    mock = GenericObject()
+    mock.claveAccesoConsultada = clave_acceso
+    mock.autorizaciones = GenericObject()
+    mock.autorizaciones.autorizacion = GenericList([GenericObject()])
+    mock.autorizaciones.autorizacion[0].estado = 'RECHAZADA'
+    mock.autorizaciones.autorizacion[0].mensajes = GenericObject()
+    mock.autorizaciones.autorizacion[0].mensajes.mensaje = GenericList([GenericObject()])
+    mock.autorizaciones.autorizacion[0].mensajes.mensaje[0].identificador = 'null'
+    mock._turn_read_only()
+    return mock
+
+
 def gen_respuesta_autorizacion_no_hay_comprobantes(clave_acceso):
     """
     (respuestaComprobante){
@@ -141,14 +182,14 @@ def gen_respuesta_autorizacion_no_hay_comprobantes(clave_acceso):
     return mock
 
 
-def gen_respuesta_comprobante_valido(clave_acceso, comprobante, ambiente='pruebas'):
+def gen_respuesta_autorizacion_comprobante_valido(clave_acceso, comprobante, ambiente='pruebas'):
     """
     (respuestaComprobante){
        claveAccesoConsultada = "2209201501170439497000120021000000146680001466819"
        numeroComprobantes = "1"
-       autorizaciones = 
+       autorizaciones =
           (autorizaciones){
-             autorizacion[] = 
+             autorizacion[] =
                 (autorizacion){
                    estado = "AUTORIZADO"
                    numeroAutorizacion = "2309201501515617043949700019460282211"
@@ -214,11 +255,14 @@ def MockEnviarComprobante(response):
     """
     Mocks the call
     """
-    orig_call = sri_sender.enviar_comprobante
+    orig_enviar_call = sri_sender.enviar_comprobante
+    orig_autorizar_call = sri_sender.autorizar_comprobante
     mock = EnviarComprobanteMock(response)
     sri_sender.enviar_comprobante = mock
+    sri_sender.autorizar_comprobante = None
     yield mock
-    sri_sender.enviar_comprobante = orig_call
+    sri_sender.enviar_comprobante = orig_enviar_call
+    sri_sender.autorizar_comprobante = orig_autorizar_call
 
 
 @contextmanager
@@ -226,11 +270,14 @@ def MockAutorizarComprobante(response):
     """
     Mocks the call
     """
-    orig_call = sri_sender.autorizar_comprobante
+    orig_enviar_call = sri_sender.enviar_comprobante
+    orig_autorizar_call = sri_sender.autorizar_comprobante
     mock = AutorizarComprobanteMock(response)
     sri_sender.autorizar_comprobante = mock
+    sri_sender.enviar_comprobante = None
     yield mock
-    sri_sender.autorizar_comprobante = orig_call
+    sri_sender.enviar_comprobante = orig_enviar_call
+    sri_sender.autorizar_comprobante = orig_autorizar_call
 
 
 class SRISendMockTests(TestCase):
@@ -282,7 +329,7 @@ class SRIAuthoriseMockTests(TestCase):
     def test_comprobante_valido(self):
         clave_acceso = '2209201501170439497000120021000000146680001466819'
         comprobante = '<xml></xml>'
-        mock = gen_respuesta_comprobante_valido(clave_acceso, comprobante, ambiente='pruebas')
+        mock = gen_respuesta_autorizacion_comprobante_valido(clave_acceso, comprobante, ambiente='pruebas')
         self.assertEquals(mock.claveAccesoConsultada, clave_acceso)
         self.assertEquals(mock.numeroComprobantes, '1')
         self.assertEquals(mock.autorizaciones.autorizacion[0].ambiente, 'PRUEBAS')
@@ -293,7 +340,7 @@ class SRIAuthoriseMockTests(TestCase):
     def test_comprobante_valido_produccion(self):
         clave_acceso = '2209201501170439497000120021000000146680001466819'
         comprobante = '<xml></xml>'
-        mock = gen_respuesta_comprobante_valido(clave_acceso, comprobante, ambiente='produccion')
+        mock = gen_respuesta_autorizacion_comprobante_valido(clave_acceso, comprobante, ambiente='produccion')
         self.assertEquals(mock.claveAccesoConsultada, clave_acceso)
         self.assertEquals(mock.numeroComprobantes, '1')
         self.assertEquals(mock.autorizaciones.autorizacion[0].ambiente, 'PRODUCCIÓN')
@@ -304,11 +351,18 @@ class SRIAuthoriseMockTests(TestCase):
                 if msg.identificador == '60':
                     self.fail("Mensaje de pruebas en produccion")
 
+    def test_clave_invalida(self):
+        clave_acceso = '123'
+        mock = gen_respuesta_autorizacion_clave_invalida(clave_acceso)
+        self.assertEquals(mock.claveAccesoConsultada, clave_acceso)
+        self.assertEquals(mock.autorizaciones.autorizacion[0].estado, 'RECHAZADA')
+        self.assertEquals(mock.autorizaciones.autorizacion[0].mensajes.mensaje[0].identificador, 'null')
+
     def test_AutorizarComprobanteMock(self):
         clave_acceso = '2209201501170439497000120021000000146680001466819'
         xml_data = '<xml></xml>'
         entorno = 'produccion'
-        response = gen_respuesta_comprobante_valido(clave_acceso, xml_data, ambiente=entorno)
+        response = gen_respuesta_autorizacion_comprobante_valido(clave_acceso, xml_data, ambiente=entorno)
 
         mock_call = AutorizarComprobanteMock(response)
         res = mock_call(clave_acceso, entorno=entorno)
@@ -321,7 +375,7 @@ class SRIAuthoriseMockTests(TestCase):
         clave_acceso = '2209201501170439497000120021000000146680001466819'
         xml_data = '<xml></xml>'
         entorno = 'produccion'
-        response = gen_respuesta_comprobante_valido(clave_acceso, xml_data, ambiente=entorno)
+        response = gen_respuesta_autorizacion_comprobante_valido(clave_acceso, xml_data, ambiente=entorno)
 
         with MockAutorizarComprobante(response) as mock:
             res = sri_sender.autorizar_comprobante(clave_acceso, entorno=entorno)

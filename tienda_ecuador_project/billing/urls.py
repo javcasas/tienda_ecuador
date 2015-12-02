@@ -90,10 +90,10 @@ urlpatterns = patterns(
         views.BillEmitGenXMLView.as_view(),
         name='bill_emit_gen_xml'),
     url(r'^bill/(?P<pk>[0-9]+)/emit/send_to_sri/$',
-        views.BillEmitSendToSRIView.as_view(),  # FIXME
+        views.BillEmitSendToSRIView.as_view(),
         name='bill_emit_send_to_sri'),
     url(r'^bill/(?P<pk>[0-9]+)/emit/validate/$',
-        views.BillDetailView.as_view(),  # FIXME
+        views.BillEmitValidateView.as_view(),
         name='bill_emit_validate'),
 
     # Proforma bill item views

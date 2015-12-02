@@ -679,22 +679,17 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
 
 
 @licence_required('basic', 'professional', 'enterprise')
-class BillValidateInSRIView(BillView, PuntoEmisionSelected, DetailView):
+class BillEmitValidateView(BillView, PuntoEmisionSelected, DetailView):
     """
     Sends an 'a enviar' bill to SRI
     """
     template_name_suffix = '_disabled'
 
     def post(self, request, pk):
-        # FIXME Implement it
         bill = self.get_object()
         if bill.status != SRIStatus.options.Sent:
             return HttpResponse("Bill status is not 'sent'",
                                 status=412, reason='Precondition Failed')
-
-        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
-            bill.clave_acceso, entorno=bill.ambiente_sri)
-        autorizar_msgs = autorizar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
 
         def convert_messages(messages):
             def convert_msg(msg):
@@ -704,18 +699,30 @@ class BillValidateInSRIView(BillView, PuntoEmisionSelected, DetailView):
                     converted[key] = getattr(msg, key, None)
             return map(convert_msg, messages)
 
-        bill.issues = json.dumps(convert_messages(enviar_msgs))
-        bill.secret_save()
-
-        if enviar_comprobante_result.estado == 'DEVUELTA':
-            bill.status = 'proforma'
-            bill.secret_save()
-            return HttpResponse("Bill was rejected", status=412, reason='Precondition Failed')
+        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
+            bill.clave_acceso, entorno=bill.ambiente_sri)
+        if int(autorizar_comprobante_result.numeroComprobantes) == 1:
+            autorizacion = autorizar_comprobante_result.autorizaciones.autorizacion[0]
+            if autorizacion.estado == 'AUTORIZADO':
+                bill.fecha_autorizacion = autorizacion.fechaAutorizacion
+                bill.numero_autorizacion = autorizacion.numeroAutorizacion
+                bill.issues = json.dumps(convert_messages(autorizacion.mensajes.mensaje))
+                bill.status = SRIStatus.options.Accepted
+                bill.secret_save()
+                return HttpResponse("Ok")
+            elif autorizacion.estado == 'RECHAZADA':
+                bill.fecha_autorizacion = autorizacion.fechaAutorizacion
+                bill.issues = json.dumps(convert_messages(autorizacion.mensajes.mensaje))
+                bill.status = SRIStatus.options.NotSent
+                bill.secret_save()
+                return HttpResponse("Bill was rejected")
+            else:  # Aun no procesado??
+                # FIXME: log
+                return HttpResponse("Bill has not been processed yet: {}".format(str(autorizar_comprobante_result)))
         else:
-            print enviar_comprobante_result.estado
-            bill.status = 'enviada'
-            bill.secret_save()
-            return HttpResponse("Ok")
+            # Unknown clave acceso?
+            return HttpResponse("No hay comprobantes. {}".format(str(autorizar_comprobante_result)),
+                                status=412, reason='Precondition Failed')
 
 
 @licence_required('basic', 'professional', 'enterprise')

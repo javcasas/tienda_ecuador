@@ -123,3 +123,32 @@ STATICFILES_DIRS = [
 ]
 
 TIME_ZONE = 'America/Guayaquil'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'multiline': {
+            'format': '[%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d]\n%(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'sri_debug.log',
+            'formatter': 'multiline'
+        },
+       'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'sri.request': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
