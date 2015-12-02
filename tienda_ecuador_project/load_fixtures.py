@@ -10,6 +10,11 @@ import yaml
 to_load = ['tax_rates.yaml', 'formas_pago.yaml', 'plazos_pago.yaml']
 
 
+def stdout(*args):
+    for i in args:
+        print i,
+    print 
+
 def try_load(module, class_):
     """
     Gets the model class from the specified module, named class_
@@ -40,13 +45,17 @@ def load_fixture(fn):
             module, class_ = class_.split(".")
             model = try_load(module, class_)
             m = model(pk=pk, **params)
-            print "    ", type(m), m
+            stdout("    ", type(m), m)
             m.save()
             res.append(m)
     return res
 
 
-if __name__ == '__main__':
+def main():
     for fn in to_load:
-        print "Loading", fn
+        stdout("Loading", fn)
         load_fixture(fn)
+
+
+if __name__ == '__main__':
+    main()

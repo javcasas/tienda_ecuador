@@ -8,6 +8,8 @@ django.setup()
 
 from functools import partial
 from datetime import datetime, date
+from decimal import Decimal
+
 import pytz
 from billing import models
 import company_accounts.models
@@ -88,9 +90,22 @@ def my_populate():
     cu2 = add_instance(company_accounts.models.CompanyUser,
                        user=u2, company=t2)
 
+    i1 = add_instance(models.Item, 
+        sku=u'H1',
+        name=u'Consultoría 1 hora',
+        description=u'1 Hora de servicios de consultoría',
+        unit_cost=Decimal(10), 
+        unit_price=Decimal(35),
+        tipo='servicio',
+        company=t1,
+        decimales_qty=0)
+    i1.tax_items.add(models.Iva.objects.get(porcentaje=Decimal(12)))
+
     return locals()
 
 
 if __name__ == '__main__':
+    import load_fixtures
+    load_fixtures.main()
     print "Starting Billing population script..."
     my_populate()

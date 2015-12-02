@@ -17,7 +17,8 @@ class FieldsTests(TestCase):
 
         try:
             os.system("python manage.py migrate")
-            populate_billing.my_populate()
+            os.system("python load_fixtures.py")
+            os.system("python populate_billing.py")
         finally:
             os.unlink(db_path)
             if os.path.exists(db_bak_path):

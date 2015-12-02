@@ -266,7 +266,7 @@ class BaseItem(models.Model):
     """
     sku = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=500)
+    description = models.CharField(max_length=500, blank=True)
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
     unit_price = models.DecimalField(max_digits=20, decimal_places=8)
     tax_items = models.ManyToManyField(Tax)

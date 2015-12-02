@@ -477,13 +477,14 @@ class BillPaymentView(BillView,
         return context
 
     def post(self, request, pk):
-        proforma = self.get_queryset().get(pk=pk)
+        bill = self.model.objects.get(id=pk)
         # Delete previous payment terms
-        payment_items = models.Pago.objects.filter(proforma_bill_id=proforma.id)
+        payment_items = models.Pago.objects.filter(bill=bill)
         for payment in payment_items:
             payment.delete()
 
         # Add new payment terms
+        ####print request.POST
         payment_method = models.FormaPago.objects.get(
             id=request.POST['payment_method'])
 
@@ -492,16 +493,16 @@ class BillPaymentView(BillView,
             models.Pago(porcentaje=Decimal(100),
                         forma_pago=payment_method,
                         plazo_pago=installment,
-                        proforma_bill=proforma).save()
-            return redirect("bill_detail", proforma.id)
+                        bill=bill).save()
+            return redirect("bill_detail", bill.id)
         elif request.POST['payment_mode'] == 'deferred':
             installment = models.PlazoPago.objects.get(
                 pk=request.POST['payment_time_to_pay'])
             models.Pago(porcentaje=Decimal(100),
                         forma_pago=payment_method,
                         plazo_pago=installment,
-                        proforma_bill=proforma).save()
-            return redirect("bill_detail", proforma.id)
+                        bill=bill).save()
+            return redirect("bill_detail", bill.id)
         # elif request.POST['payment_mode'] == 'installments':
         #     return HttpResponse(str(("Cuotitas",
         #                         request.POST['payment_method'],
@@ -1028,7 +1029,7 @@ class BillItemUpdateViewJS(BillItemView,
                            View):
     def post(self, request, pk):
         proformabill_item = get_object_or_404(
-            self.model, proforma_bill=self.proformabill, pk=pk)
+            self.model, bill=self.bill, pk=pk)
 
         def accept_qty(val):
             val = Decimal(val)

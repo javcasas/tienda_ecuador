@@ -109,13 +109,13 @@ class LoggedInTests(TestCase, TestHelpersMixin):
                         key, data_to_post[key]))
 
         # textarea fields
-        textareas = root.findall(".//form//textarea")
+        textareas = current_form.findall(".//textarea")
         for ta in textareas:
             key = ta.get('name')
             data_to_use[key] = data_to_post.pop(key, ta.text)
 
         # select fields
-        selects = root.findall(".//form//select")
+        selects = current_form.findall(".//select")
         for s in selects:
             key = s.get('name')
             selected_option = root.findall(
@@ -123,6 +123,15 @@ class LoggedInTests(TestCase, TestHelpersMixin):
                 "/option[@selected]".format(key))
             default = selected_option[0].get("value") if selected_option else ""
             data_to_use[key] = data_to_post.pop(key, default)
+
+        # submit buttons
+        buttons = current_form.findall(".//button")
+        for bt in buttons:
+            key = bt.get('name')
+            value = bt.get('value')
+            if str(data_to_post.get(key)) == value:
+                data_to_use[key] = data_to_post.pop(key)
+                break
 
         self.assertFalse(data_to_post,
                          "Items left in data to post: {}".format(data_to_post))
@@ -646,6 +655,23 @@ class BillTests(LoggedInWithCompanyTests):
             ob.tax_items.add(iva, ice)
             self.items.append(ob)
 
+        self.forma_pago = add_instance(
+            models.FormaPago,
+            codigo='01',
+            descripcion='efectivo')
+
+        self.plazo_pago_inmediato = add_instance(
+            models.PlazoPago,
+            unidad_tiempo='dias',
+            tiempo=0,
+            descripcion='Inmediato')
+
+        self.plazo_pago_mes = add_instance(
+            models.PlazoPago,
+            unidad_tiempo='dias',
+            tiempo=30,
+            descripcion='30 dias')
+
     def test_proformabill_company_index(self):
         """
         Check the proforma bill company index view
@@ -838,6 +864,48 @@ class BillTests(LoggedInWithCompanyTests):
             models.Bill.objects.get(id=self.bill.id).issued_to,
             data)
 
+    def test_bill_immediate_payment_submit(self):
+        """
+        Check the proforma bill update view
+        """
+        r = self.simulate_post(
+            reverse('bill_payment_details',
+                    args=(self.bill.id,)),
+            {'payment_method': self.forma_pago.id})
+        self.assertRedirects(
+            r, reverse('bill_detail',
+                       args=(self.bill.id,)))
+
+        self.assertEquals(len(self.bill.payment), 1)
+
+        payment = self.bill.payment[0]
+        self.assertEquals(payment.forma_pago, self.forma_pago)
+        self.assertEquals(payment.plazo_pago, self.plazo_pago_inmediato)
+        self.assertEquals(payment.porcentaje, 100)
+        self.assertEquals(payment.bill, self.bill)
+
+    def test_bill_deferred_payment_submit(self):
+        """
+        Check the proforma bill update view
+        """
+        r = self.simulate_post(
+            reverse('bill_payment_details',
+                    args=(self.bill.id,)),
+            {'payment_method': self.forma_pago.id,
+             'payment_time_to_pay': self.plazo_pago_mes.id},
+            form_index=1)
+        self.assertRedirects(
+            r, reverse('bill_detail',
+                       args=(self.bill.id,)))
+
+        self.assertEquals(len(self.bill.payment), 1)
+
+        payment = self.bill.payment[0]
+        self.assertEquals(payment.forma_pago, self.forma_pago)
+        self.assertEquals(payment.plazo_pago, self.plazo_pago_mes)
+        self.assertEquals(payment.porcentaje, 100)
+        self.assertEquals(payment.bill, self.bill)
+
 
 class BillItemTests(LoggedInWithCompanyTests):
     """
@@ -895,11 +963,12 @@ class BillItemTests(LoggedInWithCompanyTests):
             name='Item 1',
             description='Description of item 1',
             unit_price=16,
+            unit_cost=9.1,
+            tipo='servicio',
             qty=3)
         self.bill_item = add_instance(
             models.BillItem,
             bill=self.bill,
-            unit_cost=9.1,
             **self.proformabill_item_data)
         self.bill_item.tax_items.add(self.iva)
 
@@ -963,6 +1032,15 @@ class BillItemTests(LoggedInWithCompanyTests):
             {})
         with self.assertRaises(models.BillItem.DoesNotExist):
             models.BillItem.objects.get(pk=pk)
+
+    def test_update_item_qty_js(self):
+        r = self.c.post(
+            reverse('billitem_update_js',
+                    args=(self.bill_item.id,)),
+            {'qty': 4})
+        ob = models.BillItem.objects.get(id=self.bill_item.id)
+        self.assertEquals(ob.qty, 4)
+        self.assertEquals(r.content, 'Ok')
 
 
 class EmitirFacturaTests(LoggedInWithCompanyTests):
@@ -1363,6 +1441,9 @@ class PopulateBillingTest(TestCase):
     Weird conditions detected with populate_billing
     """
     def test(self):
+        import load_fixtures
+        load_fixtures.stdout = lambda *args: None
+        load_fixtures.main()
         import populate_billing
         populate_billing.print_instance = lambda a, b: None
         data = populate_billing.my_populate()

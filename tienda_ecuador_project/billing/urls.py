@@ -113,7 +113,7 @@ urlpatterns = patterns(
 
     # Proforma bill payment views
     url(r'^proforma_bill/(?P<pk>[0-9]+)/payment/$',
-        views.BillPaymentView.as_view(),  # FIXME
+        views.BillPaymentView.as_view(),
         name='bill_payment_details'),
 
     # Bill Views
