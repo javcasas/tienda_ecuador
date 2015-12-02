@@ -280,6 +280,22 @@ def MockAutorizarComprobante(response):
     sri_sender.autorizar_comprobante = orig_autorizar_call
 
 
+@contextmanager
+def MockSRISender(enviar_response, autorizar_response):
+    """
+    Mocks the whole module
+    """
+    orig_enviar_call = sri_sender.enviar_comprobante
+    orig_autorizar_call = sri_sender.autorizar_comprobante
+    mock_enviar = EnviarComprobanteMock(enviar_response)
+    mock_autorizar = AutorizarComprobanteMock(autorizar_response)
+    sri_sender.enviar_comprobante = mock_enviar
+    sri_sender.autorizar_comprobante = mock_autorizar
+    yield (mock_enviar, mock_autorizar)
+    sri_sender.enviar_comprobante = orig_enviar_call
+    sri_sender.autorizar_comprobante = orig_autorizar_call
+
+
 class SRISendMockTests(TestCase):
     def test_invalid_xml_response(self):
         clave_acceso = '2209201501170439497000120021000000146680001466819'
@@ -383,3 +399,23 @@ class SRIAuthoriseMockTests(TestCase):
         self.assertEquals(res, response)
         self.assertEquals(mock.request_args['clave_acceso'], clave_acceso)
         self.assertEquals(mock.request_args['entorno'], entorno)
+
+
+class FullModuleMockTests(TestCase):
+    def test_full_context_manager(self):
+        clave_acceso = '2209201501170439497000120021000000146680001466819'
+        xml_data = '<xml></xml>'
+        entorno = 'produccion'
+        enviar_response = gen_respuesta_solicitud_invalid_xml(clave_acceso)
+        autorizar_response = gen_respuesta_autorizacion_comprobante_valido(
+            clave_acceso, xml_data, ambiente=entorno)
+
+        with MockSRISender(enviar_response, autorizar_response) as (enviar_mock, autorizar_mock):
+            sri_sender.enviar_comprobante(xml_data, entorno=entorno)
+            sri_sender.autorizar_comprobante(clave_acceso, entorno=entorno)
+
+        self.assertEquals(autorizar_mock.request_args['clave_acceso'], clave_acceso)
+        self.assertEquals(autorizar_mock.request_args['entorno'], entorno)
+
+        self.assertEquals(enviar_mock.request_args['xml_data'], xml_data)
+        self.assertEquals(enviar_mock.request_args['entorno'], entorno)
