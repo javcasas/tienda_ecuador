@@ -1,5 +1,5 @@
 # * encoding: utf-8 *
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.db import models
@@ -10,7 +10,7 @@ from util.property import Property, ConvertedProperty, ProtectedSetattr
 from util.validators import IsCedula, IsRuc
 
 from company_accounts.models import Company, PuntoEmision
-from util.sri_models import ComprobanteSRIMixin
+from util.sri_models import ComprobanteSRIMixin, SRIStatus
 
 
 class ReadOnlyObject(Exception):
@@ -156,6 +156,19 @@ class Bill(ComprobanteSRIMixin, models.Model):
     def get_absolute_url(self):
         return reverse('bill_detail',
                        kwargs={'pk': self.pk})
+
+    def get_progress_url(self):
+        if self.status == SRIStatus.options.ReadyToSend:
+            return reverse('bill_emit_send_to_sri',
+                           kwargs={'pk': self.pk})
+        elif self.status == SRIStatus.options.Sent:
+            return reverse('bill_emit_validate',
+                           kwargs={'pk': self.pk})
+        elif self.check_if_annulled_worthy():
+            return reverse('bill_emit_check_annulled',
+                           kwargs={'pk': self.pk})
+        else:
+            return None
 
 
 class ClaveAcceso(ProtectedSetattr):

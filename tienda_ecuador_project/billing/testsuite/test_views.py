@@ -21,7 +21,8 @@ from util.testsuite.test_sri_sender_mock import (
     MockEnviarComprobante,
     gen_respuesta_solicitud_ok,
     gen_respuesta_solicitud_invalid_xml,
-    gen_respuesta_autorizacion_comprobante_valido)
+    gen_respuesta_autorizacion_comprobante_valido,
+    gen_respuesta_autorizacion_no_hay_comprobantes)
 
 
 def get_date():
@@ -678,6 +679,8 @@ class BillTests(LoggedInWithCompanyTests):
         """
         r = self.c.get(reverse('bill_company_index',
                                args=(self.company.id,)))
+        self.c.get(reverse('bill_list_table',
+                           args=(self.company.id,)))
         self.assertContainsObject(
             r, self.bill, ['number', 'issued_to'])
         self.assertEquals(
@@ -1434,6 +1437,43 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.assertEquals(bill.status, SRIStatus.options.Accepted)
         for issue in json.loads(bill.issues):
             self.assertFalse(issue)  # There are no issues
+
+    def test_emitir_factura_anulada(self):
+        """
+        Prueba la anulacion de una factura emitida
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        # Ok, emitir
+        self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        # Enviar factura
+        with MockEnviarComprobante(gen_respuesta_solicitud_ok()) as request:
+            r = self.c.post(
+                reverse('bill_emit_send_to_sri',
+                        args=(self.bill.id,)))
+
+        # Factura aceptada
+        response = gen_respuesta_autorizacion_comprobante_valido(
+            self.bill.clave_acceso,
+            self.bill.xml_content,
+            fecha_autorizacion=datetime.now(tz=pytz.timezone('America/Guayaquil')) - timedelta(days=1))
+        with MockAutorizarComprobante(response) as request:
+            r = self.c.post(
+                reverse('bill_emit_validate',
+                        args=(self.bill.id,)))
+
+        # Factura anulada
+        response = gen_respuesta_autorizacion_no_hay_comprobantes(
+            self.bill.clave_acceso)
+        with MockAutorizarComprobante(response) as request:
+            r = self.c.post(
+                reverse('bill_emit_check_annulled',
+                        args=(self.bill.id,)))
+
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.Annulled)
 
 
 class PopulateBillingTest(TestCase):

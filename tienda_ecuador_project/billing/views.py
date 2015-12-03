@@ -647,36 +647,12 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
         bill.issues = ''
         bill.secret_save()
 
-        enviar_comprobante_result = sri_sender.enviar_comprobante(
-            bill.xml_content, entorno=bill.ambiente_sri)
-        if enviar_comprobante_result.estado == 'RECIBIDA':
-            if bill.ambiente_sri == 'pruebas':
-                punto_emision.siguiente_secuencial_pruebas += 1
-            elif bill.ambiente_sri == 'produccion':
-                punto_emision.siguiente_secuencial_produccion += 1
-            else:
-                raise Exception("Unknown entorno")
-            punto_emision.save()
-            bill.status = SRIStatus.options.Sent
-            bill.secret_save()
+        send_res = bill.send_to_SRI()
+        if send_res:
             return HttpResponse("Ok")
-
-        enviar_msgs = enviar_comprobante_result.comprobantes.comprobante[0].mensajes.mensaje
-
-        def convert_messages(messages):
-            def convert_msg(msg):
-                converted = {}
-                for key in ['tipo', 'identificador',
-                            'mensaje', 'informacionAdicional']:
-                    converted[key] = getattr(msg, key, None)
-                return converted
-            return [convert_msg(msg) for msg in messages]
-
-        bill.issues = json.dumps(convert_messages(enviar_msgs))
-        bill.status = SRIStatus.options.NotSent
-        bill.secret_save()
-        return HttpResponse("Bill was rejected",
-                            status=412, reason='Precondition Failed')
+        else:
+            return HttpResponse("Bill was rejected",
+                                status=412, reason='Precondition Failed')
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -692,38 +668,33 @@ class BillEmitValidateView(BillView, PuntoEmisionSelected, DetailView):
             return HttpResponse("Bill status is not 'sent'",
                                 status=412, reason='Precondition Failed')
 
-        def convert_messages(messages):
-            def convert_msg(msg):
-                converted = {}
-                for key in ['tipo', 'identificador',
-                            'mensaje', 'informacionAdicional']:
-                    converted[key] = getattr(msg, key, None)
-            return map(convert_msg, messages)
+        res = bill.validate_in_SRI()
+        if res:
+            return HttpResponse("Ok")
+        elif bill.status == SRIStatus.options.NotSent:
+            return HttpResponse("Bill was rejected")
+        elif bill.status == SRIStatus.options.Sent:
+            return HttpResponse("Bill has not been processed yet")
 
-        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
-            bill.clave_acceso, entorno=bill.ambiente_sri)
-        if int(autorizar_comprobante_result.numeroComprobantes) == 1:
-            autorizacion = autorizar_comprobante_result.autorizaciones.autorizacion[0]
-            if autorizacion.estado == 'AUTORIZADO':
-                bill.fecha_autorizacion = autorizacion.fechaAutorizacion
-                bill.numero_autorizacion = autorizacion.numeroAutorizacion
-                bill.issues = json.dumps(convert_messages(autorizacion.mensajes.mensaje))
-                bill.status = SRIStatus.options.Accepted
-                bill.secret_save()
-                return HttpResponse("Ok")
-            elif autorizacion.estado == 'RECHAZADA':
-                bill.fecha_autorizacion = autorizacion.fechaAutorizacion
-                bill.issues = json.dumps(convert_messages(autorizacion.mensajes.mensaje))
-                bill.status = SRIStatus.options.NotSent
-                bill.secret_save()
-                return HttpResponse("Bill was rejected")
-            else:  # Aun no procesado??
-                # FIXME: log
-                return HttpResponse("Bill has not been processed yet: {}".format(str(autorizar_comprobante_result)))
-        else:
-            # Unknown clave acceso?
-            return HttpResponse("No hay comprobantes. {}".format(str(autorizar_comprobante_result)),
+
+@licence_required('basic', 'professional', 'enterprise')
+class BillEmitCheckAnnulledView(BillView, PuntoEmisionSelected, DetailView):
+    """
+    Checks if the bill has been annulled
+    """
+    template_name_suffix = '_disabled'
+
+    def post(self, request, pk):
+        bill = self.get_object()
+        if bill.status != SRIStatus.options.Accepted:
+            return HttpResponse("Bill status is not 'Accepted'",
                                 status=412, reason='Precondition Failed')
+
+        res = bill.check_if_annulled_in_SRI()
+        if res:
+            return HttpResponse("Anulled")
+        else:
+            return HttpResponse("Not annulled")
 
 
 @licence_required('basic', 'professional', 'enterprise')

@@ -8,6 +8,7 @@
           <th>Cliente</th>
           <th>Total</th>
           <th></th>
+          <th></th>
         </tr></thead>
         <tbody>
           {% for bill in bill_list %}
@@ -18,6 +19,14 @@
               <td>
                 <a href="{{ bill.get_absolute_url }}" class='btn btn-default form-control'>Detalle</a>
               </td>
+              {% if bill.get_progress_url %}
+                  <td>
+                    <form action='{{ bill.get_progress_url }}' method='POST' class='form'>
+                        {% csrf_token %}
+                        <button type='submit' class='btn btn-default form-control'>Procesar</a>
+                    </form>
+                  </td>
+              {% endif %}
             </tr>
           {% endfor %}
           {% if show_all_items_button %}

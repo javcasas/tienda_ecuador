@@ -182,7 +182,9 @@ def gen_respuesta_autorizacion_no_hay_comprobantes(clave_acceso):
     return mock
 
 
-def gen_respuesta_autorizacion_comprobante_valido(clave_acceso, comprobante, ambiente='pruebas'):
+def gen_respuesta_autorizacion_comprobante_valido(
+        clave_acceso, comprobante, ambiente='pruebas',
+        fecha_autorizacion=datetime.datetime(2015, 9, 23, 1, 51, 56)):
     """
     (respuestaComprobante){
        claveAccesoConsultada = "2209201501170439497000120021000000146680001466819"
@@ -212,7 +214,7 @@ def gen_respuesta_autorizacion_comprobante_valido(clave_acceso, comprobante, amb
     mock.autorizaciones.autorizacion = GenericList([GenericObject()])
     mock.autorizaciones.autorizacion[0].estado = 'AUTORIZADO'
     mock.autorizaciones.autorizacion[0].numeroAutorizacion = "2309201501515617043949700019460282211"
-    mock.autorizaciones.autorizacion[0].fechaAutorizacion = datetime.datetime(2015, 9, 23, 1, 51, 56)
+    mock.autorizaciones.autorizacion[0].fechaAutorizacion = fecha_autorizacion
     mock.autorizaciones.autorizacion[0].ambiente = ambiente_str
     mock.autorizaciones.autorizacion[0].comprobante = comprobante
     mock.autorizaciones.autorizacion[0].mensajes = ""

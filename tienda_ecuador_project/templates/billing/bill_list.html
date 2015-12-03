@@ -10,7 +10,14 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-    <h1>Facturas</h1>
-    {% include 'billing/bill/bill_list_table.html' %}
+        <h1>Facturas</h1>
+        {% include 'billing/bill/bill_list_table.html' %}
+        <div>
+            <a href='{% url "bill_company_index" company.id %}' class='btn btn-default'>Pre Facturas</a>
+            <a href='{% url "bill_company_index.ready_to_send" company.id %}' class='btn btn-default'>Facturas listas para enviar</a>
+            <a href='{% url "bill_company_index.sent" company.id %}' class='btn btn-default'>Facturas enviadas</a>
+            <a href='{% url "bill_company_index.accepted" company.id %}' class='btn btn-default'>Facturas aceptadas</a>
+            <a href='{% url "bill_company_index.annulled" company.id %}' class='btn btn-default'>Facturas anuladas</a>
+        </div>
     </div>
 {% endblock %}

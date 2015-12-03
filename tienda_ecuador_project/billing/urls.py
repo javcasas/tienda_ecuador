@@ -38,10 +38,16 @@ urlpatterns = patterns(
     #######################
     # Bill views          #
     #######################
+
+    # Bill lists by status
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/$',
         views.BillCompanyListView.as_view(
             queryset_filters={'status': SRIStatus.options.NotSent}
         ), name='bill_company_index'),
+    url(r'^bill/list/c/(?P<company_id>[0-9]+)/ready_to_send/$',
+        views.BillCompanyListView.as_view(
+            queryset_filters={'status': SRIStatus.options.ReadyToSend}
+        ), name='bill_company_index.ready_to_send'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/sent/$',
         views.BillCompanyListView.as_view(
             queryset_filters={'status': SRIStatus.options.Sent}
@@ -50,6 +56,10 @@ urlpatterns = patterns(
         views.BillCompanyListView.as_view(
             queryset_filters={'status': SRIStatus.options.Accepted}
         ), name='bill_company_index.accepted'),
+    url(r'^bill/list/c/(?P<company_id>[0-9]+)/annulled/$',
+        views.BillCompanyListView.as_view(
+            queryset_filters={'status': SRIStatus.options.Annulled}
+        ), name='bill_company_index.annulled'),
 
     url(r'^bill/list/e/(?P<establecimiento_id>[0-9]+)/$',
         views.BillEstablecimientoListView.as_view(), name='bill_establecimiento_index'),
@@ -82,7 +92,7 @@ urlpatterns = patterns(
             template_name_suffix='_detail_payment_table'),
         name='bill_detail_payment_table'),
 
-    # Proforma bill emitting views
+    # Bill emitting views
     url(r'^bill/(?P<pk>[0-9]+)/emit/accept/$',
         views.BillEmitAcceptView.as_view(),
         name='bill_emit_accept'),
@@ -95,6 +105,12 @@ urlpatterns = patterns(
     url(r'^bill/(?P<pk>[0-9]+)/emit/validate/$',
         views.BillEmitValidateView.as_view(),
         name='bill_emit_validate'),
+    url(r'^bill/(?P<pk>[0-9]+)/emit/check_annulled/$',
+        views.BillEmitCheckAnnulledView.as_view(),
+        name='bill_emit_check_annulled'),
+
+    # url(r'^bill/emit/general_progress/$',
+    #     views.BillEmitGeneralProgressView.as_view(), name='bill_emit_progress'),
 
     # Proforma bill item views
     url(r'^proforma_bill/(?P<bill_id>[0-9]+)/add_item/$',
@@ -122,5 +138,5 @@ urlpatterns = patterns(
     url(r'^bill_list/(?P<company_id>[0-9]+)/$',
         views.BillListView.as_view(
             template_name='billing/bill/bill_list_table.html',
-        ), name='bill_list'),
+        ), name='bill_list_table'),
 )

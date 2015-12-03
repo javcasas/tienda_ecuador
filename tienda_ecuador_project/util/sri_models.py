@@ -1,6 +1,13 @@
 # * encoding: utf-8 *
+from datetime import datetime, timedelta
+import json
+import pytz
+
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.db import transaction
+
+from util import sri_sender
 
 
 class SRIStatus(object):
@@ -9,19 +16,25 @@ class SRIStatus(object):
         ReadyToSend = 'ReadyToSend'
         Sent = 'Sent'
         Accepted = 'Accepted'
+        Annulled = 'Annulled'
 
     @classmethod
     def pretty_print(cls, ob):
         return dict(SRIStatus.__OPTIONS__)[ob]
 
     __OPTIONS__ = (
+        # Invalido o no enviado
         ('NotSent', 'No enviado al SRI'),
-            # Invalido o no enviado
+
+        # Tiene fecha y punto de emision
+        # Al enviar se genera XML, clave de acceso
+        #     y se incrementan secuenciales
         ('ReadyToSend', 'Enviando al SRI'),
-            # Tiene fecha y punto de emision
-            # al enviar se genera XML, clave de acceso y se incrementan secuenciales
         ('Sent', 'Enviada al SRI'),
         ('Accepted', 'Aceptada por el SRI'),
+
+        # Estaba aceptado por el SRI y fue anulado
+        ('Annulled', 'Anulado'),
     )
 
 
@@ -66,6 +79,9 @@ class ComprobanteSRIMixin(models.Model):
         max_length=20,
         choices=SRIStatus.__OPTIONS__,
         default=SRIStatus.options.NotSent)
+
+    sri_last_check = models.DateTimeField(
+        null=True, blank=True)
 
     @property
     def can_be_modified(self):
@@ -119,3 +135,180 @@ class ComprobanteSRIMixin(models.Model):
         Always saves, ignoring checks
         """
         return super(ComprobanteSRIMixin, self).save(**kwargs)
+
+    def send_to_SRI(self):
+        """
+        Sends a bill to SRI
+        Requires:
+            XML
+            Clave Acceso
+            status = ReadyToSend
+            ambiente_sri
+            punto_emision
+        After:
+            status = Sent or NotSent
+            maybe Issues
+        """
+        assert self.xml_content
+        assert self.clave_acceso
+        assert self.status == SRIStatus.options.ReadyToSend
+        assert self.ambiente_sri in [AmbienteSRI.options.pruebas,
+                                     AmbienteSRI.options.produccion]
+        assert self.punto_emision
+
+        def convert_messages(messages):
+            def convert_msg(msg):
+                converted = {}
+                for key in ['tipo', 'identificador',
+                            'mensaje', 'informacionAdicional']:
+                    converted[key] = getattr(msg, key, None)
+                return converted
+            return [convert_msg(msg) for msg in messages]
+
+        with transaction.atomic():
+            enviar_comprobante_result = sri_sender.enviar_comprobante(
+                self.xml_content, entorno=self.ambiente_sri)
+            if enviar_comprobante_result.estado == 'RECIBIDA':
+                punto_emision = self.punto_emision
+                if self.ambiente_sri == AmbienteSRI.options.pruebas:
+                    punto_emision.siguiente_secuencial_pruebas += 1
+                else:
+                    punto_emision.siguiente_secuencial_produccion += 1
+                punto_emision.save()
+                self.status = SRIStatus.options.Sent
+                self.secret_save()
+                res = True
+            else:
+                enviar_msgs = (enviar_comprobante_result.comprobantes
+                               .comprobante[0].mensajes.mensaje)
+                self.issues = json.dumps(convert_messages(enviar_msgs))
+                self.status = SRIStatus.options.NotSent
+                self.secret_save()
+                res = False
+        assert self.status in [SRIStatus.options.Sent,
+                               SRIStatus.options.NotSent]
+        return res
+
+    def validate_in_SRI(self):
+        """
+        Validates a bill in SRI
+        Requires:
+            Clave Acceso
+            status = Sent
+            ambiente_sri
+        After:
+            1: Being processed
+                status = Sent
+                Nothing changed
+            2: Accepted
+                status = Accepted
+                Fecha autorizacion
+                numero autorizacion
+                maybe Issues
+            3: Rejected
+                status = NotSent
+                Fecha autorizacion
+                Issues
+            sri_last_check is set to now
+        """
+        assert self.clave_acceso
+        assert self.status == SRIStatus.options.Sent
+        assert self.ambiente_sri in [AmbienteSRI.options.pruebas,
+                                     AmbienteSRI.options.produccion]
+
+        def convert_messages(messages):
+            def convert_msg(msg):
+                converted = {}
+                for key in ['tipo', 'identificador',
+                            'mensaje', 'informacionAdicional']:
+                    converted[key] = getattr(msg, key, None)
+            return map(convert_msg, messages)
+
+        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
+            self.clave_acceso, entorno=self.ambiente_sri)
+
+        if int(autorizar_comprobante_result.numeroComprobantes) == 1:
+            autorizacion = (autorizar_comprobante_result
+                            .autorizaciones.autorizacion[0])
+            if autorizacion.estado == 'AUTORIZADO':
+                self.fecha_autorizacion = autorizacion.fechaAutorizacion
+                self.numero_autorizacion = autorizacion.numeroAutorizacion
+                if autorizacion.mensajes:
+                    self.issues = json.dumps(
+                        convert_messages(autorizacion.mensajes.mensaje))
+                self.status = SRIStatus.options.Accepted
+                self.secret_save()
+                res = True
+            elif autorizacion.estado == 'RECHAZADA':
+                self.fecha_autorizacion = autorizacion.fechaAutorizacion
+                self.issues = json.dumps(
+                    convert_messages(autorizacion.mensajes.mensaje))
+                self.status = SRIStatus.options.NotSent
+                self.secret_save()
+                res = False
+            else:  # Aun no procesado??
+                # FIXME: log
+                res = False
+        else:
+            res = False
+
+        self.sri_last_check = datetime.now(tz=pytz.timezone('America/Guayaquil'))
+        self.secret_save()
+
+        if self.status == SRIStatus.options.Sent:
+            # Nothing changed
+            pass
+        elif self.status == SRIStatus.options.Accepted:
+            assert self.fecha_autorizacion
+            assert self.numero_autorizacion
+        elif self.status == SRIStatus.options.NotSent:
+            assert self.fecha_autorizacion
+            assert self.issues
+        else:
+            assert False  # This should not happen
+        return res
+
+    def check_if_annulled_worthy(self):
+        if self.status != SRIStatus.options.Accepted:
+            return False
+        if datetime.now(tz=pytz.timezone('America/Guayaquil')) - self.fecha_autorizacion < timedelta(days=15):
+            if not self.sri_last_check:
+                return True
+            elif datetime.now(tz=pytz.timezone('America/Guayaquil')) - self.sri_last_check > timedelta(hours=1):
+                return True
+        return False
+
+    def check_if_annulled_in_SRI(self):
+        """
+        Checks if a bill has been annulled in SRI
+        Requires:
+            Clave Acceso
+            status = Accepted
+            ambiente_sri
+            fecha_autorizacion is no more than 15 days old
+        After:
+            1: No
+                status = Accepted
+            2: Yes
+                status = Annulled
+            sri_last_check is set to now
+        """
+        assert self.clave_acceso
+        assert self.status == SRIStatus.options.Accepted
+        assert self.ambiente_sri in [AmbienteSRI.options.pruebas,
+                                     AmbienteSRI.options.produccion]
+        assert datetime.now(tz=pytz.timezone('America/Guayaquil')) - self.fecha_autorizacion < timedelta(days=15)
+
+        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
+            self.clave_acceso, entorno=self.ambiente_sri)
+
+        if int(autorizar_comprobante_result.numeroComprobantes) == 1:
+            # All right
+            res = False
+        elif int(autorizar_comprobante_result.numeroComprobantes) == 0:
+            self.status = SRIStatus.options.Annulled
+            res = True
+
+        self.sri_last_check = datetime.now(tz=pytz.timezone('America/Guayaquil'))
+        self.secret_save()
+        return res
