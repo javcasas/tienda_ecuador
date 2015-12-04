@@ -1,13 +1,15 @@
 # * encoding: utf-8 *
-from datetime import date, datetime
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
+from django.shortcuts import render_to_response
 
 from util.property import Property, ConvertedProperty, ProtectedSetattr
 from util.validators import IsCedula, IsRuc
+from util import signature
 
 from company_accounts.models import Company, PuntoEmision
 from util.sri_models import ComprobanteSRIMixin, SRIStatus
@@ -169,6 +171,145 @@ class Bill(ComprobanteSRIMixin, models.Model):
                            kwargs={'pk': self.pk})
         else:
             return None
+
+    def send_to_SRI(self):
+        punto_emision = self.punto_emision
+
+        self.ambiente_sri = punto_emision.ambiente_sri
+        self.secuencial = {
+            'pruebas': punto_emision.siguiente_secuencial_pruebas,
+            'produccion': punto_emision.siguiente_secuencial_produccion,
+        }[self.ambiente_sri]
+        self.secret_save()
+
+        # Generate and sign XML
+        xml_data, clave_acceso = self.gen_xml()
+
+        self.xml_content = xml_data
+        self.clave_acceso = clave_acceso
+        self.issues = ''
+        self.secret_save()
+
+        return super(Bill, self).send_to_SRI()
+
+    def validate_in_SRI(self):
+        res = super(Bill, self).validate_in_SRI()
+        if self.status == SRIStatus.options.Accepted:
+            # Create receivables
+            import accounts_receivable.models
+            for payment in self.payment:
+                if payment.plazo_pago.unidad_tiempo == 'dias':
+                    payment_date = (date.today()
+                                    + timedelta(days=payment.plazo_pago.tiempo))
+                r = accounts_receivable.models.Receivable(
+                    bill=self,
+                    qty=payment.cantidad,
+                    date=payment_date,
+                    method=payment.forma_pago)
+                r.save()
+        return res
+
+    def save(self, **kwargs):
+        """
+        Checks if there is payment
+        """
+        if self.status == SRIStatus.options.ReadyToSend:
+            if not self.payment:
+                raise ValidationError("No hay forma de pago")
+        return super(Bill, self).save(**kwargs)
+
+    def gen_xml(self, codigo=None):
+        """
+        Generates XML content and clave de acceso
+        Requires bill with:
+            punto_emision
+            ambiente_sri
+            secuencial
+            date
+        @returns: signed_xml_content, clave_acceso
+        """
+        def get_code_from_proforma_number(number):
+            for i in range(len(number)):
+                try:
+                    assert(int(number[i:]) >= 0)
+                    assert(int(number[i:]) < 10 ** 8)
+                    return int(number[i:])
+                except (ValueError, AssertionError):
+                    pass
+            else:
+                return 0
+
+        assert self.punto_emision
+        assert self.ambiente_sri
+        assert self.secuencial
+        assert self.date
+
+        company = self.punto_emision.establecimiento.company
+
+        context = {
+            'proformabill': self,
+            'punto_emision': self.punto_emision,
+            'establecimiento': self.punto_emision.establecimiento,
+            'company': company,
+        }
+
+        context['secuencial'] = self.secuencial
+
+        info_tributaria = {}
+        info_tributaria['ambiente'] = {
+            'pruebas': '1',
+            'produccion': '2'
+        }[self.ambiente_sri]
+
+        info_tributaria['tipo_emision'] = '1'   # 1: normal
+                                                # 2: indisponibilidad sistema
+        info_tributaria['cod_doc'] = '01'   # 01: factura
+                                            # 04: nota de credito
+                                            # 05: nota de debito
+                                            # 06: guia de remision
+                                            # 07: comprobante de retencion
+        c = ClaveAcceso()
+        c.fecha_emision = (self.date.year,
+                           self.date.month,
+                           self.date.day)
+        c.tipo_comprobante = "factura"
+        c.ruc = str(company.ruc)
+        c.ambiente = self.ambiente_sri
+        c.establecimiento = int(self.punto_emision.establecimiento.codigo)
+        c.punto_emision = int(self.punto_emision.codigo)
+        c.numero = self.secuencial
+        c.codigo = codigo or get_code_from_proforma_number(self.number)
+        c.tipo_emision = "normal"
+        clave_acceso = unicode(c)
+        info_tributaria['clave_acceso'] = clave_acceso
+
+        context['info_tributaria'] = info_tributaria
+
+        info_factura = {}
+        info_factura['tipo_identificacion_comprador'] = {    # tabla 7
+            'ruc': '04',
+            'cedula': '05',
+            'pasaporte': '06',
+            'consumidor_final': '07',
+            'exterior': '08',
+            'placa': '09',
+        }[self.issued_to.tipo_identificacion]
+        info_factura['total_descuento'] = 0     # No hay descuentos
+        info_factura['propina'] = 0             # No hay propinas
+        info_factura['moneda'] = 'DOLAR'
+        context['info_factura'] = info_factura
+
+        context['info_adicional'] = {
+            'Generado Con': 'DSSTI Facturas',
+            'Web': 'http://facturas.dssti.com',
+        }
+
+        response = render_to_response("billing/proformabill_xml.html", context)
+
+        xml_content = response.content
+        # sign xml_content
+        signed_xml_content = signature.sign(company.ruc, company.id, xml_content)
+        return signed_xml_content, clave_acceso
 
 
 class ClaveAcceso(ProtectedSetattr):
@@ -428,6 +569,10 @@ class Pago(models.Model):
     def cantidad(self):
         return ((self.porcentaje * self.bill.total_con_impuestos)
                 / Decimal(100))
+
+    @property
+    def date(self):
+        return self.bill.date.date() + timedelta(days=self.plazo_pago.tiempo)
 
     def save(self, **kwargs):
         if self.bill.can_be_modified:

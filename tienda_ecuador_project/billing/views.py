@@ -630,23 +630,6 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
             return HttpResponse("Bill status is not 'a enviar'",
                                 status=412, reason='Precondition Failed')
 
-        punto_emision = bill.punto_emision
-
-        bill.ambiente_sri = punto_emision.ambiente_sri
-        bill.secuencial = {
-            'pruebas': punto_emision.siguiente_secuencial_pruebas,
-            'produccion': punto_emision.siguiente_secuencial_produccion,
-        }[bill.ambiente_sri]
-        bill.secret_save()
-
-        # Generate and sign XML
-        xml_data, clave_acceso = gen_bill_xml(request, bill)
-
-        bill.xml_content = xml_data
-        bill.clave_acceso = clave_acceso
-        bill.issues = ''
-        bill.secret_save()
-
         send_res = bill.send_to_SRI()
         if send_res:
             return HttpResponse("Ok")
@@ -695,6 +678,48 @@ class BillEmitCheckAnnulledView(BillView, PuntoEmisionSelected, DetailView):
             return HttpResponse("Anulled")
         else:
             return HttpResponse("Not annulled")
+
+
+class BillEmitGeneralProgressView(View):
+    """
+    Progresses bill statuses
+    """
+    def get(self, request):
+        max_bills_to_process = 3
+        left_slots = self.send_bills_to_SRI(max_bills_to_process)
+        left_slots = self.validate_bills_in_SRI(left_slots)
+        left_slots = self.check_if_annulled_in_SRI(left_slots)
+        return HttpResponse("Ok, {} slots left".format(left_slots))
+
+    def send_bills_to_SRI(self, num_bills):
+        if num_bills == 0:
+            return 0
+        bills_to_send = models.Bill.objects.filter(status=SRIStatus.options.ReadyToSend)[:num_bills]
+        for bill in bills_to_send:
+            bill.send_to_SRI()
+        return num_bills - len(bills_to_send)
+
+    def validate_bills_in_SRI(self, num_bills):
+        if num_bills == 0:
+            return 0
+        bills_to_validate = models.Bill.objects.filter(status=SRIStatus.options.Sent)[:num_bills]
+        for bill in bills_to_validate:
+            bill.validate_in_SRI()
+        return num_bills - len(bills_to_validate)
+
+    def check_if_annulled_in_SRI(self, num_bills):
+        if num_bills == 0:
+            return 0
+        now = datetime.now(tz=pytz.timezone('America/Guayaquil'))
+        accepted_bills = (models.Bill.objects
+                          .filter(status=SRIStatus.options.Accepted)
+                          .filter(fecha_autorizacion__gte=now-timedelta(days=15)))
+        unchecked_bills = accepted_bills.filter(sri_last_check=None)
+        not_too_checked = accepted_bills.filter(sri_last_check__lte=now-timedelta(hours=1))
+        to_check = (unchecked_bills | not_too_checked).order_by("?")[:num_bills]
+        for bill in to_check:
+            bill.check_if_annulled_in_SRI()
+        return num_bills - len(to_check)
 
 
 @licence_required('basic', 'professional', 'enterprise')

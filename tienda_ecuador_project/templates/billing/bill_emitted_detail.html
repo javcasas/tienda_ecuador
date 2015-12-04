@@ -1,0 +1,103 @@
+<h3 class='spaced-top'>Factura</h3>
+<table class='table table-bordered'>
+    <tr>
+        <th>Razón Social Emisor</th><td>{{ bill.company.razon_social }}</td>
+    </tr>
+    <tr>
+        <th>RUC Emisor</th><td>{{ bill.company.ruc }}</td>
+    </tr>
+    <tr>
+        <th>Numero</th><td>{{ bill.number }}</td>
+    </tr>
+    <tr>
+        <th>Estado</th><td>{{ bill.status }} {# FIXME estado #}</td>
+    </tr>
+    <tr>
+        <th>Ambiente</th><td> {{ bill.ambiente_sri }} </td>
+    </tr>
+    <tr>
+        <th>Fecha</th><td>{{ bill.date }}</td>
+    </tr>
+    <tr>
+        <th>Clave de Acceso</th><td>{{ bill.clave_acceso }}</td>
+    </tr>
+    <tr>
+        <th>Número de Autorización</th><td>{{ bill.numero_autorizacion }}</td>
+    </tr>
+    <tr>
+        <th>Fecha de Autorización</th><td>{{ bill.fecha_autorizacion }}</td>
+    </tr>
+    <tr>
+        <th>Documentos Electrónicos</th>
+        <td>
+            <a href='{# FIXME #}' class='btn btn-default'>Descargar XML</a>
+            <a href='{# FIXME #}' class='btn btn-default'>Descargar RIDE</a>
+        </td>
+    </tr>
+    <tr>
+        <th>Enlace directo</th>
+        <td>
+            <a href='{% url "public-receipts:receipt_view" bill.clave_acceso %}'>{{ bill }}</a>
+        </td>
+    </tr>
+</table>
+
+<h3 class='spaced-top'>Cliente</h3>
+<table class='table table-bordered'>
+    <tr>
+        <th>Identificación</th><td>({{ bill.issued_to.tipo_identificacion }}) {{ bill.issued_to.identificacion }} </td>
+    </tr>
+    <tr>
+         <th>Razón Social</th><td>{{ bill.issued_to.razon_social }}</td>
+    </tr>
+</table>
+
+<h3 class='spaced-top'>Detalle</h3>
+<table class='table table-bordered'>
+    <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>Cantidad</th>
+        <th>Precio unitario</th>
+        <th>Subtotal</th>
+        <th>Impuestos</th>
+    </tr>
+{% for item in bill.items %}
+    <tr>
+        <td>{{ item.sku }}</td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.qty }}</td>
+        <td>{{ item.unit_price|floatformat:4 }}</td>
+        <td>{{ item.subtotal|floatformat:2 }}</td>
+        <td>{{ item.total_impuestos|floatformat:2 }}</td>
+    <tr/>
+{% endfor %}
+</table>
+
+<h3 class='spaced-top'>Totales</h3>
+<table class='table table-bordered'>
+    <tr>
+        <th>Subtotal IVA 12%</th><td>{{ bill.subtotal.12|floatformat:2 }}</td>
+    </tr>
+    <tr>
+        <th>Subtotal IVA 0%</th><td>{{ bill.subtotal.0|floatformat:2 }}</td>
+    </tr>
+    <tr>
+        <th>IVA 12%</th><td>{{ bill.iva.12|stringformat:".2f" }}</td>
+    </tr>
+    <tr>
+        <th>Total a pagar</th><td>{{ bill.total|stringformat:".2f" }}</td>
+    </tr>
+</table>
+
+<h3 class='spaced-top'>Pago</h3>
+<table class='table table-bordered'>
+    <thead>
+        <tr>
+            <th>Fecha</th><th>Cantidad</th><th>Forma</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% include "billing/bill_detail_payment_table.html" with exact_payment_date=True%}
+    </tbody>
+</table>

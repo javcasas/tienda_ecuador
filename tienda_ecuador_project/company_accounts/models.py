@@ -1,12 +1,13 @@
 # * encoding: utf-8 *
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+import json
+import pytz
 
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 
-from util.property import Property, ConvertedProperty
 from util import signature
 
 
@@ -60,9 +61,22 @@ class Licence(models.Model):
         """
         Approve the next licence with the new expiration date
         """
+        LicenceHistory(
+            licence=self,
+            date=datetime.now(tz=pytz.timezone('America/Guayaquil')),
+            action=json.dumps(
+                {"action": "approve",
+                 "next_licence": str(next_licence),
+                 "new_date": str(new_date),
+                 'user_viewable': True,
+                 }
+            )).save()
         self.licence = next_licence
         self.expiration = new_date
         self.save()
+
+    def get_history(self):
+        return LicenceHistory.objects.filter(licence=self)
 
     def __unicode__(self):
         return dict(Company_licencia_OPTIONS)[self.licence]
@@ -71,13 +85,23 @@ class Licence(models.Model):
 def default_licence():
     n = Licence()
     n.save()
+    LicenceHistory(
+        licence=n,
+        date=datetime.now(tz=pytz.timezone('America/Guayaquil')),
+        action=json.dumps(
+            {"action": "create",
+             'user_viewable': True,
+             "reason": "New company created"}
+        )).save()
     return n.id
+
 
 class OverwritingStorage(FileSystemStorage):
     def save(self, path, *args, **kwargs):
         if self.exists(path):
             self.delete(path)
         return super(OverwritingStorage, self).save(path, *args, **kwargs)
+
 
 class Issue(object):
     def __init__(self, level, message, url, button_text='Arreglar'):
@@ -90,12 +114,14 @@ class Issue(object):
         return u"{} - {}".format(self.level, self.message)
 
     def __repr__(self):
-        return "<issue {}>".format(self.__unicode__().encode("ascii", "replace"))
+        return "<issue {}>".format(
+            self.__unicode__().encode("ascii", "replace"))
 
 
 def logo_path_generator(instance, filename):
     ext = filename.split(".")[-1]
-    return 'static/company_logos/{id}_{ruc}.{ext}'.format(id=instance.id, ruc=instance.ruc, ext=ext)
+    return 'static/company_logos/{id}_{ruc}.{ext}'.format(
+        id=instance.id, ruc=instance.ruc, ext=ext)
 
 
 class Company(models.Model):
@@ -110,7 +136,10 @@ class Company(models.Model):
     obligado_contabilidad = models.BooleanField(default=False)
     licence = models.ForeignKey(Licence, default=default_licence)
     siguiente_numero_proforma = models.IntegerField(default=1)
-    logo = models.ImageField(upload_to=logo_path_generator, blank=True, storage=OverwritingStorage())
+    logo = models.ImageField(
+        upload_to=logo_path_generator,
+        blank=True,
+        storage=OverwritingStorage())
     cert = models.CharField(max_length=20000, blank=True)
     key = models.CharField(max_length=100, blank=True)
 
@@ -118,7 +147,8 @@ class Company(models.Model):
         return self.razon_social
 
     def get_absolute_url(self):
-        return reverse("company_accounts:company_profile", kwargs={'pk': self.pk})
+        return reverse("company_accounts:company_profile",
+                       kwargs={'pk': self.pk})
 
     @property
     def can_sign(self):
@@ -228,4 +258,60 @@ class PuntoEmision(models.Model):
             raise Exception("Unknown ambiente_sri: {}".format(ambiente))
 
     def get_absolute_url(self):
-        return reverse("company_accounts:punto_emision_detail", kwargs={'pk': self.pk})
+        return reverse("company_accounts:punto_emision_detail",
+                       kwargs={'pk': self.pk})
+
+
+class BannedCompany(models.Model):
+    """
+    Represents a company that is not welcome to the system
+    """
+    ruc = models.CharField(max_length=100)
+    reason = models.TextField()
+
+
+class ReadOnlyModelMixin(object):
+    def save(self, *args, **kwargs):
+        if not self.id:
+            return super(ReadOnlyModelMixin, self).save(*args, **kwargs)
+        else:
+            raise Exception("{} can't be altered"
+                            .format(self.__class__.__name__))
+
+    def delete(self, *args, **kwargs):
+        raise Exception("{} can't be deleted"
+                        .format(self.__class__.__name__))
+
+
+class LicenceHistory(ReadOnlyModelMixin, models.Model):
+    """
+    Changes to licences
+    """
+    licence = models.ForeignKey(Licence)
+    date = models.DateField()
+    action = models.TextField()
+
+
+class LicenceUpdateRequest(models.Model):
+    """
+    Changes to licences
+    """
+    licence = models.ForeignKey(Licence)
+    date = models.DateField()
+    action = models.TextField()
+    result = models.TextField(blank=True)
+
+    def save(self, *args, **kwargs):
+        action = {"action": "update request",
+                  'user_viewable': True,
+                  "date": str(self.date),
+                  "action": json.loads(self.action),
+                  }
+        if self.result:
+            action['result'] = json.loads(self.result),
+        LicenceHistory(
+            licence=self.licence,
+            date=datetime.now(tz=pytz.timezone('America/Guayaquil')),
+            action=json.dumps(action)
+            ).save()
+        super(LicenceUpdateRequest, self).save(*args, **kwargs)

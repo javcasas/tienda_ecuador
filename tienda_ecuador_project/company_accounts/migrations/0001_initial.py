@@ -15,6 +15,17 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='BannedCompany',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('ruc', models.CharField(max_length=100)),
+                ('reason', models.TextField()),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
             name='Company',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -64,6 +75,31 @@ class Migration(migrations.Migration):
                 ('licence', models.CharField(default=b'demo', max_length=20, choices=[(b'demo', b'Demo'), (b'basic', b'Basic'), (b'professional', b'Professional'), (b'enterprise', b'Enterprise')])),
                 ('expiration', models.DateField(default=datetime.date(2010, 1, 1))),
                 ('next_licence', models.CharField(default=b'demo', max_length=20, choices=[(b'demo', b'Demo'), (b'basic', b'Basic'), (b'professional', b'Professional'), (b'enterprise', b'Enterprise')])),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='LicenceHistory',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('date', models.DateField()),
+                ('action', models.TextField()),
+                ('licence', models.ForeignKey(to='company_accounts.Licence')),
+            ],
+            options={
+            },
+            bases=(company_accounts.models.ReadOnlyModelMixin, models.Model),
+        ),
+        migrations.CreateModel(
+            name='LicenceUpdateRequest',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('date', models.DateField()),
+                ('action', models.TextField()),
+                ('result', models.TextField()),
+                ('licence', models.ForeignKey(to='company_accounts.Licence')),
             ],
             options={
             },

@@ -6,50 +6,5 @@
 {% block body_block %}
 {{ block.super }}
 <div class='col-xs-12'>
-{{ comprobante }}
-<table class='table table-hover'>
-    <tr>
-        <th>Número</th> <td>{{ comprobante.number }}</td>
-    </tr>
-    <tr>
-        <th>Fecha Emisión</th> <td>{{ comprobante.date }}</td>
-    </tr>
-    <tr>
-        <th>Fecha Autorización</th> <td>{{ comprobante.fecha_autorizacion }}</td>
-    </tr>
-    <tr>
-        <th>Número Autorización</th> <td>{{ comprobante.numero_autorizacion }}</td>
-    </tr>
-    <tr>
-        <th>Clave Acceso</th> <td>{{ comprobante.clave_acceso }}</td>
-    </tr>
-    <tr>
-        <th>Ambiente SRI</th> <td>{{ comprobante.ambiente_sri }}</td>
-    </tr>
-    <tr>
-        <th>Total sin IVA</th> <td>{{ comprobante.total_sin_iva }}</td>
-    </tr>
-    <tr>
-        <th>IVA cobrado</th> <td>{{ comprobante.iva }}</td>
-    </tr>
-    <tr>
-        <th>IVA retenido</th> <td>{{ comprobante.iva_retenido }}</td>
-    </tr>
-    <tr>
-        <th>XML</th> <td>{{ comprobante.xml_content }}</td>
-    </tr>
-</table>
-<table id='infoTributaria'>
-    <thead>
-    </thead>
-    <tbody>
-        <tr data-name='Ambiente' data-sel='factura > infoTributaria > ambiente'></tr>
-        <tr data-name='TipoEmision' data-sel='factura > infoTributaria > tipoEmision'></tr>
-    </tbody>
-</table>
-</div>
-<script>
-    var c = $(atob('{{ comprobante.xml_content|base64_encode }}'));
-    var t = $("#infoTributaria");
-</script>
+{% include 'billing/bill_emitted_detail.html' with comprobante=bill%}
 {% endblock %}

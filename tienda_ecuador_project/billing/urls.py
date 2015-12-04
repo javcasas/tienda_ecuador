@@ -4,12 +4,16 @@ from util.sri_models import SRIStatus, AmbienteSRI
 
 urlpatterns = patterns(
     '',
+    #######################
     # Index views
+    #######################
     url(r'^$', views.index, name='billing_index'),
     url(r'^(?P<company_id>[0-9]+)/$',
         views.CompanyIndex.as_view(), name='company_index'),
 
+    #######################
     # Item views
+    #######################
     url(r'^item/index/(?P<company_id>[0-9]+)/$',
         views.ItemListView.as_view(), name='item_index'),
     url(r'^item/index/(?P<company_id>[0-9]+)/json/$',
@@ -23,7 +27,9 @@ urlpatterns = patterns(
     url(r'^item/delete/(?P<pk>[0-9]+)/$',
         views.ItemDeleteView.as_view(), name='item_delete'),
 
+    #######################
     # Customer views
+    #######################
     url(r'^customer/list/(?P<company_id>[0-9]+)/$',
         views.CustomerListView.as_view(), name='customer_index'),
     url(r'^customer/new/(?P<company_id>[0-9]+)/$',
@@ -92,7 +98,9 @@ urlpatterns = patterns(
             template_name_suffix='_detail_payment_table'),
         name='bill_detail_payment_table'),
 
+    #######################
     # Bill emitting views
+    #######################
     url(r'^bill/(?P<pk>[0-9]+)/emit/accept/$',
         views.BillEmitAcceptView.as_view(),
         name='bill_emit_accept'),
@@ -109,8 +117,8 @@ urlpatterns = patterns(
         views.BillEmitCheckAnnulledView.as_view(),
         name='bill_emit_check_annulled'),
 
-    # url(r'^bill/emit/general_progress/$',
-    #     views.BillEmitGeneralProgressView.as_view(), name='bill_emit_progress'),
+    url(r'^bill/emit/general_progress/$',
+        views.BillEmitGeneralProgressView.as_view(), name='bill_emit_progress'),
 
     # Proforma bill item views
     url(r'^proforma_bill/(?P<bill_id>[0-9]+)/add_item/$',
@@ -127,14 +135,16 @@ urlpatterns = patterns(
         views.BillItemUpdateViewJS.as_view(),
         name='billitem_update_js'),
 
-    # Proforma bill payment views
+    # orma bill payment views
     url(r'^proforma_bill/(?P<pk>[0-9]+)/payment/$',
         views.BillPaymentView.as_view(),
         name='bill_payment_details'),
 
-    # Bill Views
-    url(r'^bill/(?P<pk>[0-9]+)/read/$',
-        views.BillDetailView.as_view(), name='bill_detail'),
+    # Emitted bill Views
+    url(r'^emitted_bill/(?P<pk>[0-9]+)/read/$',
+        views.BillDetailView.as_view(
+            template_name_suffix='_emitted',
+        ), name='bill_detail'),
     url(r'^bill_list/(?P<company_id>[0-9]+)/$',
         views.BillListView.as_view(
             template_name='billing/bill/bill_list_table.html',

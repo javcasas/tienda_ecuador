@@ -1,0 +1,16 @@
+{% extends 'billing/l2_bill_selected.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Ver Factura {{ bill }} - {{ block.super }}{% endblock %}
+
+{% block left_menu %}{% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h2>Factura emitida</h2>
+        {% include 'billing/bill_emitted_detail.html' %}
+
+    </div>
+
+{% endblock %}

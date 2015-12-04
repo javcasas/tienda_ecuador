@@ -33,10 +33,12 @@ class ReceiptForm(TemplateView):
 class ReceiptView(View):
     """
     """
+    template_name = None
     def get(self, request, clave):
         classes = [
             (billing.models.Bill,
              {'template': 'public_receipts/bill_detail.html',
+              'var_name': 'bill',
              }
             ),
     ]
@@ -44,8 +46,8 @@ class ReceiptView(View):
             try:
                 ob = cls.objects.get(clave_acceso=clave)
                 return render(request,
-                              data['template'],
-                              {'comprobante': ob})
+                              self.template_name or data['template'],
+                              {data['var_name']: ob})
             except cls.DoesNotExist:
                 pass
         else:

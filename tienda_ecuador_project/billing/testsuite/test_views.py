@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 
 from billing import models
 import company_accounts.models
+import accounts_receivable.models
 
 from helpers import (add_User,
                      TestHelpersMixin,
@@ -19,6 +20,7 @@ from util.sri_models import SRIStatus, AmbienteSRI
 from util.testsuite.test_sri_sender_mock import (
     MockAutorizarComprobante,
     MockEnviarComprobante,
+    MockSRISender,
     gen_respuesta_solicitud_ok,
     gen_respuesta_solicitud_invalid_xml,
     gen_respuesta_autorizacion_comprobante_valido,
@@ -1111,6 +1113,24 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
             **self.proformabill_item_data)
         self.bill_item.tax_items.add(self.iva, self.ice)
 
+        self.forma_pago = add_instance(
+            models.FormaPago,
+            codigo='01',
+            descripcion='efectivo')
+
+        self.plazo_pago = add_instance(
+            models.PlazoPago,
+            unidad_tiempo='dias',
+            tiempo=0,
+            descripcion='Inmediato')
+
+        self.pago = add_instance(
+            models.Pago,
+            porcentaje=100,
+            forma_pago=self.forma_pago,
+            plazo_pago=self.plazo_pago,
+            bill=self.bill)
+
         def get_bill_from_db():
             return models.Bill.objects.get(id=self.bill.id)
         self.get_bill_from_db = get_bill_from_db
@@ -1364,7 +1384,9 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         self.company.licence.approve('professional', date(2020, 1, 1))
         self.punto_emision.ambiente_sri = AmbienteSRI.options.produccion
         self.punto_emision.save()
-        self.assertEquals(models.PuntoEmision.objects.get(id=self.punto_emision.id).ambiente_sri, AmbienteSRI.options.produccion)
+        self.assertEquals(
+            models.PuntoEmision.objects.get(id=self.punto_emision.id).ambiente_sri,
+            AmbienteSRI.options.produccion)
         # Ok, emitir
         self.c.post(
             reverse('bill_emit_accept',
@@ -1438,6 +1460,12 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
         for issue in json.loads(bill.issues):
             self.assertFalse(issue)  # There are no issues
 
+        # Bills are converted to receivables
+        receivable = accounts_receivable.models.Receivable.objects.get(bill=bill)
+        self.assertEquals(receivable.qty, bill.total_con_impuestos)
+        self.assertEquals(receivable.date, bill.date.date())
+        self.assertEquals(receivable.method, bill.payment[0].forma_pago)
+
     def test_emitir_factura_anulada(self):
         """
         Prueba la anulacion de una factura emitida
@@ -1474,6 +1502,33 @@ class EmitirFacturaTests(LoggedInWithCompanyTests):
 
         bill = self.get_bill_from_db()
         self.assertEquals(bill.status, SRIStatus.options.Annulled)
+
+    def test_emitir_factura_general_progress_accepted(self):
+        """
+        Prueba la vista de avance de proceso
+        """
+        self.company.licence.approve('professional', date(2020, 1, 1))
+        # Ok, emitir
+        self.c.post(
+            reverse('bill_emit_accept',
+                    args=(self.bill.id,)))
+
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.ReadyToSend)
+
+        # Progreso
+        for i in range(3):
+            c = Client()  # unauthenticated
+            enviar_response = gen_respuesta_solicitud_ok()
+            autorizar_response = gen_respuesta_autorizacion_comprobante_valido(
+                self.bill.clave_acceso,
+                self.bill.xml_content)
+            with MockSRISender(enviar_response, autorizar_response) as request:
+                res = Client().get(reverse('bill_emit_progress'))
+            self.assertContains(res, "Ok")
+
+        bill = self.get_bill_from_db()
+        self.assertEquals(bill.status, SRIStatus.options.Accepted)
 
 
 class PopulateBillingTest(TestCase):

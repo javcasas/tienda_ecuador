@@ -9,5 +9,6 @@ urlpatterns = patterns(
 
     url(r'^comprobante/(?P<clave>[0-9]+)/$',
         views.ReceiptView.as_view(), name='receipt_view'),
-
+    url(r'^comprobante/(?P<clave>[0-9]+)/bill/$',  # FIXME: remove
+        views.ReceiptView.as_view(template_name='billing/bill_emitted_detail.html'), name='receipt_view_bill'),
 )
