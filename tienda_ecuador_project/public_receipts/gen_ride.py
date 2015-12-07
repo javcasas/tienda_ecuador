@@ -2,20 +2,22 @@
 import pytz
 from io import BytesIO
 from contextlib import contextmanager
+import StringIO
+import xml.etree.ElementTree as ET
 
-import PIL.Image
+from elaphe.code128 import Code128
 
-from django.core.urlresolvers import reverse
+from django.templatetags import l10n
 
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
-from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import Paragraph, Frame, Table, Spacer, Image
+from reportlab.platypus import Paragraph, Frame, Table, Image  # , Spacer
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
+from reportlab.lib import colors, utils
 
-from util.sri_models import SRIStatus
+from util.sri_models import SRIStatus, AmbienteSRI
+from billing.templatetags.decimal_format import money_2d
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -26,14 +28,16 @@ def gen_bill_ride(ob):
         res = gen_bill_ride_stuff(ob)
         print "GENERATED"
         return res
-    except Exception, e:
+    except:
         print "ERROR"
-        print e
+        import traceback
+        print traceback.format_exc()
         raise
 
 
 class RenderStack(object):
     context_stack = []
+
     def __init__(self, x0, y0, x1, y1, margin=(0, 0, 0, 0)):
         left, bottom, right, top = self._get_margin(margin)
         self._x0 = x0 + left
@@ -48,7 +52,6 @@ class RenderStack(object):
             return left, bottom, right, top
         except TypeError:
             return margindata, margindata, margindata, margindata
-            
 
     def _push_state(self):
         self.context_stack.append(
@@ -56,7 +59,7 @@ class RenderStack(object):
              self._y0,
              self._x1,
              self._y1,
-            ])
+             ])
 
     def _pop_state(self):
         old_context = self.context_stack.pop()
@@ -93,132 +96,232 @@ class RenderStack(object):
         return (self._y1 - self._y0) * y
 
 
+def get_image(path, width=1*inch, height=1*inch):
+    img = utils.ImageReader(path)
+    iw, ih = img.getSize()
+    aspect = ih / float(iw)
+    if width * aspect > height:
+        return Image(path, width=(height/aspect), height=height)
+    else:
+        return Image(path, width=width, height=(width * aspect))
+
+
+def get_warning(ob):
+    res = []
+    invalid = False
+    if ob.status == SRIStatus.options.Annulled:
+        res.append("ANULADO")
+        invalid = True
+    elif ob.status == SRIStatus.options.Sent:
+        res.append("PENDIENTE DE AUTORIZACIÓN")
+    else:
+        res.append("PROFORMA")
+        invalid = True
+    if ob.ambiente_sri == AmbienteSRI.options.pruebas:
+        res.append("AMBIENTE DE PRUEBAS")
+        invalid = True
+    if invalid:
+        res.append("SIN VALIDEZ TRIBUTARIA")
+    return res
+
+
+def make_barcode(data):
+    """
+    Makes a GS1-128 barcode as an image
+    @param data: the data to put in the barcode
+    @return: file-like object with a png as content
+    """
+    out = StringIO.StringIO()
+    image = Code128().render(data, scale=2, margin=0)
+    for i in range(image.size[0] - 1, 0, -1):
+        pix = image.getpixel((i, 0))
+        if pix[0] == 0:
+            image = image.crop((0, 0, i+1, image.size[1]))
+            break
+    image.save(out, "png")
+    out.seek(0)
+    return out
+
+
+def get_bill_number_from_tree(tree):
+    return u"{}-{}-{}".format(tree.find("./infoTributaria/estab").text,
+                              tree.find("./infoTributaria/ptoEmi").text,
+                              tree.find("./infoTributaria/secuencial").text)
+
+
 def gen_bill_ride_stuff(ob):
     buffer_ = BytesIO()
 
+    try:
+        tree = ET.fromstring(ob.xml_content.encode('utf8'))
+    except ET.ParseError:
+        tree = None
 
-    styles = getSampleStyleSheet()
-
-    p = canvas.Canvas(buffer_, pagesize=A4)
     pagesize = A4
     margin = inch, inch, inch, inch
-    standard_separation = inch / 20
 
+    canvas = Canvas(buffer_, pagesize=pagesize)
 
     c = RenderStack(0, 0, pagesize[0], pagesize[1], margin=margin)
-    #p.roundRect(c.x(0), c.y(0), c.width(1), c.height(1), 3, stroke=1, fill=0)
+    # p.roundRect(c.x(0), c.y(0), c.width(1), c.height(1), 3, stroke=1, fill=0)
 
-    def get_warning():
-        if ob.status == SRIStatus.options.Annulled:
-            return "ANULADO", "SIN VALIDEZ TRIBUTARIA"
-        elif ob.status == SRIStatus.options.Sent:
-            return "PENDIENTE DE AUTORIZACIÓN", ""
-        else:
-            return "PROFORMA", "SIN VALIDEZ TRIBUTARIA"
+    # Print warnings
+    warnings = get_warning(ob)
+    if warnings:
+        canvas.saveState()
+        canvas.setFillColorCMYK(0, 0, 0, 0.4)
+        canvas.setStrokeColorCMYK(0, 0, 0, 0.4)
+        canvas.setFont("Helvetica", 50)
 
-    warning = get_warning()
-    if warning:
-        p.saveState()
-        p.setFillColorCMYK(0, 0, 0, 0.4)
-        p.setStrokeColorCMYK(0, 0, 0, 0.4)
-        p.setFont("Helvetica", 50)
+        total_height = 60 * len(warnings)
+        canvas.translate(c.x(0.5), c.y(0.7))
+        canvas.rotate(45)
+        canvas.translate(0, total_height / 2)
 
-        items = len(warning)
-        total_height = 60 * items
-        p.translate(c.x(0.5), c.y(0.7))
-        p.rotate(45)
-        p.translate(0, total_height / 2)
-        for item in warning:
-            p.drawCentredString(0, 0, item)
-            p.translate(0, -60)
+        for item in warnings:
+            canvas.drawCentredString(0, 0, item)
+            canvas.translate(0, -60)
 
-        p.restoreState()
+        canvas.restoreState()
 
     def add_items(items):
         f = Frame(c.x(0), c.y(0), c.width(1), c.height(1),
                   showBoundary=0,
                   leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
-        f.addFromList(items, p)
+        f.addFromList(items, canvas)
         if items:
             raise Exception("Does not fit - items left")
 
-    from reportlab.lib import utils
-
-    def get_image(path, width=1*inch, height=1*inch):
-        img = utils.ImageReader(path)
-        iw, ih = img.getSize()
-        aspect = ih / float(iw)
-        if width * aspect > height:
-            return Image(path, width=(height/aspect), height=height)
-        else:
-            return Image(path, width=width, height=(width * aspect))
-
+    # Parameters
     column_height = 0.3
+    column_width = 0.5
+    footer_height = 0.25
+    standard_separation = inch / 20
+
+    # styles
+    styles = getSampleStyleSheet()
+    small = styles['Normal'].clone("Smaller", fontSize=8)
+    normal = styles['Normal']
+    bigheader = styles['h2']
+    mediumheader = styles['h3']
+    smallheader = styles['h4']
+
     with c.section(0, 1 - column_height, 1, 1):
-        column_width = 0.5
         # columna izquierda
-        with c.section(0, 0, column_width, 1, margin=(0, 0, standard_separation, 0)):
+        with c.section(0, 0, column_width, 1,
+                       margin=(0, 0, standard_separation, 0)):
             if ob.company.get_logo():
-                with c.section(0, 0.5, 1, 1, margin=standard_separation):
+                with c.section(0, 0.5, 1, 1,
+                               margin=standard_separation):
                     # logo
-                    fn = ob.company.get_logo()
-                    add_items(
-                        [get_image(fn, width=c.width(1), height=c.height(1))]
-                    )
-            with c.section(0, 0, 1, column_width, margin=standard_separation):
+                    logo = ob.company.get_logo()
+                    if logo:
+                        add_items(
+                            [get_image(logo.file.file.name, width=c.width(1), height=c.height(1))]
+                        )
+            with c.section(0, 0, 1, column_width,
+                           margin=standard_separation):
                 story = []
                 if ob.company.nombre_comercial:
-                    story.append(Paragraph(ob.company.nombre_comercial, styles['Normal']))
-                story.append(Paragraph("Razon Social: {}".format(ob.company.razon_social), styles['Normal']))
-                story.append(Paragraph("Direccion Matriz: {}".format(ob.company.direccion_matriz), styles['Normal']))
-                story.append(Paragraph("Direccion Sucursal: {}".format(ob.punto_emision.establecimiento.direccion), styles['Normal']))
-                if ob.company.contribuyente_especial:
-                    story.append(Paragraph("Contribuyente Especial: {}".format(ob.company.contribuyente_especial), styles['Normal']))
-                if ob.company.obligado_contabilidad:
-                    story.append(Paragraph("SI Obligado a llevar Contabilidad", styles['Normal']))
+                    story.append(Paragraph(ob.company.nombre_comercial,
+                                           bigheader))
+                    story.append(Paragraph("Razon Social: {}".format(ob.company.razon_social),
+                                           normal))
                 else:
-                    story.append(Paragraph("NO Obligado a llevar Contabilidad", styles['Normal']))
+                    story.append(Paragraph("Razon Social: {}".format(ob.company.razon_social),
+                                           bigheader))
+
+                if ob.company.direccion_matriz != ob.punto_emision.establecimiento.direccion:
+                    story.append(Paragraph(u"Dirección Matriz:",
+                                           normal))
+                    story.append(Paragraph(ob.company.direccion_matriz,
+                                           small))
+                    story.append(Paragraph(u"Dirección Sucursal:",
+                                           normal))
+                    story.append(Paragraph(ob.punto_emision.establecimiento.direccion,
+                                           small))
+                else:
+                    story.append(Paragraph(u"Dirección:",
+                                           normal))
+                    story.append(Paragraph(ob.company.direccion_matriz,
+                                           small))
+                if ob.company.contribuyente_especial:
+                    story.append(Paragraph("Contribuyente Especial: {}".format(ob.company.contribuyente_especial),
+                                           normal))
+                story.append(Paragraph("{} Obligado a llevar Contabilidad".format(
+                                       "SI" if ob.company.obligado_contabilidad else "NO"),
+                                       normal))
                 add_items(story)
-            
+
         # columna derecha
-        with c.section(column_width, 0, 1, 1, margin=standard_separation):
-            story.append(Paragraph("RUC {}".format(ob.company.ruc), styles['Normal']))
+        with c.section(column_width, 0, 1, 1,
+                       margin=standard_separation):
+            story.append(Paragraph("RUC {}".format(ob.company.ruc),
+                                   normal))
+            subtipo = None
             if ob.status == SRIStatus.options.Accepted:
-                story.append(Paragraph("FACTURA", styles['Normal']))
+                tipo = "FACTURA"
+                number = get_bill_number_from_tree(tree)
             elif ob.status == SRIStatus.options.Annulled:
-                story.append(Paragraph("FACTURA ANULADA", styles['Normal']))
-                story.append(Paragraph("SIN VALIDEZ TRIBUTARIA", styles['Normal']))  # FIXME: poner en grande
+                tipo = "FACTURA ANULADA"
+                subtipo = "SIN VALIDEZ TRIBUTARIA"
+                number = get_bill_number_from_tree(tree)
             elif ob.status == SRIStatus.options.Sent:
-                story.append(Paragraph("FACTURA", styles['Normal']))
-                story.append(Paragraph("PENDIENTE DE AUTORIZACIÓN", styles['Normal'])) # FIXME: poner en grande
+                tipo = "FACTURA ANULADA"
+                subtipo = "PENDIENTE DE AUTORIZACIÓN"
+                number = get_bill_number_from_tree(tree)
             else:
-                story.append(Paragraph("PROFORMA", styles['Normal']))
-                story.append(Paragraph("SIN VALIDEZ TRIBUTARIA", styles['Normal'])) # FIXME: poner en grande
-            story.append(Paragraph("{}".format(ob.number), styles['Normal']))
+                tipo = "PROFORMA"
+                subtipo = "SIN VALIDEZ TRIBUTARIA"
+                number = ob.number
+            story.append(Paragraph(tipo, smallheader))
+            if subtipo:
+                story.append(Paragraph(subtipo, normal))
+            story.append(Paragraph(number, normal))
+            canvas.setTitle("{} {}".format(tipo, number))
+
             if ob.clave_acceso:
-                story.append(Paragraph("Clave de Acceso", styles['Normal']))
-                story.append(Paragraph(ob.clave_acceso, styles['Normal']))
+                story.append(Paragraph("Clave de Acceso",
+                                       mediumheader))
+                story.append(Paragraph(ob.clave_acceso,
+                                       small))
+                story.append(Image(make_barcode(ob.clave_acceso), width=c.width(1), height=c.height(0.1)))
             if ob.numero_autorizacion:
-                story.append(Paragraph(u"Autorización", styles['Normal']))
-                story.append(Paragraph(ob.numero_autorizacion, styles['Normal']))
-                story.append(Paragraph(str(ob.fecha_autorizacion), styles['Normal']))
-            story.append(Paragraph("Ambiente: {}".format(ob.ambiente_sri.upper()), styles['Normal']))
-            # if ambiente == 'pruebas': FIXME poner en grande
+                story.append(Paragraph(u"Autorización",
+                                       mediumheader))
+                story.append(Paragraph(ob.numero_autorizacion,
+                                       small))
+                story.append(Paragraph(l10n.localize(ob.fecha_autorizacion),
+                                       small))
+            story.append(Paragraph("Ambiente: {}".format(ob.ambiente_sri.upper()),
+                                   normal))
             add_items(story)
 
-    with c.section(0, 1 - column_height - 0.1, 1, 1 - column_height, margin=(standard_separation, 0, standard_separation, 0)):
+    with c.section(0, 1 - column_height - 0.1, 1, 1 - column_height,
+                   margin=(standard_separation, 0, standard_separation, 0)):
         story = []
-        story.append(Paragraph("Razon Social / Nombres y Apellidos: {}".format(ob.issued_to.razon_social), styles['Normal']))
-        story.append(Paragraph("Identificacion: {} {}".format(ob.issued_to.tipo_identificacion, ob.issued_to.identificacion), styles['Normal']))
-        story.append(Paragraph("Fecha de Emision {}".format(ob.date), styles['Normal']))
+        story.append(Paragraph("Cliente".format(ob.issued_to.razon_social),
+                               mediumheader))
+        story.append(Paragraph("Razon Social / Nombres y Apellidos: {}".format(ob.issued_to.razon_social),
+                               normal))
+        story.append(Paragraph("Identificacion: {} {}".format(ob.issued_to.tipo_identificacion,
+                                                              ob.issued_to.identificacion),
+                               normal))
+        story.append(Paragraph("Fecha de Emision: {}".format(l10n.localize(ob.date)),
+                               normal))
         # FIXME: Guia de remision
-        # story.append(Paragraph("Guia de Remision 001-001-00000003", styles['Normal']))
         add_items(story)
 
-    footer_height = 0.25
     with c.section(0, footer_height, 1, 1 - column_height - 0.1, margin=(0, 0, 0, standard_separation)):
-        #linea = ['001', '001', '3', 'Cosa', '20', '0', '60']
-        data = [['Cod.\nPrincipal', 'Cod.\nAuxiliar', 'Cant.', 'Descripcion', 'Precio\nUnitario', 'Dcto.', 'Total']]
+        headers = [(u'Cod.\nPrincipal',  c.width(0.1)),
+                   (u'Cod.\nAuxiliar',   c.width(0.1)),
+                   (u'Cant.',            c.width(0.1)),
+                   (u'Descripción',      c.width(0.4)),
+                   (u'Precio\nUnitario', c.width(0.1)),
+                   (u'Dcto.',            c.width(0.1)),
+                   (u'Total',            c.width(0.1))]
+        data, widths = zip(*headers)
+        data = [data]
         for item in ob.items:
             linea = [
                 item.sku,
@@ -232,14 +335,7 @@ def gen_bill_ride_stuff(ob):
             data.append(linea)
         detail_table = Table(data,
                              style=[('GRID', (0, 0), (-1, -1), 0.5, colors.grey)],
-                             colWidths=[c.width(0.1),
-                                        c.width(0.1),
-                                        None,
-                                        None,
-                                        c.width(0.1),
-                                        c.width(0.1),
-                                        c.width(0.1),
-                                       ])
+                             colWidths=widths)
         detail_table.hAlign = 'LEFT'
         add_items([detail_table])
 
@@ -255,21 +351,24 @@ def gen_bill_ride_stuff(ob):
             add_items([extrainfo_table])
         with c.section(col_mid_point, 0, 1, 1, margin=(0, 0, 0, 0)):
             data = [
-                ["Subtotal IVA 12%", ob.subtotal[12]],
-                ["Subtotal IVA 0%", ob.subtotal[0]],
-                ["IVA 12%", ob.iva[12]],
-                ["Total a Pagar", ob.total],
+                ["Subtotal IVA 12%", money_2d(ob.subtotal[12])],
+                ["Subtotal IVA 0%", money_2d(ob.subtotal[0])],
+                ["IVA 12%", money_2d(ob.iva[12])],
+                ['ICE', money_2d(ob.total_ice)],
+                ["Total a Pagar", money_2d(ob.total)],
             ]
             totals_table = Table(data,
-                                 style=[('GRID', (0, 0), (-1, -1), 0.5, colors.grey)],
+                                 style=[('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                                        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+                                        ],
                                  colWidths=[c.width(0.5),
                                             c.width(0.5),
-                                           ])
+                                            ])
             totals_table.hAlign = 'RIGHT'
             add_items([totals_table])
 
-    p.showPage()
-    p.save()
+    canvas.showPage()
+    canvas.save()
 
     pdf = buffer_.getvalue()
     buffer_.close()

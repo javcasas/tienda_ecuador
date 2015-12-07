@@ -116,6 +116,11 @@ class Bill(ComprobanteSRIMixin, models.Model):
                     for i in self.items])
 
     @property
+    def total_ice(self):
+        return sum(
+            [item.valor_ice for item in self.items])
+
+    @property
     def impuestos(self):
         # key: (codigo, codigo_porcentaje, porcentaje)
         # value: (base_imponible, valor)
