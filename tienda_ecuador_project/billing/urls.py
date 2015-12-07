@@ -144,7 +144,7 @@ urlpatterns = patterns(
     url(r'^emitted_bill/(?P<pk>[0-9]+)/read/$',
         views.BillDetailView.as_view(
             template_name_suffix='_emitted',
-        ), name='bill_detail'),
+        ), name='emitted_bill_detail'),
     url(r'^bill_list/(?P<company_id>[0-9]+)/$',
         views.BillListView.as_view(
             template_name='billing/bill/bill_list_table.html',

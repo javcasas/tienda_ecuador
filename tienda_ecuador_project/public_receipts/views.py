@@ -44,7 +44,7 @@ class PublicReceiptView(object):
         ]
         for cls, data in classes:
             try:
-                ob = cls.objects.get(clave_acceso=clave_acceso)
+                ob = cls.objects.exclude(clave_acceso="").get(clave_acceso=clave_acceso)
                 res = data.copy()
                 res['object'] = ob
                 return res
