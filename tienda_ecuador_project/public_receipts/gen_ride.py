@@ -169,8 +169,9 @@ def gen_bill_ride_stuff(ob):
     warnings = get_warning(ob)
     if warnings:
         canvas.saveState()
-        canvas.setFillColorCMYK(0, 0, 0, 0.4)
-        canvas.setStrokeColorCMYK(0, 0, 0, 0.4)
+        grey = 0.3
+        canvas.setFillColorCMYK(0, 0, 0, grey)
+        canvas.setStrokeColorCMYK(0, 0, 0, grey)
         canvas.setFont("Helvetica", 50)
 
         total_height = 60 * len(warnings)
@@ -184,9 +185,9 @@ def gen_bill_ride_stuff(ob):
 
         canvas.restoreState()
 
-    def add_items(items):
+    def add_items(items, showBoundary=False):
         f = Frame(c.x(0), c.y(0), c.width(1), c.height(1),
-                  showBoundary=0,
+                  showBoundary=showBoundary,
                   leftPadding=0, bottomPadding=0, rightPadding=0, topPadding=0)
         f.addFromList(items, canvas)
         if items:
@@ -195,7 +196,7 @@ def gen_bill_ride_stuff(ob):
     # Parameters
     column_height = 0.3
     column_width = 0.5
-    footer_height = 0.25
+    footer_height = 0.14
     standard_separation = inch / 20
 
     # styles
@@ -346,7 +347,7 @@ def gen_bill_ride_stuff(ob):
                 ["DSSTI Facturas"],
             ]
             data.append(["Descarge su comprobante en:\n   http://facturas.dssti.com"])
-            extrainfo_table = Table(data, style=[('GRID', (0, 0), (-1, -1), 0.5, colors.grey)])
+            extrainfo_table = Table(data, style=[('GRID', (0, 0), (-1, -1), 0.5, colors.grey)], colWidths=[c.width(1)])
             extrainfo_table.hAlign = 'LEFT'
             add_items([extrainfo_table])
         with c.section(col_mid_point, 0, 1, 1, margin=(0, 0, 0, 0)):
