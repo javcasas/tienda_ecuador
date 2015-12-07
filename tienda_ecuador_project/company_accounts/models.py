@@ -161,6 +161,11 @@ class Company(models.Model):
     def establecimientos(self):
         return Establecimiento.objects.filter(company=self)
 
+    def get_logo(self):
+        return self.logo
+        if self.licence.licence in ['demo', 'professional', 'enterprise']:
+            return self.logo
+
     @property
     def issues(self):
         """

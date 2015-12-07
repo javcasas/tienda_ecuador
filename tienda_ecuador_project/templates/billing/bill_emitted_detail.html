@@ -30,8 +30,8 @@
     <tr>
         <th>Documentos Electrónicos</th>
         <td>
-            <a href='{# FIXME #}' class='btn btn-default'>Descargar XML</a>
-            <a href='{# FIXME #}' class='btn btn-default'>Descargar RIDE</a>
+            <a href='{% url "public-receipts:receipt_view_xml" bill.clave_acceso %}' class='btn btn-default'>Descargar XML</a>
+            <a href='{% url "public-receipts:receipt_view_ride" bill.clave_acceso %}' class='btn btn-default'>Descargar RIDE</a>
         </td>
     </tr>
     <tr>

@@ -34,7 +34,6 @@ class ReceiptViewTests(TestCase, TestHelpersMixin):
 
         self.bill_data = dict(
             number='33344556677',
-            xml_content='xml',
             numero_autorizacion='12342423423',
             ambiente_sri='pruebas',
             clave_acceso='4545454545',
@@ -44,6 +43,7 @@ class ReceiptViewTests(TestCase, TestHelpersMixin):
             billing.models.Bill,
             company=self.company,
             date=get_date(),
+            xml_content='<xml>stufff</xml>',
             fecha_autorizacion=date(2015, 5, 1),
             issues='asdf',  # FIXME, should be in response
             **self.bill_data)
@@ -77,3 +77,13 @@ class ReceiptViewTests(TestCase, TestHelpersMixin):
             follow=True)
         for key, val in self.bill_data.iteritems():
             self.assertContains(r, val, msg_prefix="Data '{}': '{}' not found on response".format(key, val))
+        # XML and RIDE links
+        self.assertContains(r, reverse("public-receipts:receipt_view_xml", args=(clave_acceso,)))
+        self.assertContains(r, reverse("public-receipts:receipt_view_ride", args=(clave_acceso,)))
+
+    def test_receipt_get_xml(self):
+        clave_acceso = '4545454545'
+        c = Client()
+        r = c.get(
+            reverse("public-receipts:receipt_view_xml", args=(clave_acceso,)))
+        self.assertEquals(r.content, self.bill.xml_content)
