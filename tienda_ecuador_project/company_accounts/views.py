@@ -1,14 +1,13 @@
-from datetime import date
+from datetime import date, timedelta
 import pytz
+import json
 
-import django
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
-from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.views.generic.edit import CreateView, UpdateView, FormView
+from django.core.urlresolvers import reverse
 from django.db.models import Count
 
 import models
@@ -28,12 +27,12 @@ class LoggedInIndexView(View):
         except (models.CompanyUser.DoesNotExist):
             return redirect("company_accounts:create_company")
 
-            
+
 class CompanyCreateView(CreateView):
     template_name_suffix = '_create_form'
     model = models.Company
     form_class = forms.CompanyForm
-    
+
     def get(self, request):
         try:
             c_user = models.CompanyUser.objects.get(user=request.user)
@@ -42,7 +41,8 @@ class CompanyCreateView(CreateView):
             return super(CompanyCreateView, self).get(request)
 
     def form_valid(self, form):
-        models.Company.objects.annotate(number_of_companies=Count("companyuser")).filter(number_of_companies=0).delete()
+        (models.Company.objects.annotate(number_of_companies=Count("companyuser"))
+                               .filter(number_of_companies=0).delete())
         res = super(self.__class__, self).form_valid(form)
         new_company = form.instance
         c_u = models.CompanyUser(user=self.request.user, company=new_company)
@@ -107,7 +107,8 @@ class CompanySelected(object):
         Returns a PuntoEmision object if it's the only one
         for the current company
         """
-        single_punto_emision = models.PuntoEmision.objects.filter(establecimiento__company=self.company)
+        single_punto_emision = models.PuntoEmision.objects.filter(
+            establecimiento__company=self.company)
         if len(single_punto_emision) == 1:
             return single_punto_emision[0]
         else:
@@ -248,6 +249,33 @@ class CompanyPayLicenceView(CompanyView, CompanySelected, LicenceControlMixin, D
         }[self.company.licence.licence]
         return res
 
+    def post(self, request, **kwargs):
+        data = request.POST
+        try:
+            assert data['payment_method'] == 'western_union'
+            payment = models.LicenceUpdateRequest(
+                licence=self.company.licence,
+                date=date.today(),
+                action=json.dumps({
+                    'payment_method': data['payment_method'],
+                    'sender_name': data['sender_name'],
+                    'sender_code': data['sender_code'],
+                    'new_licence': self.company.licence.next_licence,
+                }))
+            payment.save()
+            l = self.company.licence
+            if l.expired:
+                l.approve(l.next_licence, date.today() + timedelta(days=30))
+            else:
+                l.approve(l.next_licence, l.expiration + timedelta(days=30))
+            return redirect("company_accounts:company_profile", self.company.id)
+        except AssertionError:
+            pass
+        except ValueError:
+            return self.get(request, **kwargs)
+
+        return self.get(request)
+
 
 ######################
 # PuntoEmision views #
@@ -265,6 +293,7 @@ class PuntoEmisionDetailView(PuntoEmisionView, PuntoEmisionSelected, DetailView)
     """
     View that shows a general index for a given punto_emision
     """
+
 
 class PuntoEmisionUpdateView(PuntoEmisionView, PuntoEmisionSelected, UpdateView):
     """

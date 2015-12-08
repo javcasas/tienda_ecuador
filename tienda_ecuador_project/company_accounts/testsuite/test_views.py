@@ -1,8 +1,7 @@
 # * encoding: utf-8 *
-from datetime import datetime, date
-from decimal import Decimal
-import base64
+from datetime import datetime, date, timedelta
 import pytz
+import json
 import xml.etree.ElementTree as ET
 
 from django.test import TestCase, Client
@@ -492,7 +491,8 @@ class LicenceTests(TestCase):
             def dispatch(self, request):
                 raise Exception('blah')
 
-        class Request(object): pass
+        class Request(object):
+            pass
 
         t = TestView()
         r = Request()
@@ -503,7 +503,6 @@ class LicenceTests(TestCase):
             type(res),
             HttpResponseRedirect)
         self.assertEquals(res.url, reverse("pricing"))
-        
 
         self.company.licence.approve('professional', date(2020, 12, 12))
         with self.assertRaises(Exception):
@@ -558,8 +557,39 @@ class LicenceActivateViewTests(LoggedInWithCompanyTests):
         self.assertContains(r, "Licencia Caducada")
         self.assertContains(r, "Renovar Licencia")  # Link to payment
         self.assertContains(r, reverse("company_accounts:pay_licence", args=(self.company.id,)))
+        self.assertEquals(self.company.licence.next_licence, "basic")
 
         r = self.c.get(reverse("company_accounts:pay_licence", args=(self.company.id,)))
         self.assertContains(r, "Pagar Licencia")
         self.assertContains(r, "Usted ha seleccionado el plan <strong>Basic</strong>")
         self.assertContains(r, "El coste de su licencia es $29 por mes (IVA incluído)")
+        # Payment methods
+        self.assertContains(r, u"Western Union")
+        self.assertContains(r, u"Pague usando Western Union.")
+        self.assertContains(r, u"Para ello, envíe $29 en cualquier oficina de Western Union a")
+        self.assertContains(r, u"Javier Casas")
+        self.assertContains(r, u"Cuando lo haya enviado, introduzca los detalles en el siguiente formulario")
+        self.assertContains(r, u"Emitiremos su factura en cuanto comprobemos el pago de su licencia")
+        self.assertContains(r, u"Nombres y Apellidos")
+        self.assertContains(r, u"Código de Transferencia (MTCN)")
+        self.assertContains(r, u"Confirmar Pago")
+
+        with self.new_item(models.LicenceUpdateRequest) as update_request:
+            r = self.simulate_post(
+                reverse('company_accounts:pay_licence', args=(self.company.id,)),
+                {'sender_name': 'Paco Pil',
+                 'sender_code': '234567'},
+                form_index=0
+            )
+        self.assertRedirects(r, reverse("company_accounts:company_profile", args=(self.company.id,)))
+        self.assertEquals(update_request.licence, self.company.licence)
+        today = date.today()
+        self.assertEquals(update_request.date, today)
+        self.assertEquals(update_request.result, "")
+        action = json.loads(update_request.action)
+        self.assertEquals(action['new_licence'], "basic")
+        self.assertEquals(action['payment_method'], "western_union")
+        self.assertEquals(action['sender_name'], "Paco Pil")
+        self.assertEquals(action['sender_code'], "234567")
+        licence = models.Licence.objects.get(id=self.company.licence.id)
+        self.assertEquals(licence.expiration, today + timedelta(days=30))

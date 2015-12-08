@@ -681,6 +681,7 @@ class BillTests(LoggedInWithCompanyTests):
         """
         r = self.c.get(reverse('bill_company_index',
                                args=(self.company.id,)))
+        self.assertEquals(r.template_name, ['billing/bill_list.html'])
         self.c.get(reverse('bill_list_table',
                            args=(self.company.id,)))
         self.assertContainsObject(

@@ -18,42 +18,62 @@
         <h3>El coste de su licencia es ${{ price_to_pay }} por mes (IVA incluído)</h3>
         <h1>Formas de pago</h1>
 
-<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingOne">
-      <h4 class="panel-title">
-        <a role="button" data-toggle="collapse" data-parent="#accordion"
-           href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          Western Union
-        </a>
-      </h4>
-    </div>
-    <div id="collapseOne"
-         class="panel-collapse collapse"
-         role="tabpanel" aria-labelledby="headingOne">
-      <div class="panel-body">
-        <p>Puede pagar con Western Union.</p>
-      </div>
-    </div>
-  </div>
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+              <h4 class="panel-title">
+                <a role="button" data-toggle="collapse" data-parent="#accordion"
+                   href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  Western Union
+                </a>
+              </h4>
+            </div>
+            <div id="collapseOne"
+                 class="panel-collapse collapse"
+                 role="tabpanel" aria-labelledby="headingOne">
+              <div class="panel-body">
+                <p>Pague usando Western Union. Para ello, envíe ${{ price_to_pay }} en cualquier oficina de Western Union a</p>
+                <p>Nombre: Javier Casas Velasco</p>
+                <p>Lugar: Quito, Ecuador</p>
+                <p>Cuando lo haya enviado, introduzca los detalles en el siguiente formulario:</p>
+                <form action='.' method='post' class='form'>
+                    {% csrf_token %}
+                    <input type='hidden' name='payment_method' value='western_union' />
+                    <div class='form-input'>
+                        <label for='sender_name'>Nombres y Apellidos de la persona que envía el pago</label>
+                        <input type='text' name='sender_name' class='form-control'/>
+                    </div>
+                    <div class='form-input'>
+                        <label for='sender_code'>Código de Transferencia (MTCN)</label>
+                        <input type='text' name='sender_code' class='form-control'/>
+                    </div>
+                    <div class='form-input'>
+                        <button type='submit' class='btn btn-primary'>Confirmar Pago</button>
+                    </div>
+                </form>
+                <p>Emitiremos su factura en cuanto comprobemos el pago de su licencia</p>
+              </div>
+            </div>
+          </div>
 
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingTwo">
-      <h4 class="panel-title">
-        <a role="button" data-toggle="collapse" data-parent="#accordion"
-           href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Ingreso Bancario
-        </a>
-      </h4>
-    </div>
-    <div id="collapseTwo"
-         class="panel-collapse collapse"
-         role="tabpanel" aria-labelledby="headingTwo">
-      <div class="panel-body">
-        <p>Puede pagar haciendo un ingreso bancario.</p>
-      </div>
-    </div>
-  </div>
-    </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingTwo">
+              <h4 class="panel-title">
+                <a role="button" data-toggle="collapse" data-parent="#accordion"
+                   href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Ingreso Bancario
+                </a>
+              </h4>
+            </div>
+            <div id="collapseTwo"
+                 class="panel-collapse collapse"
+                 role="tabpanel" aria-labelledby="headingTwo">
+              <div class="panel-body">
+                <p>Puede pagar haciendo un ingreso bancario.</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
+</div>
 {% endblock %}
