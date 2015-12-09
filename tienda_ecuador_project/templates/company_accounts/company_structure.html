@@ -31,7 +31,8 @@
             <td></td>
             <td>{{ establecimiento.codigo }}</td>
             <td></td>
-            <td><a href='{# FIXME #}' class='btn btn-default hidden'>Detalle</a>
+            <td><a href='{% url 'company_accounts:establecimiento_detail' establecimiento.id %}'
+                   class='btn btn-default btn-block'>Detalle</a>
           </tr>
           {% for punto_emision in establecimiento.puntos_emision %}
             <tr>
@@ -41,7 +42,7 @@
               <td class='{% if punto_emision.ambiente_sri == 'pruebas' %}warning{% else %}success{% endif %}'>
                   {{ punto_emision.ambiente_sri.capitalize }}</td>
               <td><a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id%}'
-                     class='btn btn-default'>Detalle</a>
+                     class='btn btn-default btn-block'>Detalle</a>
               </td>
             </tr>
           {% endfor %}

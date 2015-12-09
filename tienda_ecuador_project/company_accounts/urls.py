@@ -35,6 +35,12 @@ urlpatterns = patterns(
             template_name_suffix='_structure'
         ), name='company_structure'),
 
+    # Establecimiento Views
+    url(r'^establecimiento/(?P<pk>[0-9]+)/$',
+        views.EstablecimientoDetailView.as_view(), name='establecimiento_detail'),
+    url(r'^establecimiento/(?P<pk>[0-9]+)/edit/$',
+        views.EstablecimientoUpdateView.as_view(), name='establecimiento_update'),
+
     # PuntoEmision Views
     url(r'^punto_emision/(?P<pk>[0-9]+)/$',
         views.PuntoEmisionDetailView.as_view(), name='punto_emision_detail'),

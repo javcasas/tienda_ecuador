@@ -3,10 +3,10 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.conf.urls.static import static
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 import views
+import company_accounts.views
 import company_accounts.forms
-import registration.views
-import billing.views
 
 
 urlpatterns = [
@@ -27,13 +27,8 @@ urlpatterns = [
     url(r'^accounts_receivable/', include('accounts_receivable.urls')),
     url(r'^reports/', include('reports.urls')),
 
-    # Translated login & register forms
-#    url(r'^accounts/login/$', 'django.contrib.auth.views.login',
-#        {'authentication_form': company_accounts.forms.LoginForm},
-#        name='auth_login'),
-#    url(r'^accounts/register/$', 
-#        registration.views.RegistrationView.as_view(form_class=company_accounts.forms.MyUserCreationForm),
-#        name='registration_register'),
-
     url(r'^accounts/', include('registration.backends.simple.urls')),
+    url(r'^accounts/register/complete$',
+        login_required(company_accounts.views.LoggedInIndexView.as_view()),
+        name='registration_complete'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

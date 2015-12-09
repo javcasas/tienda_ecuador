@@ -6,10 +6,8 @@
 {% block breadcrumbs %}
     {{ block.super }}
     <li><a href='{% url 'company_accounts:company_structure' company.id %}'>Establecimientos</a></li>
-    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>{{ establecimiento.descripcion }}</a></li>
-    <li><a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id %}'>
-           {{ punto_emision.descripcion }}</a></li>
-    <li><a href='{% url 'company_accounts:punto_emision_update' punto_emision.id %}'>
+    <li><a href='{% url 'company_accounts:establecimiento_detail' establecimiento.id %}'>{{ establecimiento.descripcion }}</a></li>
+    <li><a href='{% url 'company_accounts:establecimiento_update' establecimiento.id %}'>
            Editar</a></li>
 {% endblock %}
 
@@ -25,7 +23,7 @@
                     <button type='submit' class='btn btn-primary'>Guardar</button>
                 </div>
                 <div class='btn-group'>
-                    <a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id %}' class='btn btn-default'>Cancelar</a>
+                    <a href='{% url 'company_accounts:establecimiento_detail' establecimiento.id %}' class='btn btn-default'>Cancelar</a>
                 </div>
             </div>
         {% endbuttons %}

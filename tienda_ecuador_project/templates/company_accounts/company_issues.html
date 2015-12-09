@@ -1,0 +1,17 @@
+<div class='col-xs-12'>
+    {% for issue in company.issues %}
+        <div class='alert alert-{{ issue.level }}' role='alert'>
+            <table style='width: 100%'>
+                <tr>
+                    <td>
+            {{ issue.message }}
+                    </td><td class='text-right'>
+            <a href='{{ issue.url }}'
+               class='btn btn-{{ issue.level }}'
+               >{{ issue.button_text }}</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,36 @@
+{% extends 'company_accounts/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Estructura de la Empresa - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>Establecimientos</a></li>
+    <li><a href='{% url 'company_accounts:establecimiento_detail' establecimiento.id %}'>{{ establecimiento.descripcion }}</a></li>
+{% endblock %}
+
+{% block body %}
+  {{ block.super }}
+  <div class='col-xs-12 even-section'>
+    <h1>Establecimiento '{{ establecimiento.descripcion }}'</h1>
+    <table class='table table-hover'>
+      <tbody>
+        <tr><th>Descripción</th><td>{{ establecimiento.descripcion }}</td></tr>
+        <tr><th>Código</th><td>{{ establecimiento.codigo }}</td></tr>
+        <tr><th>Dirección</th><td>{{ establecimiento.direccion }}</td></tr>
+      </tbody>
+    </table>
+    <div class='btn-group btn-group-justified'>
+        <div class='btn-group'>
+            <a href='{% url 'company_accounts:establecimiento_update' establecimiento.id %}'
+               class='btn btn-primary'>Editar</a>
+        </div>
+        <div class='btn-group'>
+            <a href='{% url 'company_accounts:company_structure' company.id %}'
+               class='btn btn-default'>Volver</a>
+        </div>
+    </div>
+  </div>
+{% endblock %}

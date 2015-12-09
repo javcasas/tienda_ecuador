@@ -14,6 +14,7 @@ import models
 import forms
 from licence_helpers import LicenceControlMixin, valid_licence, licence_required
 from util import signature
+from util.sri_models import AmbienteSRI
 
 
 tz = pytz.timezone('America/Guayaquil')
@@ -41,12 +42,31 @@ class CompanyCreateView(CreateView):
             return super(CompanyCreateView, self).get(request)
 
     def form_valid(self, form):
+        """
+        Creates a CompanyUser, default Establecimiento and PuntoEmision
+        """
+        # Delete orphaned CompanyUsers
         (models.Company.objects.annotate(number_of_companies=Count("companyuser"))
                                .filter(number_of_companies=0).delete())
         res = super(self.__class__, self).form_valid(form)
         new_company = form.instance
+        # Create CompanyUser
         c_u = models.CompanyUser(user=self.request.user, company=new_company)
         c_u.save()
+        # Create Establecimiento
+        e = models.Establecimiento(
+            company=new_company,
+            descripcion=u'Matriz',
+            codigo='001',
+            direccion=new_company.direccion_matriz)
+        e.save()
+        # Create PuntoEmision
+        pe = models.PuntoEmision(
+            establecimiento=e,
+            descripcion='Caja Principal',
+            codigo='001',
+            ambiente_sri=AmbienteSRI.options.produccion)
+        pe.save()
         return res
 
 
@@ -183,6 +203,14 @@ class CompanyProfileUpdateView(CompanyView, CompanySelected, UpdateView):
     View that shows a general index for a given company
     """
     form_class = forms.CompanyForm
+    def form_valid(self, form):
+        res = super(CompanyProfileUpdateView, self).form_valid(form)
+        new_company = form.instance
+        # Actualizar direccion del establecimiento matriz
+        for e in self.company.establecimientos.filter(descripcion='Matriz'):
+            e.direccion = new_company.direccion_matriz
+            e.save()
+        return res
 
 
 class CompanyProfileSelectPlanView(CompanyView, CompanySelected, View):
@@ -275,6 +303,29 @@ class CompanyPayLicenceView(CompanyView, CompanySelected, LicenceControlMixin, D
             return self.get(request, **kwargs)
 
         return self.get(request)
+
+
+#########################
+# Establecimiento views #
+#########################
+class EstablecimientoView(object):
+    model = models.Establecimiento
+    context_object_name = 'establecimiento'
+
+    @property
+    def establecimiento_id(self):
+        return self.kwargs["pk"]
+
+
+class EstablecimientoDetailView(EstablecimientoView, EstablecimientoSelected, DetailView):
+    """
+    """
+
+
+class EstablecimientoUpdateView(EstablecimientoView, EstablecimientoSelected, UpdateView):
+    """
+    """
+    form_class = forms.EstablecimientoForm
 
 
 ######################

@@ -28,13 +28,17 @@ class CompanyForm(forms.ModelForm):
     direccion_matriz = forms.CharField(
         label=u"Dirección Matriz",
         max_length=100)
+    obligado_contabilidad = forms.BooleanField(
+        label=u"Obligado a llevar Contabilidad",
+        required=False)
 
     # An inline class to provide additional information on the form.
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.Company
         fields = ('razon_social', 'nombre_comercial', 'ruc',
-                  'direccion_matriz')
+                  'direccion_matriz', 'obligado_contabilidad')
+
 
 class CompanyLogoForm(forms.ModelForm):
     logo = forms.ImageField(
@@ -76,6 +80,24 @@ class CertificateForm(forms.Form):
                 except:
                     time.sleep(0.1)
         return cleaned_data
+
+
+class EstablecimientoForm(forms.ModelForm):
+    descripcion = forms.CharField(
+        label='Descripción',
+        max_length=50)
+    codigo = forms.CharField(
+        label="Código",
+        max_length=3)
+    direccion = forms.CharField(
+        label='Dirección',
+        max_length=100)
+
+    # An inline class to provide additional information on the form.
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        model = models.Establecimiento
+        fields = ('descripcion', 'codigo', 'direccion', )
 
 
 class PuntoEmisionForm(forms.ModelForm):

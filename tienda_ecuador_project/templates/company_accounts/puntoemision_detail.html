@@ -28,6 +28,15 @@
             <td>{{ punto_emision.siguiente_secuencial_produccion|stringformat:'09d' }}</td></tr>
       </tbody>
     </table>
-    <a href='{% url 'company_accounts:company_structure' company.id %}' class='btn btn-default btn-block'>Volver</a>
+    <div class='btn-group btn-group-justified'>
+        <div class='btn-group'>
+            <a href='{% url 'company_accounts:punto_emision_update' punto_emision.id %}'
+               class='btn btn-primary'>Editar</a>
+        </div>
+        <div class='btn-group'>
+            <a href='{% url 'company_accounts:company_structure' company.id %}'
+               class='btn btn-default'>Volver</a>
+        </div>
+    </div>
   </div>
 {% endblock %}
