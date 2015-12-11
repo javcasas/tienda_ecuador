@@ -20,7 +20,9 @@ urlpatterns = patterns(
     url(r'^(?P<pk>[0-9]+)/profile/edit/$',
         views.CompanyProfileUpdateView.as_view(), name='company_profile_update'),
     url(r'^(?P<pk>[0-9]+)/profile/edit_logo/$',
-        views.CompanyProfileUpdateView.as_view(form_class=forms.CompanyLogoForm), name='company_profile_update_logo'),
+        views.CompanyProfileUpdateView.as_view(
+            form_class=forms.CompanyLogoForm
+        ), name='company_profile_update_logo'),
     url(r'^(?P<pk>[0-9]+)/profile/select_plan/$',
         views.CompanyProfileSelectPlanView.as_view(), name='company_profile_select_plan'),
     url(r'^(?P<pk>[0-9]+)/cert/$',

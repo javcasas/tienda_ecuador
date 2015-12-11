@@ -60,7 +60,7 @@
             {% for bill in bill_list %}
                 <tr>
                     <td>{{ bill.date }}</td>
-                    <td><a href='{% url "bill_detail" bill.id %}'>{{ bill.number }}</a></td>
+                    <td><a href='{{ bill.get_absolute_url }}'>{{ bill.number }}</a></td>
                     <td>{{ bill.total_sin_iva | money_2d }}</td>
                 </tr>
             {% empty %}

@@ -1,3 +1,4 @@
+# * encoding: utf-8 *
 import pytz
 import time
 import json
@@ -26,6 +27,7 @@ from company_accounts.licence_helpers import licence_required
 from util import signature
 from util import sri_sender
 from util.sri_models import SRIStatus
+from util import mail
 import accounts_receivable.models
 
 tz = pytz.timezone('America/Guayaquil')
@@ -180,11 +182,11 @@ class CompanyIndex(CompanySelected, View):
             'bill_list':
                 models.Bill.objects
                            .filter(company=company)
-                           .filter(status='aceptada')[:5],
+                           .filter(status=SRIStatus.options.Accepted)[:5],
             'prebill_list':
                 models.Bill.objects
                            .filter(punto_emision__establecimiento__company=company)
-                           .filter(status='no enviado')
+                           .filter(status=SRIStatus.options.NotSent)
                            .order_by("number")[:5],
             'customer_list':
                 models.Customer.objects
@@ -583,10 +585,59 @@ class BillDeleteView(BillView,
         view_name = "{}_company_index".format(self.context_object_name)
         return reverse(view_name, args=(self.company.id, ))
 
+class BillSendToCustomerView(BillView,
+                             PuntoEmisionSelected,
+                             DetailView):
+    """
+    Send proformas to customers
+    """
+    def get_context_data(self, **kwargs):
+        context = super(BillSendToCustomerView, self).get_context_data(**kwargs)
+        context['form'] = forms.SendToCustomerForm(
+            initial={'subject': 'Proforma de {}'.format(self.company.nombre_comercial or
+                                                        self.company.razon_social),
+                     'text': u"Estimado Sr,\nAdjunto la proforma que me pidió.\nSaludos cordiales"}
+        )
+        return context
+
+    def post(self, request, pk):
+        bill = self.get_object()
+        self.object = bill
+        filename = "Proforma_{}.pdf".format(bill.number)
+        filecontent = bill.gen_pdf()
+        subject = request.POST['subject']
+        text = request.POST['text']
+        mail.send_mail(request.user.email,
+                       bill.issued_to.email,
+                       subject,
+                       text,
+                       [("application/pdf", filename, filecontent)])
+        return render(request, "billing/bill_send_to_customer_sent.html", self.get_context_data())
+
 
 #############################################################
 #   Proforma Bill Emit Bill views
 #############################################################
+@licence_required('basic', 'professional', 'enterprise')
+class BillEmitAutoProgressView(BillView, PuntoEmisionSelected, DetailView):
+    """
+    Confirms acceptance of bill, moves it to the 'a enviar' status
+    """
+    template_name_suffix = '_emit'
+
+    def get_context_data(self, **kwargs):
+        res = super(BillEmitAutoProgressView, self).get_context_data(**kwargs)
+        try:
+            res['msgs'] = self.error_messages
+        except:
+            pass
+        return res
+
+    def post(self, request, pk):
+        self.object = self.get_object()
+        return render(request, "billing/bill_emit_auto_progress.html", self.get_context_data())
+
+
 @licence_required('basic', 'professional', 'enterprise')
 class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
     """
@@ -604,17 +655,27 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
 
     def post(self, request, pk):
         # Local vars
+        def success(msg):
+            return HttpResponse(
+                json.dumps({
+                    'success': True,
+                    'msg': msg
+                }))
+
         bill = self.get_object()
+        if bill.status in [SRIStatus.options.ReadyToSend, SRIStatus.options.Sent,
+                           SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
+            return success('Ya Aceptado')
         if bill.status != SRIStatus.options.NotSent:
-            return HttpResponse("<html>Bill status is not 'NotSent'</html>",
+            return HttpResponse("Bill status is not 'NotSent'",
                                 status=412, reason='Precondition Failed')
         if not bill.punto_emision:
-            return HttpResponse("<html>Bill has no 'punto_emision'</html>",
+            return HttpResponse("Bill has no 'punto_emision'",
                                 status=412, reason='Precondition Failed')
         bill.date = datetime.now(tz=pytz.timezone('America/Guayaquil'))
         bill.status = SRIStatus.options.ReadyToSend
         bill.save()
-        return HttpResponse('<html>Ok</html>')
+        return success('Aceptado')
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -625,17 +686,31 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_disabled'
 
     def post(self, request, pk):
+        def success(msg):
+            return HttpResponse(
+                json.dumps({
+                    'success': True,
+                    'msg': msg
+                }))
+        def failure(msg):
+            return HttpResponse(
+                json.dumps({
+                    'success': False,
+                    'msg': msg
+                }))
+
         bill = self.get_object()
+        if bill.status in [SRIStatus.options.Sent, SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
+            return success("Ya enviado")
         if bill.status != SRIStatus.options.ReadyToSend:
             return HttpResponse("Bill status is not 'a enviar'",
                                 status=412, reason='Precondition Failed')
 
         send_res = bill.send_to_SRI()
         if send_res:
-            return HttpResponse("Ok")
+            return success("Enviado")
         else:
-            return HttpResponse("Bill was rejected",
-                                status=412, reason='Precondition Failed')
+            return failure("Factura rechazada")
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -646,18 +721,40 @@ class BillEmitValidateView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_disabled'
 
     def post(self, request, pk):
+        def success(msg):
+            return HttpResponse(
+                json.dumps({
+                    'success': True,
+                    'msg': msg
+                }))
+        def failure(msg):
+            return HttpResponse(
+                json.dumps({
+                    'success': False,
+                    'msg': msg
+                }))
+        def not_yet(msg):
+            return HttpResponse(
+                json.dumps({
+                    'success': False,
+                    'msg': msg
+                }))
         bill = self.get_object()
+        if bill.status in [SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
+            return success("Ya Validado")
+        if bill.status in [SRIStatus.options.NotSent]:
+            return failure("Ya Rechazado")
         if bill.status != SRIStatus.options.Sent:
             return HttpResponse("Bill status is not 'sent'",
                                 status=412, reason='Precondition Failed')
 
         res = bill.validate_in_SRI()
         if res:
-            return HttpResponse("Ok")
+            return success("Aceptado")
         elif bill.status == SRIStatus.options.NotSent:
-            return HttpResponse("Bill was rejected")
+            return failure("Rechazado")
         elif bill.status == SRIStatus.options.Sent:
-            return HttpResponse("Bill has not been processed yet")
+            return HttpResponse(u"Aún no procesada", status=412, reason='Precondition Failed')
 
 
 @licence_required('basic', 'professional', 'enterprise')

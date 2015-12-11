@@ -7,7 +7,7 @@
         <th>RUC Emisor</th><td>{{ bill.company.ruc }}</td>
     </tr>
     <tr>
-        <th>Numero</th><td>{{ bill.number }}</td>
+        <th>Numero</th><td>{{ bill.get_bill_number }}</td>
     </tr>
     <tr>
         <th>Estado</th><td>{{ bill.status }} {# FIXME estado #}</td>

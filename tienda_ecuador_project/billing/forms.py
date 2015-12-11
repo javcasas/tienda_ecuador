@@ -155,3 +155,17 @@ class BillItemForm(forms.ModelForm):
         model = models.BillItem
         fields = ('sku', 'name', 'qty', 'unit_price', 'description',
                   'unit_cost', 'bill')
+
+class SendToCustomerForm(forms.Form):
+    subject = forms.CharField(
+        label="Asunto",
+        max_length=100,
+        help_text="Por favor teclee un asunto.")
+    text = forms.CharField(
+        label="Cuerpo del Email",
+        max_length=500,
+        widget=forms.Textarea(),
+        help_text="Por favor teclee una descripción.")
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        fields = ('subject', 'text',)

@@ -114,6 +114,8 @@ def get_warning(ob):
         invalid = True
     elif ob.status == SRIStatus.options.Sent:
         res.append("PENDIENTE DE AUTORIZACIÓN")
+    elif ob.status == SRIStatus.options.Accepted:
+        pass
     else:
         res.append("PROFORMA")
         invalid = True

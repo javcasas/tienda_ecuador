@@ -67,6 +67,11 @@ urlpatterns = patterns(
             queryset_filters={'status': SRIStatus.options.Annulled}
         ), name='bill_company_index.annulled'),
 
+    url(r'^bill/list/status/(?P<company_id>[0-9]+)/$',
+        views.BillCompanyListView.as_view(
+            template_name_suffix='_list_by_status',
+        ), name='bill_company_index.by_status'),
+
     url(r'^bill/list/e/(?P<establecimiento_id>[0-9]+)/$',
         views.BillEstablecimientoListView.as_view(), name='bill_establecimiento_index'),
     url(r'^bill/list/pe/(?P<punto_emision_id>[0-9]+)/$',
@@ -98,6 +103,11 @@ urlpatterns = patterns(
             template_name_suffix='_detail_payment_table'),
         name='bill_detail_payment_table'),
 
+    url(r'^bill/(?P<pk>[0-9]+)/send_to_customer/$',
+        views.BillSendToCustomerView.as_view(
+            template_name_suffix='_send_to_customer'),
+        name='bill_send_to_customer'),
+
     #######################
     # Bill emitting views
     #######################
@@ -116,6 +126,10 @@ urlpatterns = patterns(
     url(r'^bill/(?P<pk>[0-9]+)/emit/check_annulled/$',
         views.BillEmitCheckAnnulledView.as_view(),
         name='bill_emit_check_annulled'),
+
+    url(r'^bill/(?P<pk>[0-9]+)/emit/$',
+        views.BillEmitAutoProgressView.as_view(),
+        name='bill_emit_auto_progress'),
 
     url(r'^bill/emit/general_progress/$',
         views.BillEmitGeneralProgressView.as_view(), name='bill_emit_progress'),

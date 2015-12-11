@@ -1,6 +1,7 @@
 # * encoding: utf-8 *
 from datetime import date, timedelta
 from decimal import Decimal
+import xml.etree.ElementTree as ET
 
 from django.db import models
 from django.core.urlresolvers import reverse
@@ -80,7 +81,7 @@ class Bill(ComprobanteSRIMixin, models.Model):
     secuencial = models.IntegerField(default=0, blank=True)
 
     def __unicode__(self):
-        return u"{} - {}".format(self.number, self.date)
+        return u"{} - {}".format(self.get_bill_number(), self.date.date())
 
     @property
     def items(self):
@@ -113,6 +114,11 @@ class Bill(ComprobanteSRIMixin, models.Model):
     @property
     def total_con_impuestos(self):
         return sum([(i.total_sin_impuestos + i.valor_ice + i.valor_iva)
+                    for i in self.items])
+
+    @property
+    def total_sin_iva(self):
+        return sum([(i.total_sin_impuestos + i.valor_ice)
                     for i in self.items])
 
     @property
@@ -161,8 +167,12 @@ class Bill(ComprobanteSRIMixin, models.Model):
         return Pago.objects.filter(bill=self)
 
     def get_absolute_url(self):
-        return reverse('bill_detail',
-                       kwargs={'pk': self.pk})
+        if self.status == SRIStatus.options.NotSent:
+            return reverse('bill_detail',
+                           kwargs={'pk': self.pk})
+        else:
+            return reverse('emitted_bill_detail',
+                           kwargs={'pk': self.pk})
 
     def get_progress_url(self):
         if self.status == SRIStatus.options.ReadyToSend:
@@ -222,6 +232,22 @@ class Bill(ComprobanteSRIMixin, models.Model):
             if not self.payment:
                 raise ValidationError("No hay forma de pago")
         return super(Bill, self).save(**kwargs)
+
+    def gen_pdf(self):
+        from public_receipts import gen_ride
+        return gen_ride.gen_bill_ride(self)
+
+    def get_bill_number_from_xml(self):
+        tree = ET.fromstring(self.xml_content.encode('utf8'))
+        return u"{}-{}-{}".format(tree.find("./infoTributaria/estab").text,
+                                  tree.find("./infoTributaria/ptoEmi").text,
+                                  tree.find("./infoTributaria/secuencial").text)
+
+    def get_bill_number(self):
+        if self.status in [SRIStatus.options.NotSent, SRIStatus.options.ReadyToSend]:
+            return self.number
+        else:
+            return self.get_bill_number_from_xml()
 
     def gen_xml(self, codigo=None):
         """

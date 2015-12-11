@@ -168,14 +168,25 @@
         <h2 class='panel-title'>Acciones</h2>
     </div>
     <div class='panel-body'>
-      {% if company.can_sign %}
-      <a href="{% url "bill_emit_accept" bill.id %}"
-         class='btn btn-primary col-xs-12'>Emitir Factura</a>
+      {% if not company.can_sign %}
+          <p>No hay certificado de firma. No es posible emitir facturas hasta que no se suba un certificado de firma</p>
+          <a href="{% url "company_accounts:company_upload_cert" company.id %}"
+             class='btn btn-warning col-xs-12'>Subir Certificado de Firma</a>
+      {% elif not bill.issued_to %}
+          <p>No hay cliente seleccionado.</p>
+          <a href="{% url "bill_update" bill.id %}"
+             class='btn btn-warning col-xs-12'>Seleccionar Cliente</a>
+      {% elif not bill.payment %}
+          <p>No hay términos de pago.</p>
+          <a href="{% url "bill_payment_details" bill.id %}"
+             class='btn btn-warning col-xs-12'>Seleccionar Condiciones de Pago</a>
       {% else %}
-      <p>No hay certificado de firma. No es posible emitir facturas hasta que no se suba un certificado de firma</p>
-      <a href="{% url "company_accounts:company_upload_cert" company.id %}"
-         class='btn btn-warning col-xs-12'>Subir Certificado de Firma</a>
+          <a href="{% url "bill_emit_accept" bill.id %}"
+             class='btn btn-primary col-xs-12'>Emitir Factura</a>
       {% endif %}
+
+      <a href="{% url "bill_send_to_customer" bill.id %}"
+         class='btn btn-default col-xs-12 spacer'>Enviar Proforma al Cliente</a>
         
       <a href="{% url "bill_delete" bill.id %}"
          class='btn btn-danger col-xs-12 spacer'>Eliminar Factura</a>

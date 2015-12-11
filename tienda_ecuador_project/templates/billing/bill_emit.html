@@ -84,7 +84,7 @@
             </tbody>
         </table>
 
-        <form action='{% url 'bill_emit_accept' bill.id %}' method='post' class='form spaced-bottom'>
+        <form action='.' method='post' class='form spaced-bottom'>
             {% csrf_token %}
             {% buttons %}
                 <button type='submit' class='btn btn-primary col-xs-6'>Emitir Factura</button>

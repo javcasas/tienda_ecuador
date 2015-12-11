@@ -1,0 +1,27 @@
+{% extends 'billing/l2_bill_selected.html' %}
+{% load bootstrap3 %}
+{% load decimal_format %}
+
+{% block title %}Ver Factura {{ bill }} - {{ block.super }}{% endblock %}
+
+{% block left_menu %}
+    <li><a href="{% url 'bill_create' punto_emision.id %}">Nueva Factura</a></li>
+    <li><a href="{% url 'bill_delete' bill.id %}" class='btn-danger' >Eliminar Factura</a></li>
+{% endblock %}
+
+{% block body %}
+
+<style>
+.spacer {
+    margin-top: 15px;
+}
+</style>
+
+{{ block.super }}
+
+<div class='col-xs-12'>
+    <h1>Proforma enviada al Cliente</h1>
+    <a href='{% url 'bill_detail' bill.id %}' class='btn btn-primary btn-block'>Volver</a>
+</div>
+
+{% endblock %}

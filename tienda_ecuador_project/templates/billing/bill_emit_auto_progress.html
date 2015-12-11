@@ -1,0 +1,90 @@
+{% extends 'billing/l2_bill_selected.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Ver Factura {{ bill }} - {{ block.super }}{% endblock %}
+
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h2>Emitiendo Factura</h2>
+        <table class='table table-hover' id='status-table'>
+            <tr><th>Confirmar Factura</th><td id='accept-td'></td></tr>
+            <tr><th>Enviar factura al SRI</th><td id='send-td'></td></tr>
+            <tr><th>Validar factura en SRI</th><td id='validate-td'></td></tr>
+        </table>
+    </div>
+<script>
+$(document).ready(function () {
+
+    function get_base_dict_for_post() {
+        var token_data = $("{% csrf_token %}");
+        var res = {};
+        res[token_data.attr("name")] = token_data.attr('value');
+        return res
+    }
+
+    var accept_url = '{% url "bill_emit_accept" bill.id %}',
+        send_to_sri_url = '{% url "bill_emit_send_to_sri" bill.id %}',
+        validate_url = '{% url "bill_emit_validate" bill.id %}',
+        success_url = '{% url "emitted_bill_detail" bill.id %}',
+        failure_url = '{% url "bill_detail" bill.id %}',
+        timeout_id;
+
+    timeout_id = window.setTimeout(accept_fn, 1000);
+
+    function noop() {}
+    function accept_fn() {
+        $('#accept-td').append('<span class="glyphicon glyphicon-refresh spinning"></span>')
+        $.post(accept_url, get_base_dict_for_post(), noop, 'json')
+         .done(function (data) {
+            if(data.success == true) {
+                $('#accept-td').text(data.msg);
+                $('#accept-td').append(' <span class="glyphicon glyphicon-ok text-green"></span>');
+                timeout_id = window.setTimeout(send_to_sri_fn, 100);
+            } else {
+                $('#accept-td').text(data.msg);
+                $('#accept-td').append(' <span class="glyphicon glyphicon-delete text-red"></span>');
+                document.location = failure_url;
+            }
+         });
+    }
+
+    function send_to_sri_fn() {
+        $('#send-td').append('<span class="glyphicon glyphicon-refresh spinning"></span>')
+        $.post(send_to_sri_url, get_base_dict_for_post(), noop, 'json')
+         .done(function (data) {
+            if(data.success == true) {
+                $('#send-td').text(data.msg);
+                $('#send-td').append(' <span class="glyphicon glyphicon-ok text-green"></span>');
+                timeout_id = window.setTimeout(validate_fn, 100);
+            } else {
+                $('#send-td').text(data.msg);
+                $('#send-td').append(' <span class="glyphicon glyphicon-remove text-red"></span>');
+                document.location = failure_url;
+            }
+         });
+    }
+
+    function validate_fn() {
+        $('#validate-td').append('<span class="glyphicon glyphicon-refresh spinning"></span>')
+        $.post(validate_url, get_base_dict_for_post(), noop, 'json')
+         .done(function (data) {
+            if(data.success == true) {
+                $('#validate-td').text(data.msg);
+                $('#validate-td').append(' <span class="glyphicon glyphicon-ok text-green"></span>');
+                document.location = success_url;
+            } else {
+                $('#validate-td').text(data.msg);
+                $('#validate-td').append(' <span class="glyphicon glyphicon-remove text-red"></span>');
+                document.location = failure_url;
+            }
+         }).fail(function (data) {
+                timeout_id = window.setTimeout(validate_fn, 1000);
+         });
+    }
+
+});
+</script>
+
+{% endblock %}

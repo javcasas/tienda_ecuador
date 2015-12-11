@@ -18,6 +18,8 @@ from accounts_receivable.models import Payment
 
 from templatetags.date_management import month_name
 
+from util.sri_models import SRIStatus
+
 tz = pytz.timezone('America/Guayaquil')
 
 
@@ -240,6 +242,7 @@ class BillDateListReport(DateListReport):
             start_date, end_date = self.get_date_range()
         res = (self.model.objects
                .filter(company=self.company)
+               .filter(status=SRIStatus.options.Accepted)
                .filter(ambiente_sri=self.ambiente_sri)
                .filter(date__gte=start_date)
                .filter(date__lte=end_date))
