@@ -14,7 +14,7 @@ import models
 import forms
 from licence_helpers import LicenceControlMixin, valid_licence, licence_required
 from util import signature
-from util.sri_models import AmbienteSRI
+from sri.models import AmbienteSRI
 
 
 tz = pytz.timezone('America/Guayaquil')

@@ -43,23 +43,31 @@ base_data = {
     },
 }
 
+def make_base_instances():
+    company = add_instance(models.Company, **base_data['Company'])
+
+    establecimiento = add_instance(models.Establecimiento,
+                                   company=company,
+                                   **base_data['Establecimiento'])
+
+    punto_emision = add_instance(models.PuntoEmision,
+                                 establecimiento=establecimiento,
+                                 **base_data['PuntoEmision'])
+
+    user = add_User(username="Paco", password='')
+    company_user = add_instance(models.CompanyUser,
+                                company=company,
+                                user=user)
+
+    return locals()
+
 
 class FieldsTests(TestCase, TestHelpersMixin):
     """
     Tests that check if a given model has all the required fields
     """
     def setUp(self):
-        self.company = add_instance(models.Company, **base_data['Company'])
-
-        self.establecimiento = add_instance(models.Establecimiento,
-                                            company=self.company,
-                                            **base_data['Establecimiento'])
-
-        self.punto_emision = add_instance(models.PuntoEmision,
-                                          establecimiento=self.establecimiento,
-                                          **base_data['PuntoEmision'])
-
-        self.user = add_User(username="Paco", password='')
+        self.__dict__.update(make_base_instances())
 
         self.tests = [
             (models.Company, base_data['Company'],
@@ -105,11 +113,7 @@ class UnicodeTests(TestCase, TestHelpersMixin):
 
 class CompanyUserTests(TestCase, TestHelpersMixin):
     def setUp(self):
-        self.company = add_instance(models.Company, **base_data['Company'])
-        self.user = add_User(username="Paco", password='')
-        self.company_user = add_instance(models.CompanyUser,
-                                         company=self.company,
-                                         user=self.user)
+        self.__dict__.update(make_base_instances())
 
     def test_unicode(self):
         self.assertEquals(str(self.company_user),
@@ -118,8 +122,7 @@ class CompanyUserTests(TestCase, TestHelpersMixin):
 
 class LicenceTests(TestCase, TestHelpersMixin):
     def setUp(self):
-        self.company = add_instance(
-            models.Company, **base_data['Company'])
+        self.__dict__.update(make_base_instances())
 
     def test_initial_licence(self):
         licence = self.company.licence

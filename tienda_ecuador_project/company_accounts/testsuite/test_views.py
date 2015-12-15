@@ -31,7 +31,7 @@ class NotLoggedInTests(TestCase):
     Ensure no useful information can be get without logging in
     """
     def test_index(self):
-        response = self.client.get(reverse('billing_index'))
+        response = self.client.get(reverse('company_accounts:company_select'))
         self.assertEqual(response.status_code, 302)
 
     def test_company_index(self):

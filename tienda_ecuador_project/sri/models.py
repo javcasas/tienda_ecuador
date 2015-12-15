@@ -2,28 +2,46 @@
 from datetime import datetime, timedelta
 import json
 import pytz
+from decimal import Decimal
 
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from util import sri_sender
+from util.enum import Enum
 
 
-class SRIStatus(object):
-    class options(object):
-        NotSent = 'NotSent'
-        ReadyToSend = 'ReadyToSend'
-        Sent = 'Sent'
-        Accepted = 'Accepted'
-        Annulled = 'Annulled'
+class Tax(models.Model):
+    descripcion = models.CharField(max_length=100)
+    codigo = models.CharField(max_length=10)
+    porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
+    valor_fijo = models.DecimalField(
+        decimal_places=2, max_digits=6, default=Decimal('0.00'))
 
-    @classmethod
-    def pretty_print(cls, ob):
-        return dict(SRIStatus.__OPTIONS__)[ob]
 
-    __OPTIONS__ = (
-        # Invalido o no enviado
+class Iva(Tax):
+    """
+    Representa el IVA
+    """
+    def __unicode__(self):
+        return u"{:.0f}% - {}".format(self.porcentaje, self.descripcion)
+
+
+class Ice(Tax):
+    """
+    Representa el ICE
+    """
+    def __nonzero__(self):
+        return self.descripcion != "No ICE"
+
+    def __unicode__(self):
+        return u"{:.0f}% - {}".format(self.porcentaje, self.descripcion)
+
+
+SRIStatus = Enum(
+    "SRIStatus",
+    (   # Invalido o no enviado
         ('NotSent', 'No enviado al SRI'),
 
         # Tiene fecha y punto de emision
@@ -36,21 +54,16 @@ class SRIStatus(object):
         # Estaba aceptado por el SRI y fue anulado
         ('Annulled', 'Anulado'),
     )
+)
 
 
-class AmbienteSRI(object):
-    class options(object):
-        pruebas = 'pruebas'
-        produccion = 'produccion'
-
-    @classmethod
-    def pretty_print(cls, ob):
-        return dict(cls.__OPTIONS__)[ob]
-
-    __OPTIONS__ = (
+AmbienteSRI = Enum(
+    "AmbienteSRI",
+    (
         ('pruebas', 'Pruebas'),
         ('produccion', 'Producción')
     )
+)
 
 
 class ComprobanteSRIMixin(models.Model):
