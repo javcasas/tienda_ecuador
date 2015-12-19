@@ -26,7 +26,7 @@ from company_accounts.licence_helpers import licence_required
 
 from util import signature
 from util import sri_sender
-from util.sri_models import SRIStatus
+from sri.models import SRIStatus
 from util import mail
 import accounts_receivable.models
 
@@ -175,10 +175,10 @@ class CompanyIndex(CompanySelected, View):
         company = self.company
         context = {}
         context.update({
-            'item_list':
-                models.Item.objects
-                           .filter(company=company)
-                           .order_by('sku')[:5],
+            'item_list': [],
+            #    models.Item.objects
+            #               .filter(company=company)
+            #               .order_by('sku')[:5],
             'bill_list':
                 models.Bill.objects
                            .filter(company=company)
@@ -207,7 +207,7 @@ class ItemView(object):
     """
     Base class for an Item View
     """
-    model = models.Item
+    #model = models.Item
     context_object_name = 'item'
 
     def get_queryset(self):
@@ -241,7 +241,7 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
     Create view for items
     """
     template_name_suffix = '_create_form'
-    form_class = forms.ItemForm
+    #form_class = forms.ItemForm
 
     def get_form(self, *args):
         res = super(ItemCreateView, self).get_form(*args)
@@ -258,7 +258,7 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
 
 
 class ItemUpdateView(ItemView, CompanySelected, UpdateView):
-    form_class = forms.ItemForm
+    #form_class = forms.ItemForm
 
     def get_form(self, *args, **kwargs):
         form = super(ItemUpdateView, self).get_form(*args, **kwargs)

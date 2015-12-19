@@ -1,10 +1,7 @@
-from datetime import datetime, date, timedelta
 from itertools import count
 from decimal import Decimal
-import pytz
 
 from django.test import TestCase
-from django.core.exceptions import ValidationError
 
 from util.testsuite.helpers import add_instance
 
@@ -13,8 +10,10 @@ import sri.models as models
 current_ruc = count(10)
 get_ruc = lambda: str(current_ruc.next())
 
+
 class MakeBaseInstances(object):
     def setUp(self):
+        super(MakeBaseInstances, self).setUp()
         self.iva = add_instance(
             models.Iva,
             descripcion="12%",
@@ -40,6 +39,7 @@ class TaxTests(TestCase):
         n = models.Tax.objects.get(**data)
         for k, v in data.iteritems():
             self.assertEquals(getattr(n, k), v)
+
 
 class IceTests(TestCase):
     def test_nonzero(self):

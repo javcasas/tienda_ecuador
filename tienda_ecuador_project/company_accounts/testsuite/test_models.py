@@ -8,9 +8,9 @@ from django.core.exceptions import ValidationError
 from sri.testsuite.test_models import MakeBaseInstances
 from company_accounts import models
 
-from helpers import (add_instance,
-                     add_User,
-                     TestHelpersMixin)
+from util.testsuite.helpers import (add_instance,
+                                    add_User,
+                                    TestHelpersMixin)
 
 
 current_ruc = count(10)
@@ -44,6 +44,7 @@ base_data = {
     },
 }
 
+
 class MakeBaseInstances(MakeBaseInstances):
     def setUp(self):
         super(MakeBaseInstances, self).setUp()
@@ -57,7 +58,7 @@ class MakeBaseInstances(MakeBaseInstances):
                                           establecimiento=self.establecimiento,
                                           **base_data['PuntoEmision'])
 
-        self.user = add_User(username="Paco", password='')
+        self.user = add_User(username="paco", password='paco_pw')
         self.company_user = add_instance(models.CompanyUser,
                                          company=self.company,
                                          user=self.user)

@@ -18,7 +18,7 @@ from accounts_receivable.models import Payment
 
 from templatetags.date_management import month_name
 
-from util.sri_models import SRIStatus
+from sri.models import SRIStatus
 
 tz = pytz.timezone('America/Guayaquil')
 

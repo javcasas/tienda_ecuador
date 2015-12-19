@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 from billing import views
-from util.sri_models import SRIStatus, AmbienteSRI
+from sri.models import SRIStatus, AmbienteSRI
 
 urlpatterns = patterns(
     '',

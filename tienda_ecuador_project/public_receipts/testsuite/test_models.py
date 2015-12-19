@@ -9,7 +9,7 @@ from util.testsuite.helpers import add_instance
 import billing.models
 import billing.testsuite.test_models
 
-from util.sri_models import AmbienteSRI
+from sri.models import AmbienteSRI
 
 
 current_ruc = count(10)

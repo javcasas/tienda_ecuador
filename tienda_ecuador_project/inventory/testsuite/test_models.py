@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 from inventory import models
 
-from company_accounts.testsuite.test_models import make_base_instances as company_accounts_make_base_instances
+from company_accounts.testsuite.test_models import MakeBaseInstances
 
 from util.testsuite.helpers import (add_instance,
                                     TestHelpersMixin)
@@ -27,9 +27,9 @@ base_data = {
 }
 
 
-class MakeBaseInstances(object):
+class MakeBaseInstances(MakeBaseInstances):
     def setUp(self):
-        self.__dict__.update(company_accounts_make_base_instances())
+        super(MakeBaseInstances, self).setUp()
         self.item = add_instance(
             models.Item,
             name="Test Item",
@@ -38,6 +38,7 @@ class MakeBaseInstances(object):
             tipo='producto',
             decimales_qty=0,
             company=self.company)
+        self.item.tax_items.add(self.iva, self.ice)
         self.batch = add_instance(
             models.Batch,
             item=self.item,

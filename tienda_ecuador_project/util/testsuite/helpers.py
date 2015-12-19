@@ -1,13 +1,9 @@
-from functools import partial
 from contextlib import contextmanager
 import urllib
 import xml.etree.ElementTree as ET
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-
-from billing import models
-import company_accounts.models
 
 
 def add_instance(klass, **kwargs):
@@ -74,7 +70,8 @@ class TestHelpersMixin(object):
             self.fail("New item of type {} was not created".format(kind))
         res.ob = new_items.pop()
 
-    def simulate_post(self, url, data_to_post, client=None, form_index=0, **client_kwargs):
+    def simulate_post(self, url, data_to_post, client=None,
+                      form_index=0, **client_kwargs):
         """
         Simulates a post
             Only commits data that is not in hidden fields

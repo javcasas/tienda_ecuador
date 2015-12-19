@@ -12,8 +12,9 @@ from util.property import Property, ConvertedProperty, ProtectedSetattr
 from util.validators import IsCedula, IsRuc
 from util import signature
 
-from company_accounts.models import Company, PuntoEmision
-from util.sri_models import ComprobanteSRIMixin, SRIStatus
+from company_accounts.models import Company, Establecimiento, PuntoEmision
+from inventory.models import SKU
+from sri.models import ComprobanteSRIMixin, SRIStatus
 
 
 class ReadOnlyObject(Exception):
@@ -399,121 +400,15 @@ class ClaveAcceso(ProtectedSetattr):
         return res
 
 
-##########################
-# Taxes
-##########################
-class Tax(models.Model):
-    descripcion = models.CharField(max_length=100)
-    codigo = models.CharField(max_length=10)
-    porcentaje = models.DecimalField(decimal_places=2, max_digits=6)
-    valor_fijo = models.DecimalField(
-        decimal_places=2, max_digits=6, default=Decimal('0.00'))
-
-
-class Iva(Tax):
-    """
-    Representa el IVA
-    """
-    def __unicode__(self):
-        return u"{:.0f}% - {}".format(self.porcentaje, self.descripcion)
-
-
-class Ice(Tax):
-    """
-    Representa el ICE
-    """
-    def __nonzero__(self):
-        return self.descripcion != "No ICE"
-
-    def __unicode__(self):
-        return u"{:.0f}% - {}".format(self.porcentaje, self.descripcion)
-
-
 ###########################
 # Items
 ##########################
-Item_tipo_OPTIONS = (
-    ('producto', 'Producto'),
-    ('servicio', 'Servicio'),
-)
-
-Item_decimales_OPTIONS = (
-    (0, 'Unidades Enteras'),
-    (1, '1 Decimal'),
-    (2, '2 Decimales'),
-    (3, '3 Decimales'),
-)
-
-
-class BaseItem(models.Model):
-    """
-    Represents an abstract stock item
-    """
-    sku = models.CharField(max_length=50)
-    name = models.CharField(max_length=50)
-    description = models.CharField(max_length=500, blank=True)
-    unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
-    unit_price = models.DecimalField(max_digits=20, decimal_places=8)
-    tax_items = models.ManyToManyField(Tax)
-    tipo = models.CharField(
-        max_length=10,
-        choices=Item_tipo_OPTIONS)
-    decimales_qty = models.IntegerField(
-        max_length=1,
-        choices=Item_decimales_OPTIONS,
-        default=0)
-
-    @property
-    def taxes(self):
-        """
-        Returns the properly typed tax items
-        """
-        def typecast(v):
-            for t in [Iva, Ice]:
-                try:
-                    return t.objects.get(id=v.id)
-                except t.DoesNotExist:
-                    pass
-        return map(typecast, self.tax_items.all())
-
-    @property
-    def ice(self):
-        for i in self.taxes:
-            if type(i) == Ice:
-                return i
-
-    @property
-    def iva(self):
-        for i in self.taxes:
-            if type(i) == Iva:
-                return i
-        else:
-            raise Exception("Error: No IVA")
-
-    @property
-    def increment_qty(self):
-        return "{}".format(1 / (Decimal("10") ** self.decimales_qty))
-
-
-class Item(BaseItem):
-    """
-    Represents an item that can be sold or bought
-    """
-    company = models.ForeignKey(Company)
-
-    def get_absolute_url(self):
-        return reverse('item_detail',
-                       kwargs={'pk': self.pk})
-
-    def __unicode__(self):
-        return u"{} - {}".format(self.sku, self.name)
-
-
-class BillItem(BaseItem):
+class BillItem(models.Model):
     """
     Base class for items that are part of a bill
     """
     qty = models.DecimalField(max_digits=20, decimal_places=8)
+    sku = models.ForeignKey(SKU)
     descuento = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     bill = models.ForeignKey(Bill)
 
@@ -528,6 +423,18 @@ class BillItem(BaseItem):
             super(BillItem, self).delete(**kwargs)
         else:
             raise ValidationError("No se puede modificar la factura")
+
+    @property
+    def unit_price(self):
+        return self.sku.unit_price
+
+    @property
+    def iva(self):
+        return self.sku.batch.item.iva
+
+    @property
+    def ice(self):
+        return self.sku.batch.item.ice
 
     @property
     def total_sin_impuestos(self):
@@ -557,6 +464,10 @@ class BillItem(BaseItem):
     @property
     def total_impuestos(self):
         return self.valor_ice + self.valor_iva
+
+    @property
+    def increment_qty(self):
+        return self.sku.batch.item.increment_qty
 
 
 ############################################

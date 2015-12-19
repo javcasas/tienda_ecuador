@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from django import forms
+from inventory.models import Item_tipo_OPTIONS, Item_decimales_OPTIONS
+import sri.models as sri
 from billing import models
 
 
-class ItemForm(forms.ModelForm):
+"""class ItemForm(forms.ModelForm):
     sku = forms.CharField(
         max_length=50,
         label='Código de stock (SKU)',
@@ -14,11 +16,11 @@ class ItemForm(forms.ModelForm):
         help_text="Por favor teclee el nombre del artículo.")
     tipo = forms.ChoiceField(
         label='Tipo',
-        choices=models.Item_tipo_OPTIONS,
+        choices=Item_tipo_OPTIONS,
         help_text="Por favor seleccione el tipo del artículo.")
     decimales_qty = forms.ChoiceField(
         label='Decimales en cantidad',
-        choices=models.Item_decimales_OPTIONS)
+        choices=Item_decimales_OPTIONS)
     description = forms.CharField(
         label="Descripción",
         max_length=500,
@@ -34,11 +36,11 @@ class ItemForm(forms.ModelForm):
         help_text='Por favor introduzca el precio por unidad.')
     iva = forms.ModelChoiceField(
         label='IVA',
-        queryset=models.Iva.objects,
+        queryset=sri.Iva.objects,
         help_text='Por favor, seleccione el IVA del producto')
     ice = forms.ModelChoiceField(
         label='ICE',
-        queryset=models.Ice.objects,
+        queryset=sri.Ice.objects,
         required=False,
         empty_label='Sin ICE',
         help_text='Por favor, seleccione el ICE del producto')
@@ -49,7 +51,7 @@ class ItemForm(forms.ModelForm):
         model = models.Item
         fields = ('sku', 'name', 'tipo', 'unit_price', 'unit_cost',
                   'description', 'decimales_qty')
-
+"""
 
 class BillForm(forms.ModelForm):
     issued_to = forms.ModelChoiceField(

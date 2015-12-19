@@ -38,6 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'company_accounts',
+    'sri',
+    'inventory',
     'billing',
     'accounts_receivable',
     'registration',

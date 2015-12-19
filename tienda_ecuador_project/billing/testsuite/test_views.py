@@ -11,12 +11,12 @@ from billing import models
 import company_accounts.models
 import accounts_receivable.models
 
-from helpers import (add_User,
-                     TestHelpersMixin,
-                     add_instance,
-                     make_post)
+from util.testsuite.helpers import (add_User,
+                                    TestHelpersMixin,
+                                    add_instance,
+                                    make_post)
 
-from util.sri_models import SRIStatus, AmbienteSRI
+from sri.models import SRIStatus, AmbienteSRI
 from util.testsuite.test_sri_sender_mock import (
     MockAutorizarComprobante,
     MockEnviarComprobante,
@@ -25,6 +25,8 @@ from util.testsuite.test_sri_sender_mock import (
     gen_respuesta_solicitud_invalid_xml,
     gen_respuesta_autorizacion_comprobante_valido,
     gen_respuesta_autorizacion_no_hay_comprobantes)
+
+from test_models import MakeBaseInstances
 
 
 def get_date():
@@ -141,7 +143,7 @@ class LoggedInTests(TestCase, TestHelpersMixin):
         return client.post(url, data_to_use)
 
     def assert_no_broken_urls(self):
-        for model in [models.Item, models.Customer, models.Bill]:
+        for model in [models.Customer, models.Bill]:
             obs = model.objects.all()
             for ob in obs:
                 r = self.c.get(ob.get_absolute_url())
@@ -515,83 +517,83 @@ class LoggedInWithCustomerTests(LoggedInWithCompanyTests,
         self.index_keys = ['razon_social', 'identificacion']
 
 
-class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
-    """
-    Logged in user that is associated with a company
-    Has company and items
-    """
-    entity = 'item'
-    cls = models.Item
-    data = {'sku': 'P1234',
-            'name': 'Item 1',
-            'unit_cost': 5,
-            'unit_price': 6.5,
-            'tipo': 'producto',
-            'description': 'Item 1 description',
-            'decimales_qty': 0}
-    newdata = {'sku': 'P12345',
-               'name': 'Item 2',
-               'unit_cost': 3,
-               'unit_price': 6,
-               'tipo': 'servicio',
-               'description': 'Item 2 description',
-               'decimales_qty': 1}
+# class LoggedInWithItemTests(LoggedInWithCompanyTests, GenericObjectCRUDTest):
+#     """
+#     Logged in user that is associated with a company
+#     Has company and items
+#     """
+#     entity = 'item'
+#     cls = models.Item
+#     data = {'sku': 'P1234',
+#             'name': 'Item 1',
+#             'unit_cost': 5,
+#             'unit_price': 6.5,
+#             'tipo': 'producto',
+#             'description': 'Item 1 description',
+#             'decimales_qty': 0}
+#     newdata = {'sku': 'P12345',
+#                'name': 'Item 2',
+#                'unit_cost': 3,
+#                'unit_price': 6,
+#                'tipo': 'servicio',
+#                'description': 'Item 2 description',
+#                'decimales_qty': 1}
+# 
+#     def setUp(self):
+#         super(LoggedInWithItemTests, self).setUp()
+#         self.iva = add_instance(
+#             models.Iva,
+#             descripcion="12%", codigo='12', porcentaje=12.0)
+#         self.ice = add_instance(models.Ice,
+#                                 descripcion="Bebidas gaseosas",
+#                                 codigo='3051', porcentaje=50.0)
+#         self.make_object()
+#         self.ob.tax_items.add(self.iva, self.ice)
+#         self.index_keys = ['sku', 'name']
+#         self.fields_in_view = ['sku', 'name', 'unit_price', 'description']
+# 
+#     def test_create(self):
+#         self.iva2 = add_instance(models.Iva,
+#                                  descripcion="0%", codigo='2', porcentaje=0.0)
+#         self.ice2 = add_instance(models.Ice,
+#                                  descripcion="Otro",
+#                                  codigo='3052', porcentaje=150.0)
+#         with self.new_item(self.cls) as new:
+#             r = self.simulate_post(
+#                 reverse(self.create_view, args=self.reverse_index_args),
+#                 dict(self.data, iva=self.iva2.id, ice=self.ice2.id),
+#             )
+#         self.assertRedirects(
+#             r, reverse(self.detail_view,
+#                        args=(new.id,)))
+#         self.assertObjectMatchesData(new, self.data)
+# 
+#     def test_update(self):
+#         """
+#         Tests updating an object with self.newdata
+#         The test passes if:
+#             The object has the new data
+#             The client is redirected to the object view
+#         """
+#         self.iva2 = add_instance(models.Iva,
+#                                  descripcion="0%", codigo='2', porcentaje=0.0)
+#         self.ice2 = add_instance(models.Ice,
+#                                  descripcion="Otro",
+#                                  codigo='3052', porcentaje=150.0)
+#         r = self.simulate_post(
+#             reverse(self.update_view, args=self.reverse_object_args),
+#             dict(self.newdata, iva=self.iva2.id, ice=self.ice2.id),
+#         )
+#         self.assertRedirects(
+#             r, reverse(self.detail_view, args=self.reverse_object_args))
+#         self.assertObjectMatchesData(
+#             self.cls.objects.get(id=self.ob.id), self.newdata)
+#         ob = self.cls.objects.get(id=self.ob.id)
+#         self.assertEquals(ob.iva, self.iva2)
+#         self.assertEquals(ob.ice, self.ice2)
 
-    def setUp(self):
-        super(LoggedInWithItemTests, self).setUp()
-        self.iva = add_instance(
-            models.Iva,
-            descripcion="12%", codigo='12', porcentaje=12.0)
-        self.ice = add_instance(models.Ice,
-                                descripcion="Bebidas gaseosas",
-                                codigo='3051', porcentaje=50.0)
-        self.make_object()
-        self.ob.tax_items.add(self.iva, self.ice)
-        self.index_keys = ['sku', 'name']
-        self.fields_in_view = ['sku', 'name', 'unit_price', 'description']
 
-    def test_create(self):
-        self.iva2 = add_instance(models.Iva,
-                                 descripcion="0%", codigo='2', porcentaje=0.0)
-        self.ice2 = add_instance(models.Ice,
-                                 descripcion="Otro",
-                                 codigo='3052', porcentaje=150.0)
-        with self.new_item(self.cls) as new:
-            r = self.simulate_post(
-                reverse(self.create_view, args=self.reverse_index_args),
-                dict(self.data, iva=self.iva2.id, ice=self.ice2.id),
-            )
-        self.assertRedirects(
-            r, reverse(self.detail_view,
-                       args=(new.id,)))
-        self.assertObjectMatchesData(new, self.data)
-
-    def test_update(self):
-        """
-        Tests updating an object with self.newdata
-        The test passes if:
-            The object has the new data
-            The client is redirected to the object view
-        """
-        self.iva2 = add_instance(models.Iva,
-                                 descripcion="0%", codigo='2', porcentaje=0.0)
-        self.ice2 = add_instance(models.Ice,
-                                 descripcion="Otro",
-                                 codigo='3052', porcentaje=150.0)
-        r = self.simulate_post(
-            reverse(self.update_view, args=self.reverse_object_args),
-            dict(self.newdata, iva=self.iva2.id, ice=self.ice2.id),
-        )
-        self.assertRedirects(
-            r, reverse(self.detail_view, args=self.reverse_object_args))
-        self.assertObjectMatchesData(
-            self.cls.objects.get(id=self.ob.id), self.newdata)
-        ob = self.cls.objects.get(id=self.ob.id)
-        self.assertEquals(ob.iva, self.iva2)
-        self.assertEquals(ob.ice, self.ice2)
-
-
-class BillTests(LoggedInWithCompanyTests):
+class BillTests(MakeBaseInstances, LoggedInWithCompanyTests):
     """
     Logged in user that is associated with a company
     Has company and items
@@ -600,7 +602,7 @@ class BillTests(LoggedInWithCompanyTests):
     cls = models.Bill
 
     def setUp(self):
-        super(self.__class__, self).setUp()
+        super(BillTests, self).setUp()
         self.customer_data = {
             'razon_social': 'Pepe',
             "tipo_identificacion": "cedula",
@@ -615,53 +617,10 @@ class BillTests(LoggedInWithCompanyTests):
             "email": "a@d.com",
             "direccion": "pupu street",
         }
-        self.customer = add_instance(
-            models.Customer,
-            company=self.company,
-            **self.customer_data)
         self.new_customer = add_instance(
             models.Customer,
             company=self.company,
             **self.new_customer_data)
-        self.establecimiento = add_instance(
-            company_accounts.models.Establecimiento,
-            company=self.company,
-            codigo='001')
-        self.punto_emision = add_instance(
-            company_accounts.models.PuntoEmision,
-            establecimiento=self.establecimiento,
-            codigo='001')
-
-        self.bill = add_instance(
-            models.Bill,
-            issued_to=self.customer,
-            punto_emision=self.punto_emision,
-            date=get_date(),
-            company=self.company)
-
-        iva = add_instance(models.Iva,
-                           descripcion="12%", codigo="2", porcentaje=12.0)
-        ice = add_instance(models.Ice,
-                           descripcion="Bebidas gaseosas",
-                           codigo=1000, porcentaje=50)
-        self.items = []
-        for i in range(5):
-            ob = add_instance(
-                models.BillItem,
-                sku="SKU00{}".format(i),
-                name='Item {}'.format(i),
-                description='Description of item {}'.format(i),
-                qty=3 + i,
-                unit_cost=5,
-                unit_price=12,
-                bill=self.bill)
-            ob.tax_items.add(iva, ice)
-            self.items.append(ob)
-
-        self.forma_pago = add_instance(
-            models.FormaPago,
-            codigo='01',
-            descripcion='efectivo')
 
         self.plazo_pago_inmediato = add_instance(
             models.PlazoPago,

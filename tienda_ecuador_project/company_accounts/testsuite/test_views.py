@@ -2,7 +2,6 @@
 from datetime import datetime, date, timedelta
 import pytz
 import json
-import xml.etree.ElementTree as ET
 
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
@@ -10,10 +9,12 @@ from django.http.response import HttpResponseRedirect
 
 from company_accounts import models, views
 
-from helpers import (TestHelpersMixin,
-                     add_instance,
-                     add_User,
-                     make_post)
+from util.testsuite.helpers import (TestHelpersMixin,
+                                    add_instance,
+                                    add_User,
+                                    make_post)
+
+from test_models import MakeBaseInstances
 
 
 def get_date():
@@ -26,7 +27,7 @@ def fix_keys(keys):
     return [k for k in keys if k not in bad_keys]
 
 
-class NotLoggedInTests(TestCase):
+class NotLoggedInTests(object):
     """
     Ensure no useful information can be get without logging in
     """
@@ -41,108 +42,141 @@ class NotLoggedInTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
-class LoggedInTests(TestCase, TestHelpersMixin):
+class LoggedInTests(object):
     """
     Tests that support a logged-in user
     """
     def setUp(self):
-        username, password = 'paco', 'paco_pw'
-        self.user = add_User(username=username, password=password)
+        super(LoggedInTests, self).setUp()
         self.c = Client()
         r = self.c.post("/accounts/login/",
-                        {'username': username, 'password': password},
+                        {'username': self.user.username,
+                         'password': "paco_pw"},
                         follow=True)
-        self.assertRedirects(r, reverse('company_accounts:create_company'))
+        self.assertRedirects(r, reverse('company_accounts:company_main_menu',
+                                        args=(self.company.id,)))
 
     def tearDown(self):
         self.assert_no_broken_urls()
         super(LoggedInTests, self).tearDown()
 
-    def assertContainsObject(self, response, item, fields, msg=None):
-        """
-        Checks all the fields in a general object
-        """
-        for field in fields:
-            value = getattr(item, field)
-            self.assertContains(
-                response, str(value), html=False,
-                msg_prefix='Field {} ({}) not found'.format(field, value))
-
-    def simulate_post(self, url, data_to_post, client=None, form_index=0):
-        """
-        Simulates a post
-            Only commits data that is not in hidden fields
-        """
-        client = client or self.c
-        source_html = client.get(url).content
-        try:
-            root = ET.fromstring(source_html)
-        except:
-            open("test.xml", "w").write(source_html)
-            raise
-        data_to_post = make_post(data_to_post)
-        data_to_use = {}
-
-        current_form = root.findall(".//form")[form_index]
-        # input fields, including hidden inputs
-        for i in current_form.findall(".//input"):
-            key = i.get('name')
-            pre_value = i.get('value')
-            type_ = i.get('type')
-            # Pre-filled in values
-            data_to_use[key] = pre_value or ""
-            # Added values
-            if type_ != "hidden" and data_to_post.get(key):
-                data_to_use[key] = data_to_post.pop(key)
-            if type_ == 'hidden' and data_to_post.get(key):
-                self.fail(
-                    "Test error: Attempt to post custom"
-                    " value for hidden field: {} = {}".format(
-                        key, data_to_post[key]))
-
-        # textarea fields
-        textareas = root.findall(".//form//textarea")
-        for ta in textareas:
-            key = ta.get('name')
-            data_to_use[key] = data_to_post.pop(key, ta.text)
-
-        # select fields
-        selects = root.findall(".//form//select")
-        for s in selects:
-            key = s.get('name')
-            selected_option = root.findall(
-                ".//form//select[@name='{}']"
-                "/option[@selected]".format(key))
-            default = selected_option[0].get("value") if selected_option else ""
-            data_to_use[key] = data_to_post.pop(key, default)
-
-        self.assertFalse(data_to_post, "Items left in data to post: {}".format(data_to_post))
-        return client.post(url, data_to_use)
-
     def assert_no_broken_urls(self):
-        for model in [models.Company]:
-            obs = model.objects.all()
+        for model in self.__dict__.values():
+            try:
+                obs = model.objects.all
+                for ob in obs:
+                    ob.get_absolute_url()
+            except AttributeError:
+                # Not a model, or no absolute URL
+                continue
             for ob in obs:
                 r = self.c.get(ob.get_absolute_url())
                 self.assertIn(r.status_code, [200, 404, 405])
+
+#     def assertContainsObject(self, response, item, fields, msg=None):
+#         """
+#         Checks all the fields in a general object
+#         """
+#         for field in fields:
+#             value = getattr(item, field)
+#             self.assertContains(
+#                 response, str(value), html=False,
+#                 msg_prefix='Field {} ({}) not found'.format(field, value))
+#
+#     def simulate_post(self, url, data_to_post, client=None, form_index=0):
+#         """
+#         Simulates a post
+#             Only commits data that is not in hidden fields
+#         """
+#         client = client or self.c
+#         source_html = client.get(url).content
+#         try:
+#             root = ET.fromstring(source_html)
+#         except:
+#             open("test.xml", "w").write(source_html)
+#             raise
+#         data_to_post = make_post(data_to_post)
+#         data_to_use = {}
+#
+#         current_form = root.findall(".//form")[form_index]
+#         # input fields, including hidden inputs
+#         for i in current_form.findall(".//input"):
+#             key = i.get('name')
+#             pre_value = i.get('value')
+#             type_ = i.get('type')
+#             # Pre-filled in values
+#             data_to_use[key] = pre_value or ""
+#             # Added values
+#             if type_ != "hidden" and data_to_post.get(key):
+#                 data_to_use[key] = data_to_post.pop(key)
+#             if type_ == 'hidden' and data_to_post.get(key):
+#                 self.fail(
+#                     "Test error: Attempt to post custom"
+#                     " value for hidden field: {} = {}".format(
+#                         key, data_to_post[key]))
+#
+#         # textarea fields
+#         textareas = root.findall(".//form//textarea")
+#         for ta in textareas:
+#             key = ta.get('name')
+#             data_to_use[key] = data_to_post.pop(key, ta.text)
+#
+#         # select fields
+#         selects = root.findall(".//form//select")
+#         for s in selects:
+#             key = s.get('name')
+#             selected_option = root.findall(
+#                 ".//form//select[@name='{}']"
+#                 "/option[@selected]".format(key))
+#             default = selected_option[0].get("value") if selected_option else ""
+#             data_to_use[key] = data_to_post.pop(key, default)
+#
+#         self.assertFalse(data_to_post, "Items left in data to post: {}".format(data_to_post))
+#         return client.post(url, data_to_use)
 
 
 class LoggedInWithCompanyTests(LoggedInTests):
     """
     Logged in user that is associated with a company
     """
+#     def setUp(self):
+#         super(LoggedInWithCompanyTests, self).setUp()
+#         self.company = add_instance(
+#             models.Company,
+#             nombre_comercial='Tienda 1',
+#             ruc='1234567890',
+#             razon_social='Paco Pil',
+#             direccion_matriz="C del pepino")
+#         self.company_user = add_instance(
+#             models.CompanyUser,
+#             user=self.user,
+#             company=self.company)
+#         self.company2 = add_instance(
+#             models.Company,
+#             nombre_comercial='Tienda 2',
+#             ruc='1234567892',
+#             razon_social='Paca Pil',
+#             direccion_matriz="C del pepano")
+#
+#         self.establecimiento = add_instance(
+#             models.Establecimiento,
+#             company=self.company,
+#             descripcion="Matriz",
+#             direccion='C del pepino',
+#             codigo="001",
+#         )
+#
+#         self.punto_emision = add_instance(
+#             models.PuntoEmision,
+#             establecimiento=self.establecimiento,
+#             descripcion="Caja de la matriz",
+#             codigo="001"
+#         )
+
+
+class IndexViewTests(LoggedInTests, MakeBaseInstances, TestCase):
     def setUp(self):
-        super(LoggedInWithCompanyTests, self).setUp()
-        self.company = add_instance(
-            models.Company,
-            nombre_comercial='Tienda 1',
-            ruc='1234567890',
-            razon_social='Paco Pil',
-            direccion_matriz="C del pepino")
-        self.company_user = add_instance(
-            models.CompanyUser,
-            user=self.user,
-            company=self.company)
+        super(IndexViewTests, self).setUp()
         self.company2 = add_instance(
             models.Company,
             nombre_comercial='Tienda 2',
@@ -150,23 +184,6 @@ class LoggedInWithCompanyTests(LoggedInTests):
             razon_social='Paca Pil',
             direccion_matriz="C del pepano")
 
-        self.establecimiento = add_instance(
-            models.Establecimiento,
-            company=self.company,
-            descripcion="Matriz",
-            direccion='C del pepino',
-            codigo="001",
-        )
-
-        self.punto_emision = add_instance(
-            models.PuntoEmision,
-            establecimiento=self.establecimiento,
-            descripcion="Caja de la matriz",
-            codigo="001"
-        )
-
-
-class IndexViewTests(LoggedInWithCompanyTests):
     def test_view_index_multiple_companies(self):
         """
         A logged-in user can view the billing index,
@@ -509,7 +526,7 @@ class LicenceTests(TestCase):
             print t.dispatch(r)
 
 
-class LicenceActivateViewTests(LoggedInWithCompanyTests):
+class LicenceActivateViewTests(LoggedInTests, MakeBaseInstances, TestHelpersMixin, TestCase):
     """
     Tests for testing automated licence approval
     """

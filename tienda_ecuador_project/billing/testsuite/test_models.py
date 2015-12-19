@@ -6,11 +6,11 @@ import pytz
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 
+from sri.models import Iva, Ice
+import inventory.testsuite.test_models
 from billing.models import (Bill,
-                            Item,
                             BillItem,
                             Customer,
-                            Iva, Ice,
                             ClaveAcceso)
 
 from company_accounts.models import (Company,
@@ -24,7 +24,7 @@ from helpers import (add_instance,
                      add_User,
                      TestHelpersMixin)
 
-from util.sri_models import SRIStatus, AmbienteSRI
+from sri.models import SRIStatus, AmbienteSRI
 
 
 current_ruc = count(10)
@@ -63,14 +63,8 @@ base_data = {
         "email": "papa@ble.com",
         "direccion": "dfdf gfwergwer",
     },
-    "BaseItem": {
-        'sku': 'T123',
-        'name': 'Widget',
-        'description': 'Widget description',
-        'unit_cost': 11.5,
-        'unit_price': 15.5,
-        'tipo': 'producto',
-        'decimales_qty': 0,
+    "BillItem": {
+        'qty': 4,
     },
     "Bill": {
         'number': '33344556677',
@@ -106,12 +100,41 @@ base_data = {
 }
 
 
-class BaseInstancesMixin(object):
+class MakeBaseInstances(inventory.testsuite.test_models.MakeBaseInstances):
+    def setUp(self):
+        inventory.testsuite.test_models.MakeBaseInstances.setUp(self)
+        self.forma_pago = add_instance(
+            models.FormaPago, **base_data['FormaPago'])
+        self.plazo_pago = add_instance(
+            models.PlazoPago, **base_data['PlazoPago'])
+        self.customer = add_instance(
+            Customer,
+            company=self.company,
+            **base_data['BaseCustomer'])
+        self.bill = add_instance(
+            models.Bill,
+            company=self.company,
+            issued_to=self.customer,
+            **base_data['Bill'])
+        self.bill_item = add_instance(
+            BillItem,
+            sku=self.sku,
+            bill=self.bill,
+            qty=6)
+        self.pago = add_instance(
+            models.Pago,
+            porcentaje=Decimal(100),
+            bill=self.bill,
+            forma_pago=self.forma_pago,
+            plazo_pago=self.plazo_pago)
+
+
+class MakeBaseInstances(MakeBaseInstances):
     """
     Some basic instances to help other tests
     """
     def setUp(self):
-        super(BaseInstancesMixin, self).setUp()
+        super(MakeBaseInstances, self).setUp()
         self.company = add_instance(Company, **base_data['Company'])
 
         self.establecimiento = add_instance(Establecimiento,
@@ -142,7 +165,7 @@ class BaseInstancesMixin(object):
             models.PlazoPago, **base_data['PlazoPago'])
 
 
-class FieldsTest(BaseInstancesMixin, TestCase, TestHelpersMixin):
+class FieldsTest(MakeBaseInstances, TestCase, TestHelpersMixin):
     """
     Tests that check if a given model has all the required fields
     """
@@ -170,11 +193,9 @@ class FieldsTest(BaseInstancesMixin, TestCase, TestHelpersMixin):
                              tzinfo=pytz.timezone('America/Guayaquil')),
                  'numero_autorizacion': '12342423423',
                  'ambiente_sri': AmbienteSRI.options.pruebas}),
-            (Item, base_data['BaseItem'],
-                {"company": self.company,
-                 }),
-            (BillItem, base_data['BaseItem'],
+            (BillItem, base_data['BillItem'],
                 {"bill": self.bill,
+                 'sku': self.sku,
                  'qty': 6}),
             (models.FormaPago, base_data['FormaPago'],
                 {}),
@@ -241,9 +262,9 @@ class CompanyUserTests(TestCase, TestHelpersMixin):
                           self.company_user.user.username)
 
 
-class ItemTests(BaseInstancesMixin, TestCase, TestHelpersMixin):
+class BillItemTests(MakeBaseInstances, TestCase, TestHelpersMixin):
     """
-    Tests for the Item classes
+    Tests for the BillItem classes
     """
     def test_total_sin_impuestos(self):
         """
@@ -251,54 +272,45 @@ class ItemTests(BaseInstancesMixin, TestCase, TestHelpersMixin):
         que devuelve el total correspondiente a un item
         sin contar los impuestos
         """
-        item = BillItem(sku="1234", name="asdf", description="asdf",
-                        unit_cost=10, unit_price=14, qty=6)
-        self.assertEquals(item.total_sin_impuestos, 6 * 14)
+        self.assertEquals(self.bill_item.total_sin_impuestos, self.sku.unit_price * self.bill_item.qty)
 
     def test_bill_item_iva_ice(self):
         """
         Prueba los calculos de iva e ice
         """
-        item = BillItem(
-            sku="1234", name="asdf", description="asdf", unit_cost=10,
-            unit_price=10, qty=6, bill=self.bill)
-        item.save()
-        item.tax_items.add(self.iva, self.ice)
-
         # ICE
-        self.assertEquals(item.base_imponible_ice,
-                          item.total_sin_impuestos)
-        valor_ice = item.base_imponible_ice * Decimal("0.5")
-        self.assertEquals(item.valor_ice, valor_ice)
+        self.assertEquals(self.bill_item.base_imponible_ice,
+                          self.bill_item.total_sin_impuestos)
+        valor_ice = self.bill_item.base_imponible_ice * Decimal("0.5")
+        self.assertEquals(self.bill_item.valor_ice, valor_ice)
 
         # IVA
-        self.assertEquals(item.base_imponible_iva,
-                          item.total_sin_impuestos + valor_ice)
-        valor_iva = item.base_imponible_iva * Decimal("0.12")
-        self.assertEquals(item.valor_iva, valor_iva)
-        self.assertEquals(item.total_impuestos, valor_iva + valor_ice)
+        self.assertEquals(self.bill_item.base_imponible_iva,
+                          self.bill_item.total_sin_impuestos + valor_ice)
+        valor_iva = self.bill_item.base_imponible_iva * Decimal("0.12")
+        self.assertEquals(self.bill_item.valor_iva, valor_iva)
+        self.assertEquals(self.bill_item.total_impuestos, valor_iva + valor_ice)
 
-    def test_unicode(self):
-        """
-        Prueba str() y unicode()
-        """
-        ob = Item(sku="1234", name="asdf", description="asdf",
-                  unit_cost=10, unit_price=10)
-        self.assertEquals(str(ob), "1234 - asdf")
+    #def test_unicode(self):
+    #    """
+    #    Prueba str() y unicode()
+    #    """
+    #    ob = Item(sku="1234", name="asdf", description="asdf",
+    #              unit_cost=10, unit_price=10)
+    #    self.assertEquals(str(ob), "1234 - asdf")
 
     def test_increment(self):
         """
         """
-        ob = Item(sku="1234", name="asdf", description="asdf",
-                  unit_cost=10, unit_price=10, decimales_qty=2)
-        self.assertEquals(ob.increment_qty, "0.01")
+        item = self.item
+        item.decimales_qty = 2
+        item.save()
+        self.assertEquals(self.bill_item.increment_qty, "0.01")
 
     def test_increment_no_decimals(self):
         """
         """
-        ob = BillItem(sku="1234", name="asdf", description="asdf",
-                      unit_cost=10, unit_price=10, decimales_qty=0)
-        self.assertEquals(ob.increment_qty, "1")
+        self.assertEquals(self.bill_item.increment_qty, "1")
 
 
 class IdentificacionTests(TestCase):
@@ -390,72 +402,30 @@ class IdentificacionTests(TestCase):
                      identificacion="173831153")
 
 
-class BillTest(TestCase, TestHelpersMixin):
+class BillTest(MakeBaseInstances, TestCase, TestHelpersMixin):
     """
     Test that checks that a final model can be created,
     but not modified
     """
-    def setUp(self):
-        self.company = Company.objects.get_or_create(**base_data['Company'])[0]
-        self.establecimiento = add_instance(Establecimiento,
-                                            company=self.company,
-                                            **base_data['Establecimiento'])
-        self.punto_emision = add_instance(PuntoEmision,
-                                          establecimiento=self.establecimiento,
-                                          **base_data['PuntoEmision'])
-        self.customer = Customer.objects.get_or_create(
-            company=self.company, **base_data['BaseCustomer'])[0]
-        self.iva = add_instance(Iva, **base_data['Iva'])
-        self.ice = add_instance(Ice, **base_data['Ice'])
-        self.bill = add_instance(Bill,
-                                 punto_emision=self.punto_emision,
-                                 number='3',
-                                 date=get_date(),
-                                 company=self.company,
-                                 issued_to=self.customer)
-        for i in range(1, 5):
-            ob = add_instance(BillItem,
-                              bill=self.bill,
-                              sku='T123{}'.format(i),
-                              name='Widget{}'.format(i),
-                              description='Widget description',
-                              qty=i,
-                              unit_cost=5,
-                              unit_price=10,)
-            ob.tax_items.add(self.iva, self.ice)
-        self.payment = add_instance(
-            models.Pago,
-            porcentaje=Decimal(100),
-            bill=self.bill,
-            forma_pago=add_instance(
-                models.FormaPago,
-                codigo='01',
-                descripcion='Efectivo'),
-            plazo_pago=add_instance(
-                models.PlazoPago,
-                descripcion='30 dias',
-                unidad_tiempo='dias',
-                tiempo=30))
-
-        def get_bill_from_db():
-            return models.Bill.objects.get(id=self.bill.id)
-        self.get_bill_from_db = get_bill_from_db
+    def get_bill(self):
+        return models.Bill.objects.get(id=self.bill.id)
 
     def test_subtotal(self):
         self.assertEquals(self.bill.subtotal,
-                          {12: (1 + 2 + 3 + 4) * (10 + 5),
+                          {12: 6 * 20 * Decimal("1.50"),
                            0: 0})
         for k, v in self.bill.subtotal.iteritems():
             self.assertEquals(type(v), Decimal)
 
     def test_total_sin_impuestos(self):
+        total = sum([item.qty * item.sku.unit_price for item in self.bill.items])
         self.assertEquals(self.bill.total_sin_impuestos,
-                          (1 + 2 + 3 + 4) * 10)
+                          total)
         self.assertEquals(type(self.bill.total_sin_impuestos), Decimal)
 
     def test_total_con_impuestos(self):
         self.assertEquals(self.bill.total_con_impuestos,
-                          (1 + 2 + 3 + 4) * (10 + 5) * Decimal("1.12"))
+                          6 * 20 * Decimal("1.50") * Decimal("1.12"))
         self.assertEquals(type(self.bill.total_con_impuestos), Decimal)
 
     def test_impuestos(self):
@@ -464,30 +434,25 @@ class BillTest(TestCase, TestHelpersMixin):
                 "codigo": "2",
                 "codigo_porcentaje": base_data['Iva']['codigo'],
                 "porcentaje": base_data['Iva']['porcentaje'],
-                "base_imponible": Decimal((1 + 2 + 3 + 4) * (10 + 5)),
-                'valor': (1 + 2 + 3 + 4) * (10 + 5) * Decimal("0.12"),
+                "base_imponible": 6 * 20 * Decimal("1.50"),
+                'valor': 6 * 20 * Decimal("1.50") * Decimal("0.12"),
             },
             {
                 "codigo": "3",
                 "codigo_porcentaje": base_data['Ice']['codigo'],
                 "porcentaje": base_data['Ice']['porcentaje'],
-                "base_imponible": Decimal((1 + 2 + 3 + 4) * 10),
-                'valor': (1 + 2 + 3 + 4) * 10 * Decimal("0.5"),
+                "base_imponible": 6 * 20,
+                'valor': 6 * 20 * Decimal("0.5"),
             },
         ]
         self.assertEquals(self.bill.impuestos, expected)
 
     def test_iva(self):
-        unidades = 1 + 2 + 3 + 4
-        precio_unitario = 10
-        factor_ice = 1.5
-        factor_iva = 0.12
-        total = (unidades * precio_unitario) * factor_ice * factor_iva
         self.assertEquals(
             self.bill.iva,
             {
                 Decimal(0): Decimal(0),
-                Decimal(12): Decimal(total),
+                Decimal(12): 6 * 20 * Decimal("1.50") * Decimal("0.12"),
             })
         self.assertEquals(type(self.bill.iva[0]), Decimal)
         self.assertEquals(type(self.bill.iva[12]), Decimal)
@@ -524,7 +489,7 @@ class BillTest(TestCase, TestHelpersMixin):
 
     def test_attached_payments(self):
         self.assertEquals(list(self.bill.payment),
-                          [self.payment])
+                          [self.pago])
 
     def test_payment_qty(self):
         self.assertEquals(self.bill.payment[0].cantidad,
@@ -534,7 +499,7 @@ class BillTest(TestCase, TestHelpersMixin):
         """
         The default status for a bill is 'no enviada'
         """
-        bill = self.get_bill_from_db()
+        bill = self.get_bill()
         self.assertEquals(bill.status, SRIStatus.options.NotSent)
 
     def test_proforma_to_send_incomplete_fields_checks(self):
@@ -548,23 +513,23 @@ class BillTest(TestCase, TestHelpersMixin):
             Pasa a ser no editable
         """
         # No date
-        bill = self.get_bill_from_db()
+        bill = self.get_bill()
         bill.date = None
         bill.punto_emision = self.punto_emision
         bill.status = SRIStatus.options.ReadyToSend
         with self.assertRaises(ValidationError):
             bill.save()
-        self.assertEquals(self.get_bill_from_db().status,
+        self.assertEquals(self.get_bill().status,
                           SRIStatus.options.NotSent)
 
         # No punto_emision
-        bill = self.get_bill_from_db()
+        bill = self.get_bill()
         bill.date = get_date()
         bill.punto_emision = None
         bill.status = SRIStatus.options.ReadyToSend
         with self.assertRaises(ValidationError):
             bill.save()
-        self.assertEquals(self.get_bill_from_db().status,
+        self.assertEquals(self.get_bill().status,
                           SRIStatus.options.NotSent)
 
     def test_proforma_to_send_complete_fields_checks(self):
@@ -578,25 +543,26 @@ class BillTest(TestCase, TestHelpersMixin):
             Pasa a ser no editable
         """
         d = get_date()
-        bill = self.get_bill_from_db()
+        bill = self.get_bill()
         bill.date = d
         bill.punto_emision = self.punto_emision
         bill.status = SRIStatus.options.ReadyToSend
         bill.save()
-        self.assertEquals(self.get_bill_from_db().status,
+        self.assertEquals(self.get_bill().status,
                           SRIStatus.options.ReadyToSend)
 
     def test_cant_modify_bill_not_proforma(self):
         """
         No se puede modificar una factura que no este en status='proforma'
         """
-        bill = self.get_bill_from_db()
+        bill = self.get_bill()
+        bill.punto_emision = self.punto_emision
         bill.ambiente_sri = self.punto_emision.ambiente_sri
         bill.clave_acceso = '1234512345'
         bill.xml_content = '<xml></xml>'
         bill.status = SRIStatus.options.ReadyToSend
         bill.save()
-        self.assertEquals(self.get_bill_from_db().status,
+        self.assertEquals(self.get_bill().status,
                           SRIStatus.options.ReadyToSend)
 
         with self.assertRaises(ValidationError):
