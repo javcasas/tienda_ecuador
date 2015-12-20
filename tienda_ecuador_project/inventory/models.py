@@ -99,3 +99,7 @@ class SKU(models.Model):
     # Where on the store it is located
     location = models.CharField(
         max_length=500)
+
+    @property
+    def code(self):
+        return u"{}-{}".format(self.batch.item.code, self.batch.code)

@@ -14,7 +14,8 @@ import accounts_receivable.models
 from util.testsuite.helpers import (add_User,
                                     TestHelpersMixin,
                                     add_instance,
-                                    make_post)
+                                    make_post,
+                                    LoggedInTests)
 
 from sri.models import SRIStatus, AmbienteSRI
 from util.testsuite.test_sri_sender_mock import (
@@ -54,100 +55,100 @@ class NotLoggedInTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
-class LoggedInTests(TestCase, TestHelpersMixin):
-    """
-    Tests that support a logged-in user
-    """
-    def setUp(self):
-        username, password = 'paco', 'paco_pw'
-        self.user = add_User(username=username, password=password)
-        self.c = Client()
-        r = self.c.post("/accounts/login/",
-                        {'username': username, 'password': password},
-                        follow=True)
-        self.assertRedirects(r, reverse('company_accounts:create_company'))
-
-    def tearDown(self):
-        self.assert_no_broken_urls()
-        super(LoggedInTests, self).tearDown()
-
-    def assertContainsObject(self, response, item, fields, msg=None):
-        """
-        Checks all the fields in a general object
-        """
-        for field in fields:
-            value = getattr(item, field)
-            self.assertContains(
-                response, str(value), html=False,
-                msg_prefix='Field {} ({}) not found'.format(field, value))
-
-    def simulate_post(self, url, data_to_post, client=None, form_index=0):
-        """
-        Simulates a post
-            Only commits data that is not in hidden fields
-        """
-        client = client or self.c
-        source_html = client.get(url).content
-        try:
-            root = ET.fromstring(source_html)
-        except ET.ParseError:
-            open("test.xml", "w").write(source_html)
-            raise
-        data_to_post = make_post(data_to_post)
-        data_to_use = {}
-
-        current_form = root.findall(".//form")[form_index]
-        # input fields, including hidden inputs
-        for i in current_form.findall(".//input"):
-            key = i.get('name')
-            pre_value = i.get('value')
-            type_ = i.get('type')
-            # Pre-filled in values
-            data_to_use[key] = pre_value or ""
-            # Added values
-            if type_ != "hidden" and data_to_post.get(key):
-                data_to_use[key] = data_to_post.pop(key)
-            if type_ == 'hidden' and data_to_post.get(key):
-                self.fail(
-                    "Test error: Attempt to post custom"
-                    " value for hidden field: {} = {}".format(
-                        key, data_to_post[key]))
-
-        # textarea fields
-        textareas = current_form.findall(".//textarea")
-        for ta in textareas:
-            key = ta.get('name')
-            data_to_use[key] = data_to_post.pop(key, ta.text)
-
-        # select fields
-        selects = current_form.findall(".//select")
-        for s in selects:
-            key = s.get('name')
-            selected_option = root.findall(
-                ".//form//select[@name='{}']"
-                "/option[@selected]".format(key))
-            default = selected_option[0].get("value") if selected_option else ""
-            data_to_use[key] = data_to_post.pop(key, default)
-
-        # submit buttons
-        buttons = current_form.findall(".//button")
-        for bt in buttons:
-            key = bt.get('name')
-            value = bt.get('value')
-            if str(data_to_post.get(key)) == value:
-                data_to_use[key] = data_to_post.pop(key)
-                break
-
-        self.assertFalse(data_to_post,
-                         "Items left in data to post: {}".format(data_to_post))
-        return client.post(url, data_to_use)
-
-    def assert_no_broken_urls(self):
-        for model in [models.Customer, models.Bill]:
-            obs = model.objects.all()
-            for ob in obs:
-                r = self.c.get(ob.get_absolute_url())
-                self.assertIn(r.status_code, [200, 404, 405])
+# class LoggedInTests(TestCase, TestHelpersMixin):
+#     """
+#     Tests that support a logged-in user
+#     """
+#     def setUp(self):
+#         username, password = 'paco', 'paco_pw'
+#         self.user = add_User(username=username, password=password)
+#         self.c = Client()
+#         r = self.c.post("/accounts/login/",
+#                         {'username': username, 'password': password},
+#                         follow=True)
+#         self.assertRedirects(r, reverse('company_accounts:create_company'))
+# 
+#     def tearDown(self):
+#         self.assert_no_broken_urls()
+#         super(LoggedInTests, self).tearDown()
+# 
+#     def assertContainsObject(self, response, item, fields, msg=None):
+#         """
+#         Checks all the fields in a general object
+#         """
+#         for field in fields:
+#             value = getattr(item, field)
+#             self.assertContains(
+#                 response, str(value), html=False,
+#                 msg_prefix='Field {} ({}) not found'.format(field, value))
+# 
+#     def simulate_post(self, url, data_to_post, client=None, form_index=0):
+#         """
+#         Simulates a post
+#             Only commits data that is not in hidden fields
+#         """
+#         client = client or self.c
+#         source_html = client.get(url).content
+#         try:
+#             root = ET.fromstring(source_html)
+#         except ET.ParseError:
+#             open("test.xml", "w").write(source_html)
+#             raise
+#         data_to_post = make_post(data_to_post)
+#         data_to_use = {}
+# 
+#         current_form = root.findall(".//form")[form_index]
+#         # input fields, including hidden inputs
+#         for i in current_form.findall(".//input"):
+#             key = i.get('name')
+#             pre_value = i.get('value')
+#             type_ = i.get('type')
+#             # Pre-filled in values
+#             data_to_use[key] = pre_value or ""
+#             # Added values
+#             if type_ != "hidden" and data_to_post.get(key):
+#                 data_to_use[key] = data_to_post.pop(key)
+#             if type_ == 'hidden' and data_to_post.get(key):
+#                 self.fail(
+#                     "Test error: Attempt to post custom"
+#                     " value for hidden field: {} = {}".format(
+#                         key, data_to_post[key]))
+# 
+#         # textarea fields
+#         textareas = current_form.findall(".//textarea")
+#         for ta in textareas:
+#             key = ta.get('name')
+#             data_to_use[key] = data_to_post.pop(key, ta.text)
+# 
+#         # select fields
+#         selects = current_form.findall(".//select")
+#         for s in selects:
+#             key = s.get('name')
+#             selected_option = root.findall(
+#                 ".//form//select[@name='{}']"
+#                 "/option[@selected]".format(key))
+#             default = selected_option[0].get("value") if selected_option else ""
+#             data_to_use[key] = data_to_post.pop(key, default)
+# 
+#         # submit buttons
+#         buttons = current_form.findall(".//button")
+#         for bt in buttons:
+#             key = bt.get('name')
+#             value = bt.get('value')
+#             if str(data_to_post.get(key)) == value:
+#                 data_to_use[key] = data_to_post.pop(key)
+#                 break
+# 
+#         self.assertFalse(data_to_post,
+#                          "Items left in data to post: {}".format(data_to_post))
+#         return client.post(url, data_to_use)
+# 
+#     def assert_no_broken_urls(self):
+#         for model in [models.Customer, models.Bill]:
+#             obs = model.objects.all()
+#             for ob in obs:
+#                 r = self.c.get(ob.get_absolute_url())
+#                 self.assertIn(r.status_code, [200, 404, 405])
 
 
 class LoggedInWithCompanyTests(LoggedInTests):
@@ -593,7 +594,7 @@ class LoggedInWithCustomerTests(LoggedInWithCompanyTests,
 #         self.assertEquals(ob.ice, self.ice2)
 
 
-class BillTests(MakeBaseInstances, LoggedInWithCompanyTests):
+class BillTests(LoggedInTests, MakeBaseInstances, TestHelpersMixin, TestCase):
     """
     Logged in user that is associated with a company
     Has company and items
@@ -673,7 +674,7 @@ class BillTests(MakeBaseInstances, LoggedInWithCompanyTests):
         r = self.c.get(reverse('bill_establecimiento_index',
                                args=(establecimiento2.id,)))
         self.assertContainsObject(
-            r, self.bill, ['number', 'issued_to'])
+            r, bill2, ['number', 'issued_to'])
         self.assertEquals(
             list(r.context['bill_list']),
             [bill2])
@@ -715,8 +716,12 @@ class BillTests(MakeBaseInstances, LoggedInWithCompanyTests):
             reverse('bill_detail',
                     args=(self.bill.id,)))
 
-        for item in self.items:
-            self.assertContainsObject(r, item, ['sku', 'name', 'qty'])
+        for item in [self.bill_item]:
+            self.assertContains(r, item.qty)
+            self.assertContains(r, item.name)
+            self.assertContains(r, item.code)
+            self.assertContains(r, item.unit_price)
+            self.assertContains(r, item.descuento)
             self.assertContains(
                 r,
                 reverse(
@@ -728,7 +733,7 @@ class BillTests(MakeBaseInstances, LoggedInWithCompanyTests):
                     'billitem_delete',
                     args=(item.id,)))
         subtotal = sum([i.total_sin_impuestos + i.valor_ice
-                        for i in self.items])
+                        for i in [self.item]])
         self.assertContains(r, subtotal)          # Total sin IVA
         self.assertContains(r, subtotal * 12 / 100)   # IVA
         self.assertContains(r, subtotal * 112 / 100)   # Total con IVA
@@ -1513,7 +1518,7 @@ class PopulateBillingTest(TestCase):
         # FIXME: re-enable tests
         urls = [
             # reverse("customer_detail", args=(data['c3'].id,)),
-            reverse("item_detail", args=(data['i1'].id,)),
+            # reverse("item_detail", args=(data['i1'].id,)),
             # reverse("bill_detail",
             #         args=(data['b3'].id,)),
         ]

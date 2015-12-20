@@ -13,6 +13,7 @@ from util.validators import IsCedula, IsRuc
 from util import signature
 
 from company_accounts.models import Company, Establecimiento, PuntoEmision
+from customer_accounts.models import Customer
 from inventory.models import SKU
 from sri.models import ComprobanteSRIMixin, SRIStatus
 
@@ -21,50 +22,6 @@ class ReadOnlyObject(Exception):
     """
     Exception for when trying to write read-only objects
     """
-
-
-##################################
-# Customers
-##################################
-BaseCustomer_tipo_identificacion_OPTIONS = (
-    ('cedula', 'Cédula'),
-    ('ruc', 'RUC'),
-    ('pasaporte', 'Pasaporte'),
-)
-
-
-class Customer(models.Model):
-    """
-    Represents a generic customer
-    """
-    razon_social = models.CharField(max_length=100)
-    tipo_identificacion = models.CharField(
-        max_length=100,
-        choices=BaseCustomer_tipo_identificacion_OPTIONS)
-    identificacion = models.CharField(max_length=100)
-    email = models.CharField(max_length=100, blank=True)
-    direccion = models.CharField(max_length=100, blank=True)
-    company = models.ForeignKey(Company)
-
-    def __unicode__(self):
-        return u"{}({})".format(self.razon_social,
-                                self.identificacion)
-
-    def clean(self):
-        if self.tipo_identificacion == "ruc":
-            IsRuc(self.identificacion)
-        elif self.tipo_identificacion == 'cedula':
-            IsCedula(self.identificacion)
-        else:
-            raise ValidationError("Identificacion desconocida")
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        return super(Customer, self).save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse('customer_detail',
-                       kwargs={'pk': self.pk})
 
 
 #####################################
@@ -468,6 +425,14 @@ class BillItem(models.Model):
     @property
     def increment_qty(self):
         return self.sku.batch.item.increment_qty
+
+    @property
+    def name(self):
+        return self.sku.batch.item.name
+
+    @property
+    def code(self):
+        return self.sku.code
 
 
 ############################################

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 from inventory import models
 
-from company_accounts.testsuite.test_models import MakeBaseInstances
+from customer_accounts.testsuite.test_models import MakeBaseInstances
 
 from util.testsuite.helpers import (add_instance,
                                     TestHelpersMixin)
@@ -100,3 +100,12 @@ class ItemTests(MakeBaseInstances, TestCase, TestHelpersMixin):
         Prueba str() y unicode()
         """
         self.assertEquals(str(self.item), "12345 - Test Item")
+
+
+class SKUTests(MakeBaseInstances, TestCase, TestHelpersMixin):
+    """
+    Tests for the SKU class
+    """
+    def test_code(self):
+        self.assertEquals(self.sku.code,
+                          "{}-{}".format(self.item.code, self.batch.code))

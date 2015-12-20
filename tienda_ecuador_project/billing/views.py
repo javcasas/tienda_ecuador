@@ -486,7 +486,6 @@ class BillPaymentView(BillView,
             payment.delete()
 
         # Add new payment terms
-        ####print request.POST
         payment_method = models.FormaPago.objects.get(
             id=request.POST['payment_method'])
 

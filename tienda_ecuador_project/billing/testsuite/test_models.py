@@ -115,6 +115,7 @@ class MakeBaseInstances(inventory.testsuite.test_models.MakeBaseInstances):
             models.Bill,
             company=self.company,
             issued_to=self.customer,
+            punto_emision=self.punto_emision,
             **base_data['Bill'])
         self.bill_item = add_instance(
             BillItem,
@@ -135,18 +136,6 @@ class MakeBaseInstances(MakeBaseInstances):
     """
     def setUp(self):
         super(MakeBaseInstances, self).setUp()
-        self.company = add_instance(Company, **base_data['Company'])
-
-        self.establecimiento = add_instance(Establecimiento,
-                                            company=self.company,
-                                            **base_data['Establecimiento'])
-
-        self.punto_emision = add_instance(PuntoEmision,
-                                          establecimiento=self.establecimiento,
-                                          **base_data['PuntoEmision'])
-
-        self.user = add_User(username="Paco", password='')
-
         self.customer = add_instance(
             Customer,
             company=self.company,
@@ -157,8 +146,6 @@ class MakeBaseInstances(MakeBaseInstances):
             company=self.company,
             **base_data['Bill'])
 
-        self.iva = add_instance(Iva, **dict(base_data['Iva']))
-        self.ice = add_instance(Ice, **dict(base_data['Ice']))
         self.forma_pago = add_instance(
             models.FormaPago, **base_data['FormaPago'])
         self.plazo_pago = add_instance(
@@ -311,6 +298,15 @@ class BillItemTests(MakeBaseInstances, TestCase, TestHelpersMixin):
         """
         """
         self.assertEquals(self.bill_item.increment_qty, "1")
+    
+    def test_name(self):
+        self.assertEquals(self.bill_item.name, self.bill_item.sku.batch.item.name)
+
+    def test_code(self):
+        self.assertEquals(self.bill_item.code, self.bill_item.sku.code)
+
+    def test_unit_price(self):
+        self.assertEquals(self.bill_item.unit_price, self.bill_item.sku.unit_price)
 
 
 class IdentificacionTests(TestCase):

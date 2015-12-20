@@ -7,6 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('customer_accounts', '0001_initial'),
         ('inventory', '0001_initial'),
         ('company_accounts', '0001_initial'),
     ]
@@ -28,6 +29,8 @@ class Migration(migrations.Migration):
                 ('date', models.DateTimeField()),
                 ('secuencial', models.IntegerField(default=0, blank=True)),
                 ('company', models.ForeignKey(to='company_accounts.Company')),
+                ('issued_to', models.ForeignKey(blank=True, to='customer_accounts.Customer', null=True)),
+                ('punto_emision', models.ForeignKey(blank=True, to='company_accounts.PuntoEmision', null=True)),
             ],
             options={
                 'abstract': False,
@@ -42,21 +45,6 @@ class Migration(migrations.Migration):
                 ('descuento', models.DecimalField(default=0, max_digits=20, decimal_places=8)),
                 ('bill', models.ForeignKey(to='billing.Bill')),
                 ('sku', models.ForeignKey(to='inventory.SKU')),
-            ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='Customer',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('razon_social', models.CharField(max_length=100)),
-                ('tipo_identificacion', models.CharField(max_length=100, choices=[(b'cedula', b'C\xc3\xa9dula'), (b'ruc', b'RUC'), (b'pasaporte', b'Pasaporte')])),
-                ('identificacion', models.CharField(max_length=100)),
-                ('email', models.CharField(max_length=100, blank=True)),
-                ('direccion', models.CharField(max_length=100, blank=True)),
-                ('company', models.ForeignKey(to='company_accounts.Company')),
             ],
             options={
             },
@@ -101,18 +89,6 @@ class Migration(migrations.Migration):
             model_name='pago',
             name='plazo_pago',
             field=models.ForeignKey(to='billing.PlazoPago'),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='bill',
-            name='issued_to',
-            field=models.ForeignKey(blank=True, to='billing.Customer', null=True),
-            preserve_default=True,
-        ),
-        migrations.AddField(
-            model_name='bill',
-            name='punto_emision',
-            field=models.ForeignKey(blank=True, to='company_accounts.PuntoEmision', null=True),
             preserve_default=True,
         ),
     ]

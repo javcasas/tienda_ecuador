@@ -1,236 +1,236 @@
 # IVA
-- model: billing.iva
+- model: sri.iva
   fields:
     codigo: '2'
     descripcion: 12%
     porcentaje: 12
   pk: 1
 
-- model: billing.iva
+- model: sri.iva
   fields:
     codigo: '0'
     descripcion: 0%
     porcentaje: 0
   pk: 2
 
-- model: billing.iva
+- model: sri.iva
   fields:
     codigo: '6'
     descripcion: No Objeto de Impuesto
     porcentaje: 0
   pk: 3
 
-- model: billing.iva
+- model: sri.iva
   fields:
     codigo: '7'
     descripcion: Exento de IVA
     porcentaje: 0
   pk: 4
 # ICE
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '0'
     descripcion: 0%
     porcentaje: 0
   pk: 101
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '6'
     descripcion: No objeto de impuesto
     porcentaje: 0
   pk: 102
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3011'
     descripcion: Cigarrillos rubios
     porcentaje: 0
   pk: 103
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3021'
     descripcion: Cigarrillos negros
     porcentaje: 0
   pk: 104
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3023'
     descripcion: Productos del tabaco y sucedaneos del tabaco excepto cigarrillos
     porcentaje: 150
   pk: 105
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3041'
     descripcion: Cerveza
     porcentaje: 0
   pk: 106
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3072'
     descripcion: Camionetas, furgonetas, camiones y vehiculos de rescate cuyo PVP sea hasta de 30000 USD
     porcentaje: 5
   pk: 107
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3073'
     descripcion: Vehiculos motorizados cuyo PVP sea hasta de 20000 USD
     porcentaje: 5
   pk: 108
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3074'
     descripcion: Vehiculos motorizados excepto camionetas y furgonetas entre 20000 y 30000
     porcentaje: 10
   pk: 109
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3075'
     descripcion: Vehiculos motorizados PVP entre 30000 y 40000
     porcentaje: 15
   pk: 110
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3077'
     descripcion: Vehiculos motorizados cuyo PVP superior USD 40.000 hasta 50.000
     porcentaje: 20
   pk: 111
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3078'
     descripcion: Vehiculos motorizados cuyo PVP superior USD 50.000 hasta 60.000
     porcentaje: 25
   pk: 112
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3079'
     descripcion: Vehiculos motorizados cuyo PVP superior USD 60.000 hasta 70.000
     porcentaje: 30
   pk: 113
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3080'
     descripcion: Vehiculos motorizados cuyo PVP superior USD 70.000
     porcentaje: 35
   pk: 114
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3081'
     descripcion: Aviones, avionetas, helicopteros, motos acuaticas, tricares, cuadrones, yates y barcos de recreo
     porcentaje: 15
   pk: 115
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3051'
     descripcion: Bebidas gaseosas
     porcentaje: 10
   pk: 116
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3031'
     descripcion: Alcohol y productos alcoholicos, distintos a la cerveza
     porcentaje: 0
   pk: 117
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3610'
     descripcion: Perfumes y aguas de tocador
     porcentaje: 20
   pk: 118
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3620'
     descripcion: Videojuegos
     porcentaje: 35
   pk: 119
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3630'
     descripcion: Armas de fuego, armas deportivas y municiones
     porcentaje: 300
   pk: 120
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3640'
     descripcion: Focos incandescentes
     porcentaje: 100
   pk: 121
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3092'
     descripcion: Servicios de television pagada
     porcentaje: 15
   pk: 122
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3650'
     descripcion: Servicios de casinos, salas de juego (bingo - mecanicos) y otros juegos de azar
     porcentaje: 35
   pk: 123
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3660'
     descripcion: Cuotas, membresias, afliaciones, acciones y similares que cobren a sus miembros y usuarios los clubes sociales, cuyo monto supere 1.500 USD anual
     porcentaje: 35
   pk: 124
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3173'
     descripcion: Vehiculos hibridos o electricos cuyo PVP mayor a USD 40.000 hasta USD 50.000
     porcentaje: 14
   pk: 125
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3174'
     descripcion: Vehiculos hibridos o electricos cuyo PVP mayor a USD 50.000 hasta USD 60.000
     porcentaje: 20
   pk: 126
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3175'
     descripcion: Vehiculos hibridos o electricos cuyo PVP mayor a USD 60.000 hasta USD 70.000
     porcentaje: 26
   pk: 127
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3176'
     descripcion: Vehiculos hibridos o electricos cuyo PVP mayor a USD 70.000
     porcentaje: 32
   pk: 128
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3171'
     descripcion: Vehiculos hibridos o electricos cuyo PVP sea de hasta USD 35.000
     porcentaje: 0
   pk: 129
 
-- model: billing.ice
+- model: sri.ice
   fields:
     codigo: '3172'
     descripcion: Vehiculos hibridos o electricos cuyo PVP mayor a USD 35.000 hasta USD 40.000
