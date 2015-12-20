@@ -733,7 +733,7 @@ class BillTests(LoggedInTests, MakeBaseInstances, TestHelpersMixin, TestCase):
                     'billitem_delete',
                     args=(item.id,)))
         subtotal = sum([i.total_sin_impuestos + i.valor_ice
-                        for i in [self.item]])
+                        for i in [self.bill_item]])
         self.assertContains(r, subtotal)          # Total sin IVA
         self.assertContains(r, subtotal * 12 / 100)   # IVA
         self.assertContains(r, subtotal * 112 / 100)   # Total con IVA

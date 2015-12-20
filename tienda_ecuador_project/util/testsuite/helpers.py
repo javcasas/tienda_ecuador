@@ -82,7 +82,7 @@ class TestHelpersMixin(object):
             self.fail("New item of type {} was not created".format(kind))
         res.ob = new_items.pop()
 
-    def simulate_post(self, url, data_to_post, client=None, form_index=0):
+    def simulate_post(self, url, data_to_post, client=None, form_index=0, **kwargs):
         """
         Simulates a post
             Only commits data that is not in hidden fields
@@ -141,7 +141,7 @@ class TestHelpersMixin(object):
 
         self.assertFalse(data_to_post,
                          "Items left in data to post: {}".format(data_to_post))
-        return client.post(url, data_to_use)
+        return client.post(url, data_to_use, **kwargs)
 
     def assertContainsTag(self, response, tag_name, **attributes):
         """
