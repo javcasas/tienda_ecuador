@@ -23,6 +23,8 @@ urlpatterns = [
     url(r'^company_accounts/',
         include('company_accounts.urls',
                 app_name='company_accounts', namespace='company-accounts')),
+    url(r'^customer_accounts/',
+        include('customer_accounts.urls',)),
     url(r'^billing/', include('billing.urls')),
     url(r'^accounts_receivable/', include('accounts_receivable.urls')),
     url(r'^reports/', include('reports.urls')),
