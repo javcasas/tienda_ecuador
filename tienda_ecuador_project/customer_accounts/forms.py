@@ -19,10 +19,12 @@ class CustomerForm(forms.ModelForm):
     email = forms.CharField(
         label="E-Mail",
         max_length=50,
+        required=False,
         help_text="Por favor teclee el email.")
     direccion = forms.CharField(
         label="Dirección",
         max_length=50,
+        required=False,
         help_text="Por favor teclee la dirección.")
 
     # An inline class to provide additional information on the form.
