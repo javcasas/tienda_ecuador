@@ -1,5 +1,7 @@
-{% extends 'billing/l2_customer_selected.html' %}
+{% extends 'customer_accounts/l2_customer_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
+
 {% block body %}
 {{ block.super }}
 <div class='col-xs-12'>
@@ -22,7 +24,10 @@
         </tr>
     </table>
     {% buttons %}
-        <a href='{% url "customer_update" customer.id %}' class='btn btn-primary'>Editar</a>
+        {% buttons_menu %}
+            {% edit_button "customer_update" customer.id %}
+            {% back_button 'customer_index' company.id %}
+        {% endbuttons_menu %}
     {% endbuttons %}
 </div>
 {% endblock %}

@@ -1,5 +1,6 @@
-{% extends 'billing/l2_customer_selected.html' %}
+{% extends 'customer_accounts/l2_customer_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
 {% block title %}Editar cliente {{ customer.name }} - {{ block.super }}{% endblock %}
 {% block body %}
@@ -9,8 +10,10 @@
         {% csrf_token %}
         {% bootstrap_form form %}
         {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'customer_detail' customer.id %}' class='btn btn-default'>Cancelar</a>
+            {% buttons_menu %}
+                {% save_button %}
+                {% dont_save_button 'customer_detail' customer.id %}
+            {% endbuttons_menu %}
         {% endbuttons %}
     </form>
     </div>

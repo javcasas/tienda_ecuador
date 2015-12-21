@@ -12,6 +12,7 @@
         <div class='col-xs-12'>
             <ol class='breadcrumb'>
                 {% block breadcrumbs %}
+                    <li><a href='{% url 'company_accounts:company_main_menu' company.id %}'>{{ company.nombre_comercial }}</a></li>
                 {% endblock %}
             </ol>
         </div>

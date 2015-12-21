@@ -1,0 +1,20 @@
+{% extends 'customer_accounts/l1_company_selected.html' %}
+{% block title %}{{ customer.razon_social }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'customer_index' company.id %}'>Clientes</a></li>
+    <li><a href='{% url 'customer_detail' customer.id %}'>{{ customer.razon_social }}</a></li>
+{% endblock %}
+
+{% block left_menu %}
+    <li><a href="{% url 'customer_create' company.id %}">Nuevo cliente</a></li>
+    <li><a href="{% url 'customer_update' company.id %}">Editar cliente</a></li>
+    <li><a href="{% url 'customer_delete' customer.id %}" class='btn-danger'>Eliminar cliente</a></li>
+{% endblock %}
+
+{% block body %}
+    <div class='col-xs-12'>
+        <h1>{{ customer.razon_social }}</h1>
+    </div>
+{% endblock %}

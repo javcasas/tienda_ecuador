@@ -1,5 +1,6 @@
-{% extends 'billing/l1_company_selected.html' %}
+{% extends 'customer_accounts/l1_company_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
 {% block breadcrumbs %}
     {{ block.super }}
@@ -11,5 +12,10 @@
     <div class='col-xs-12'>
         <h1>Clientes</h1>
         {% include 'customer_accounts/customer/customer_list_table.html' %}
+        {% buttons %}
+            {% buttons_menu %}
+                {% primary_button "Nuevo cliente" 'customer_create' company.id %}
+            {% endbuttons_menu %}
+        {% endbuttons %}
     </div>
 {% endblock %}
