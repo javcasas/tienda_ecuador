@@ -1,0 +1,10 @@
+{% extends 'inventory/l1_company_selected.html' %}
+{% block title %}{{ item }} - {{ block.super }}{% endblock %}
+
+{% block left_nav_bar %}
+    <li><a href="{% url 'item_index' company.id %}">Inventario</a></li>
+    {% block left_menu %}
+        <li><a href="{% url 'item_create' company.id %}">Nuevo Artículo</a></li>
+        <li><a href="{% url 'batch_create' item.id %}">Nueva Remesa</a></li>
+    {% endblock %}
+{% endblock %}

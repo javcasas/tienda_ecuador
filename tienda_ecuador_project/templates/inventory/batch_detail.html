@@ -1,4 +1,4 @@
-{% extends 'inventory/l2_item_selected.html' %}
+{% extends 'inventory/l3_batch_selected.html' %}
 {% load bootstrap3 %}
 {% load decimal_format %}
 {% load links %}
@@ -6,51 +6,40 @@
 {% block body %}
 {{ block.super }}
 <div class='col-xs-12'>
-    <h1>Artículo {{ item }}</h1>
+    <h1>Remesa {{ batch }}</h1>
     <table class='table table-hover'>
         <tr>
-            <th>Código</th> <td>{{ item.code }}</td>
+            <th>Código</th> <td>{{ item.code }}-{{ batch.code }}</td>
         </tr>
         <tr>
             <th>Nombre</th> <td>{{ item.name }}</td>
         </tr>
         <tr>
-            <th>Tipo</th> <td>{{ item.tipo }}</td>
-        </tr>
-        <tr>
             <th>Descripción</th> <td>{{ item.description }}</td>
-        </tr>
-        {% if item.ice %}
-        <tr>
-            <th>ICE</th> <td>{{ item.ice }}</td>
-        </tr>
-        {% endif %}
-        <tr>
-            <th>IVA</th> <td>{{ item.iva }}</td>
         </tr>
     </table>
 
-    <h2>Remesas</h2>
+    <h2>SKUs</h2>
     <table class='table table-hover'>
         <thead>
             <tr>
-                <th>Código</th>
-                <th>Fecha</th>
-                <th>Coste</th>
+                <th>Cantidad</th>
+                <th>Precio de Venta</th>
+                <th>Establecimiento</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            {% for batch in item.batches %}
+            {% for sku in batch.skus %}
                 <tr>
-                    <td> {{ batch.code }} </td>
-                    <td> {{ batch.acquisition_date }} </td>
-                    <td> {{ batch.unit_cost | money_2d }} </td>
-                    <td> {% fullwidth_button 'Detalle' 'batch_detail' batch.id %} </td>
+                    <td> {{ sku.qty }} </td>
+                    <td> {{ sku.unit_price | money_2d }} </td>
+                    <td> {{ sku.establecimiento }} </td>
+                    <td> {% fullwidth_button 'Detalle' 'sku_detail' sku.id %} </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan='4'>No hay remesas</td>
+                    <td colspan='4'>No hay SKUs</td>
                 </tr>
             {% endfor %}
         </tbody>

@@ -1,0 +1,13 @@
+{% extends 'l0_company_selected.html' %}
+{% block title %}{{ company.nombre_comercial }} - {{ block.super }}{% endblock %}
+
+{% block left_nav_bar %}
+    <li><a href="{% url 'item_index' company.id %}">Inventario</a></li>
+    {% block left_menu %}
+        <li><a href="{% url 'item_create' company.id %}">Nuevo Artículo</a></li>
+    {% endblock %}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <li><a href='{% url 'company_accounts:company_main_menu' company.id %}'>{{ company.nombre_comercial }}</a></li>
+{% endblock %}

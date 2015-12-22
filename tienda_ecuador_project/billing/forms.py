@@ -1,57 +1,9 @@
 # -*- coding: utf-8 -*-
 from django import forms
-from inventory.models import Item_tipo_OPTIONS, Item_decimales_OPTIONS
+#from inventory.models import Item_tipo_OPTIONS, Item_decimales_OPTIONS
 import sri.models as sri
 from billing import models
 
-
-"""class ItemForm(forms.ModelForm):
-    sku = forms.CharField(
-        max_length=50,
-        label='Código de stock (SKU)',
-        help_text="Por favor teclee un código de stock.")
-    name = forms.CharField(
-        label='Nombre',
-        max_length=50,
-        help_text="Por favor teclee el nombre del artículo.")
-    tipo = forms.ChoiceField(
-        label='Tipo',
-        choices=Item_tipo_OPTIONS,
-        help_text="Por favor seleccione el tipo del artículo.")
-    decimales_qty = forms.ChoiceField(
-        label='Decimales en cantidad',
-        choices=Item_decimales_OPTIONS)
-    description = forms.CharField(
-        label="Descripción",
-        max_length=500,
-        widget=forms.Textarea(),
-        help_text="Por favor teclee una descripción.")
-    unit_cost = forms.DecimalField(
-        decimal_places=4,
-        label="Coste por unidad",
-        help_text='Por favor introduzca el coste por unidad.')
-    unit_price = forms.DecimalField(
-        decimal_places=4,
-        label="Precio por unidad",
-        help_text='Por favor introduzca el precio por unidad.')
-    iva = forms.ModelChoiceField(
-        label='IVA',
-        queryset=sri.Iva.objects,
-        help_text='Por favor, seleccione el IVA del producto')
-    ice = forms.ModelChoiceField(
-        label='ICE',
-        queryset=sri.Ice.objects,
-        required=False,
-        empty_label='Sin ICE',
-        help_text='Por favor, seleccione el ICE del producto')
-
-    # An inline class to provide additional information on the form.
-    class Meta:
-        # Provide an association between the ModelForm and a model
-        model = models.Item
-        fields = ('sku', 'name', 'tipo', 'unit_price', 'unit_cost',
-                  'description', 'decimales_qty')
-"""
 
 class BillForm(forms.ModelForm):
     issued_to = forms.ModelChoiceField(

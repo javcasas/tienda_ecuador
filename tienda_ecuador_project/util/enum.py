@@ -13,6 +13,9 @@ class {}(object):
         pass
     cls.options = options
     for k, v in option_pairs:
-        setattr(options, k, k)
+        try:
+            setattr(options, k, k)
+        except:
+            pass
     cls.__OPTIONS__ = option_pairs
     return cls

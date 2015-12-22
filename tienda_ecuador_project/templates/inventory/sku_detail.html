@@ -1,0 +1,35 @@
+{% extends 'inventory/l4_sku_selected.html' %}
+{% load bootstrap3 %}
+{% load decimal_format %}
+{% load links %}
+
+{% block body %}
+{{ block.super }}
+<div class='col-xs-12'>
+    <h1>Inventario {{ sku }}</h1>
+    <table class='table table-hover'>
+        <tr>
+            <th>Código</th> <td>{{ sku.code }}</td>
+        </tr>
+        <tr>
+            <th>Cantidad</th> <td>{{ sku.qty }}</td>
+        </tr>
+        <tr>
+            <th>Precio Unitario</th> <td>{{ sku.unit_price | money_2d }}</td>
+        </tr>
+        <tr>
+            <th>Establecimiento</th> <td>{{ sku.establecimiento }}</td>
+        </tr>
+        <tr>
+            <th>Lugar</th> <td>{{ sku.location }}</td>
+        </tr>
+    </table>
+
+    {% buttons %}
+        {% buttons_menu %}
+            {% edit_button "sku_update" sku.id %}
+            {% back_button "batch_detail" batch.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
+</div>
+{% endblock %}

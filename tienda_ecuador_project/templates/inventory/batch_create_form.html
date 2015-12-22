@@ -1,19 +1,19 @@
-{% extends 'billing/l1_company_selected.html' %}
+{% extends 'billing/l2_item_selected.html' %}
 {% load bootstrap3 %}
 {% load links %}
 
-{% block title %}Nuevo Artículo - {{ block.super }}{% endblock %}
+{% block title %}Nueva Remesa - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-        <h1>Nuevo artículo</h1>
+        <h1>Nueva remesa</h1>
         <form method='post' action='.' class='form'>
             {% csrf_token %}
             {% bootstrap_form form %}
             {% buttons %}
                 {% buttons_menu %}
                     {% save_button %}
-                    {% dont_save_button 'item_index' company.id %}
+                    {% dont_save_button 'item_detail' item.id %}
                 {% endbuttons_menu %}
             {% endbuttons %}
         </form>

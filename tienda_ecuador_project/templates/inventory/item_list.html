@@ -1,4 +1,4 @@
-{% extends 'billing/l1_company_selected.html' %}
+{% extends 'inventory/l1_company_selected.html' %}
 {% load bootstrap3 %}
 {% load decimal_format %}
 
@@ -10,6 +10,6 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-    {% include 'billing/item/item_list_table.html' %}
+    {% include 'inventory/item/item_list_table.html' %}
     </div>
 {% endblock %}

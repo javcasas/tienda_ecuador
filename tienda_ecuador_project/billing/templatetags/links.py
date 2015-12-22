@@ -23,6 +23,16 @@ def button(text, view, *view_params):
 
 
 @register.simple_tag()
+def fullwidth_button(text, view, *view_params):
+    """
+    Formats with arg decimal digits
+    """
+    html = "<a href='{url}' class='btn btn-default btn-block'>{text}</a>"
+    url = reverse(view, args=view_params)
+    return html.format(url=url, text=text)
+
+
+@register.simple_tag()
 def primary_button(text, view, *view_params):
     """
     Formats with arg decimal digits

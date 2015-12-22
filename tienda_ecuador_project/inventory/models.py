@@ -10,18 +10,26 @@ from django.core.exceptions import ValidationError
 import company_accounts.models
 from sri.models import Tax, Iva, Ice
 
+from util.enum import Enum
 
-Item_tipo_OPTIONS = (
-    ('producto', 'Producto'),
-    ('servicio', 'Servicio'),
+
+ItemTipo = Enum(
+    "ItemTipo",
+    (
+        ('producto', 'Producto'),
+        ('servicio', 'Servicio'),
+    )
 )
 
 
-Item_decimales_OPTIONS = (
-    (0, 'Unidades Enteras'),
-    (1, '1 Decimal'),
-    (2, '2 Decimales'),
-    (3, '3 Decimales'),
+ItemDecimales = Enum(
+    "ItemDecimales",
+    (
+        (0, 'Unidades Enteras'),
+        (1, '1 Decimal'),
+        (2, '2 Decimales'),
+        (3, '3 Decimales'),
+    )
 )
 
 
@@ -35,10 +43,10 @@ class Item(models.Model):
     tax_items = models.ManyToManyField(Tax)
     tipo = models.CharField(
         max_length=10,
-        choices=Item_tipo_OPTIONS)
+        choices=ItemTipo.__OPTIONS__)
     decimales_qty = models.IntegerField(
         max_length=1,
-        choices=Item_decimales_OPTIONS,
+        choices=ItemDecimales.__OPTIONS__,
         default=0)
     company = models.ForeignKey(company_accounts.models.Company)
 
@@ -76,6 +84,13 @@ class Item(models.Model):
     def __unicode__(self):
         return u"{} - {}".format(self.code, self.name)
 
+    def get_absolute_url(self):
+        return reverse("item_detail", args=(self.id,))
+
+    @property
+    def batches(self):
+        return Batch.objects.filter(item=self)
+
 
 class Batch(models.Model):
     """
@@ -85,6 +100,13 @@ class Batch(models.Model):
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
     code = models.CharField(max_length=50)
     acquisition_date = models.DateField()
+
+    def get_absolute_url(self):
+        return reverse("batch_detail", args=(self.id,))
+
+    @property
+    def skus(self):
+        return SKU.objects.filter(batch=self)
 
 
 class SKU(models.Model):
@@ -103,3 +125,6 @@ class SKU(models.Model):
     @property
     def code(self):
         return u"{}-{}".format(self.batch.item.code, self.batch.code)
+
+    def get_absolute_url(self):
+        return reverse("sku_detail", args=(self.id,))

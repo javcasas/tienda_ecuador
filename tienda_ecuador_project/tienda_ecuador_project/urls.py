@@ -25,6 +25,8 @@ urlpatterns = [
                 app_name='company_accounts', namespace='company-accounts')),
     url(r'^customer_accounts/',
         include('customer_accounts.urls',)),
+    url(r'^inventory/',
+        include('inventory.urls',)),
     url(r'^billing/', include('billing.urls')),
     url(r'^accounts_receivable/', include('accounts_receivable.urls')),
     url(r'^reports/', include('reports.urls')),

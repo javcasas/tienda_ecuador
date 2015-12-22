@@ -1,22 +1,23 @@
 {% load decimal_format %}
+{% load links %}
 
 {% if item_list %}
 <table class='table table-hover'>
     <thead>
         <tr>
-            <th>SKU</th>
+            <th>Código</th>
             <th>Nombre</th>
-            <th>Precio Unitario</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
         {% for item in item_list %}
             <tr>
-                <td>{{ item.sku }}</td>
+                <td>{{ item.code }}</td>
                 <td>{{ item.name }}</td>
-                <td>{{ item.unit_price|price2d }}</td>
-                <td><a href="{% url 'item_detail' item.id %}" class='btn btn-default'>Detalle</a></td>
+                <td>
+                    {% fullwidth_button 'Detalle' 'item_detail' item.id %}
+                </td>
             </tr>
         {% endfor %}
         {% if show_all_items_button %}
