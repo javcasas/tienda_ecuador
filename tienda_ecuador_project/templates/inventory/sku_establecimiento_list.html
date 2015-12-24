@@ -1,4 +1,4 @@
-{% extends 'inventory/l3_batch_selected.html' %}
+{% extends 'inventory/l2_establecimiento_selected.html' %}
 {% load bootstrap3 %}
 {% load decimal_format %}
 {% load links %}
@@ -6,45 +6,29 @@
 {% block body %}
 {{ block.super }}
 <div class='col-xs-12'>
-    <h1>Remesa {{ batch }}</h1>
-    <table class='table table-hover'>
-        <tr>
-            <th>Código</th> <td>{{ item.code }}-{{ batch.code }}</td>
-        </tr>
-        <tr>
-            <th>Nombre</th> <td>{{ item.name }}</td>
-        </tr>
-        <tr>
-            <th>Descripción</th> <td>{{ item.description }}</td>
-        </tr>
-    </table>
-    {% buttons %}
-        {% buttons_menu %}
-            {% edit_button "batch_update" batch.id %}
-        {% endbuttons_menu %}
-    {% endbuttons %}
-
-    <h2>SKUs</h2>
+    <h1>Inventario en establecimiento {{ establecimiento }}</h1>
     <table class='table table-hover'>
         <thead>
             <tr>
+                <th>Código</th>
+                <th>Descripción</th>
                 <th>Cantidad</th>
                 <th>Precio de Venta</th>
-                <th>Establecimiento</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            {% for sku in batch.skus %}
+            {% for sku in sku_list %}
                 <tr>
+                    <td> {{ sku.code }} </td>
+                    <td> {{ sku.batch.item.name }} </td>
                     <td> {{ sku.qty }} </td>
                     <td> {{ sku.unit_price | money_2d }} </td>
-                    <td> {{ sku.establecimiento }} </td>
                     <td> {% fullwidth_button 'Detalle' 'sku_detail' sku.id %} </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan='4'>No hay SKUs</td>
+                    <td colspan='5'>No hay SKUs</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -52,7 +36,7 @@
 
     {% buttons %}
         {% buttons_menu %}
-            {% back_button "item_index" company.id %}
+            {% back_button "inventory_main_menu" company.id %}
         {% endbuttons_menu %}
     {% endbuttons %}
 

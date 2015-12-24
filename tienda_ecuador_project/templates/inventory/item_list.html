@@ -1,6 +1,6 @@
 {% extends 'inventory/l1_company_selected.html' %}
 {% load bootstrap3 %}
-{% load decimal_format %}
+{% load links %}
 
 {% block breadcrumbs %}
     {{ block.super }}
@@ -11,5 +11,10 @@
     {{ block.super }}
     <div class='col-xs-12'>
     {% include 'inventory/item/item_list_table.html' %}
+    {% buttons %}
+        {% buttons_menu %}
+            {% button "Nuevo Artículo" 'item_create' company.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
     </div>
 {% endblock %}

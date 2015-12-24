@@ -54,10 +54,22 @@ class Migration(migrations.Migration):
             },
             bases=(models.Model,),
         ),
+        migrations.AlterUniqueTogether(
+            name='sku',
+            unique_together=set([('batch', 'establecimiento')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='item',
+            unique_together=set([('company', 'code')]),
+        ),
         migrations.AddField(
             model_name='batch',
             name='item',
             field=models.ForeignKey(to='inventory.Item'),
             preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='batch',
+            unique_together=set([('item', 'code')]),
         ),
     ]

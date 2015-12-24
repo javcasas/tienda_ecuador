@@ -5,7 +5,7 @@ register = template.Library()
 
 
 def wrap_btn_group(text):
-    return """
+    return u"""
 <div class='btn-group'>
     {}
 </div>
@@ -94,7 +94,7 @@ class ButtonMenuNode(template.Node):
 
     def render(self, context):
         output = self.nodelist.render(context)
-        output = """
+        output = u"""
 <div class='btn-group-justified'>
 {}
 </div>

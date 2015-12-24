@@ -49,6 +49,8 @@ class Item(models.Model):
         choices=ItemDecimales.__OPTIONS__,
         default=0)
     company = models.ForeignKey(company_accounts.models.Company)
+    class Meta:
+        unique_together = (("company", "code"),)
 
     @property
     def taxes(self):
@@ -100,6 +102,8 @@ class Batch(models.Model):
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
     code = models.CharField(max_length=50)
     acquisition_date = models.DateField()
+    class Meta:
+        unique_together = (("item", "code"),)
 
     def get_absolute_url(self):
         return reverse("batch_detail", args=(self.id,))
@@ -121,6 +125,8 @@ class SKU(models.Model):
     # Where on the store it is located
     location = models.CharField(
         max_length=500)
+    class Meta:
+        unique_together = (("batch", "establecimiento"),)
 
     @property
     def code(self):

@@ -227,6 +227,9 @@ class Establecimiento(models.Model):
     def puntos_emision(self):
         return PuntoEmision.objects.filter(establecimiento=self)
 
+    def __unicode__(self):
+        return self.descripcion
+
 
 class PuntoEmision(models.Model):
     """

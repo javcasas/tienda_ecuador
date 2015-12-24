@@ -3,6 +3,11 @@ from inventory import views
 
 urlpatterns = patterns(
     '',
+    # Main menu
+    url(r'^(?P<pk>[0-9]+)/$',
+        views.CompanyProfileView.as_view(
+            template_name='inventory/inventory_main_menu.html',
+        ), name='inventory_main_menu'),
     # Item views
     url(r'^item/index/(?P<company_id>[0-9]+)/$',
         views.ItemListView.as_view(), name='item_index'),
@@ -31,7 +36,7 @@ urlpatterns = patterns(
 
     # SKU views
     url(r'^sku/index/(?P<establecimiento_id>[0-9]+)/$',
-        views.SKUListView.as_view(), name='sku_index'),
+        views.SKUEstablecimientoListView.as_view(), name='sku_establecimiento_index'),
     url(r'^sku/new/c/(?P<batch_id>[0-9]+)/$',
         views.SKUCreateView.as_view(), name='sku_create'),
     url(r'^sku/detail/(?P<pk>[0-9]+)/$',

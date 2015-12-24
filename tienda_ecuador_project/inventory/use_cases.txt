@@ -1,0 +1,12 @@
+Casos de uso:
+
+* CRUD artículos
+* Comprar mercadería -> compras
+    * Leer factura electrónica/física
+    * Conectar artículos en la factura con artículos en el sistema
+    * Transferir inventario a un establecimiento
+* Ver inventario en establecimiento
+* Transferir inventario
+    * Seleccionar destino
+    * Seleccionar items
+    * Generar guía de remisión

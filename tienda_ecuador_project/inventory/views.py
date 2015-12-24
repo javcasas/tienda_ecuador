@@ -16,9 +16,15 @@ from django.forms.models import model_to_dict
 
 import models
 import forms
-from company_accounts.views import CompanyView, CompanySelected
+from company_accounts.views import CompanyView, CompanySelected, LicenceControlMixin, EstablecimientoSelected
 
 tz = pytz.timezone('America/Guayaquil')
+
+
+class CompanyProfileView(CompanyView, CompanySelected, DetailView):
+    """
+    View that shows a general index for a given company
+    """
 
 ####################################################################
 #   Item views
@@ -221,11 +227,15 @@ class SKUView(object):
         return self.model.objects.get(id=self.kwargs['pk']).batch.id
 
 
-class SKUListView(BatchSelected, SKUView, ListView):
+class SKUEstablecimientoListView(EstablecimientoSelected, SKUView, ListView):
     """
     View that shows the items for the current company
     """
     context_object_name = "sku_list"
+    template_name_suffix = '_establecimiento_list'
+
+    def get_queryset(self):
+        return self.model.objects.filter(establecimiento=self.establecimiento)
 
 
 #class ItemListViewJson(JSONResponseMixin, ItemListView):
