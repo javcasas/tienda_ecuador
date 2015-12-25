@@ -265,7 +265,9 @@ class ComprobanteSRIMixin(models.Model):
         else:
             res = False
 
-        self.sri_last_check = datetime.now(tz=pytz.timezone('America/Guayaquil'))
+        self.sri_last_check = datetime.now(
+            tz=pytz.timezone('America/Guayaquil'))
+
         self.secret_save()
 
         if self.status == SRIStatus.options.Sent:

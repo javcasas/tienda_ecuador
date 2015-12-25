@@ -1,22 +1,17 @@
-import tempfile
-import os
-import base64
 import pytz
-from datetime import datetime, timedelta
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.views.generic import View
+from django.shortcuts import get_object_or_404
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 from django.http import JsonResponse
-from django.forms.models import model_to_dict
 
 import models
 import forms
-from company_accounts.views import CompanyView, CompanySelected, LicenceControlMixin, EstablecimientoSelected
+from company_accounts.views import (CompanyView,
+                                    CompanySelected,
+                                    EstablecimientoSelected)
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -25,6 +20,7 @@ class CompanyProfileView(CompanyView, CompanySelected, DetailView):
     """
     View that shows a general index for a given company
     """
+
 
 ####################################################################
 #   Item views
@@ -51,9 +47,9 @@ class ItemListView(CompanySelected, ItemView, ListView):
     context_object_name = "item_list"
 
 
-#class ItemListViewJson(JSONResponseMixin, ItemListView):
-#    def render_to_response(self, context, **response_kwargs):
-#        return self.render_to_json_response(context, **response_kwargs)
+# class ItemListViewJson(JSONResponseMixin, ItemListView):
+#     def render_to_response(self, context, **response_kwargs):
+#         return self.render_to_json_response(context, **response_kwargs)
 
 
 class ItemDetailView(ItemView, CompanySelected, DetailView):
@@ -71,16 +67,17 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
 
     def get_form(self, *args):
         res = super(ItemCreateView, self).get_form(*args)
+        res.instance.company = self.company
         return res
 
     def form_valid(self, form):
-        form.instance.company = self.company
-        form.instance.save()
-        item = models.Item.objects.get(id=form.instance.id)
+        res = super(ItemCreateView, self).form_valid(form)
         if form.data['ice']:
-            item.tax_items.add(models.Ice.objects.get(pk=form.data['ice']))
-        item.tax_items.add(models.Iva.objects.get(pk=form.data['iva']))
-        return super(ItemCreateView, self).form_valid(form)
+            form.instance.tax_items.add(
+                models.Ice.objects.get(pk=form.data['ice']))
+        form.instance.tax_items.add(
+            models.Iva.objects.get(pk=form.data['iva']))
+        return res
 
 
 class ItemUpdateView(ItemView, CompanySelected, UpdateView):
@@ -129,6 +126,7 @@ class ItemSelected(CompanySelected):
         context['item'] = self.item
         return context
 
+
 ####################################################################
 #   Batch views
 ####################################################################
@@ -154,9 +152,9 @@ class BatchListView(ItemSelected, BatchView, ListView):
     context_object_name = "batch_list"
 
 
-#class ItemListViewJson(JSONResponseMixin, ItemListView):
-#    def render_to_response(self, context, **response_kwargs):
-#        return self.render_to_json_response(context, **response_kwargs)
+# class ItemListViewJson(JSONResponseMixin, ItemListView):
+#     def render_to_response(self, context, **response_kwargs):
+#         return self.render_to_json_response(context, **response_kwargs)
 
 
 class BatchDetailView(BatchView, ItemSelected, DetailView):
@@ -170,7 +168,7 @@ class BatchCreateView(ItemSelected, BatchView, CreateView):
     Create view for items
     """
     template_name_suffix = '_create_form'
-    #form_class = forms.ItemForm
+    # form_class = forms.ItemForm
 
     def form_valid(self, form):
         form.instance.item = self.item
@@ -180,13 +178,14 @@ class BatchCreateView(ItemSelected, BatchView, CreateView):
 class BatchUpdateView(BatchView, ItemSelected, UpdateView):
     """
     """
-    #form_class = forms.ItemForm
+    # form_class = forms.ItemForm
 
 
 class BatchDeleteView(BatchView, ItemSelected, DeleteView):
     @property
     def success_url(self):
         return reverse("batch_index", args=(self.item.id, ))
+
 
 class BatchSelected(ItemSelected):
     @property
@@ -238,9 +237,9 @@ class SKUEstablecimientoListView(EstablecimientoSelected, SKUView, ListView):
         return self.model.objects.filter(establecimiento=self.establecimiento)
 
 
-#class ItemListViewJson(JSONResponseMixin, ItemListView):
-#    def render_to_response(self, context, **response_kwargs):
-#        return self.render_to_json_response(context, **response_kwargs)
+# class ItemListViewJson(JSONResponseMixin, ItemListView):
+#     def render_to_response(self, context, **response_kwargs):
+#         return self.render_to_json_response(context, **response_kwargs)
 
 
 class SKUDetailView(SKUView, BatchSelected, DetailView):
@@ -254,7 +253,7 @@ class SKUCreateView(BatchSelected, SKUView, CreateView):
     Create view for items
     """
     template_name_suffix = '_create_form'
-    #form_class = forms.ItemForm
+    # form_class = forms.ItemForm
 
     def form_valid(self, form):
         form.instance.batch = self.batch
@@ -264,7 +263,7 @@ class SKUCreateView(BatchSelected, SKUView, CreateView):
 class SKUUpdateView(SKUView, BatchSelected, UpdateView):
     """
     """
-    #form_class = forms.ItemForm
+    # form_class = forms.ItemForm
 
 
 class SKUDeleteView(SKUView, BatchSelected, DeleteView):

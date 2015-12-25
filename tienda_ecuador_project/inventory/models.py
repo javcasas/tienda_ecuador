@@ -1,11 +1,8 @@
 # * encoding: utf-8 *
-from datetime import date
 from decimal import Decimal
 
 from django.db import models
 from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 
 import company_accounts.models
 from sri.models import Tax, Iva, Ice
@@ -49,6 +46,7 @@ class Item(models.Model):
         choices=ItemDecimales.__OPTIONS__,
         default=0)
     company = models.ForeignKey(company_accounts.models.Company)
+
     class Meta:
         unique_together = (("company", "code"),)
 
@@ -102,6 +100,7 @@ class Batch(models.Model):
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
     code = models.CharField(max_length=50)
     acquisition_date = models.DateField()
+
     class Meta:
         unique_together = (("item", "code"),)
 
@@ -121,10 +120,12 @@ class SKU(models.Model):
     batch = models.ForeignKey(Batch)
     qty = models.DecimalField(max_digits=20, decimal_places=8)
     unit_price = models.DecimalField(max_digits=20, decimal_places=8)
-    establecimiento = models.ForeignKey(company_accounts.models.Establecimiento)
+    establecimiento = models.ForeignKey(
+        company_accounts.models.Establecimiento)
     # Where on the store it is located
     location = models.CharField(
         max_length=500)
+
     class Meta:
         unique_together = (("batch", "establecimiento"),)
 

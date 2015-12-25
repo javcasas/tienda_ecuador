@@ -13,7 +13,8 @@ to_load = ['tax_rates.yaml', 'formas_pago.yaml', 'plazos_pago.yaml']
 def stdout(*args):
     for i in args:
         print i,
-    print 
+    print
+
 
 def try_load(module, class_):
     """

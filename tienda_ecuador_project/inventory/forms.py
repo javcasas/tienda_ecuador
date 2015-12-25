@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import datetime
 from django import forms
 import models
 import sri.models as sri
@@ -42,4 +41,17 @@ class ItemForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.Item
-        fields = ('name', 'code', 'iva', 'ice', 'tipo', 'description', 'decimales_qty')
+        fields = ('name', 'code', 'iva', 'ice', 'tipo', 'description',
+                  'decimales_qty')
+
+    def clean(self):
+        cleaned_data = super(ItemForm, self).clean()
+        # Check unique constraint
+        try:
+            self.Meta.model.objects.get(company=self.instance.company,
+                                        code=cleaned_data['code'])
+            self.add_error('code',
+                           u'Código repetido, por favor utilice otro código.')
+        except self.Meta.model.DoesNotExist:
+            pass
+        return cleaned_data

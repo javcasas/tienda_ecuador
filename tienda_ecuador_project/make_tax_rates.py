@@ -2,7 +2,9 @@ from collections import namedtuple
 from datetime import date
 from decimal import Decimal
 
-data = open("/home/javier/ComprobantesElectronicos/resources/impuesto_valor.sql").read()
+data = open("/home/javier/ComprobantesElectronicos/"
+            "resources/impuesto_valor.sql").read()
+
 
 def split_parts(s):
     res = []
@@ -23,6 +25,7 @@ def split_parts(s):
         s = s.strip()
     return res
 
+
 def get_date(s):
     if s != "NULL":
         parts = s.split("-")
@@ -31,23 +34,25 @@ def get_date(s):
     else:
         return None
 
+
 def clean_desc(s):
     headers = ['ICE - ', 'ICE \xe2\x80\x93 ']
     for i in headers:
         if s.startswith(i):
             s = s[len(i):]
-    middle_items =[('  ', ' '),
-                   ('\xc2\xa0', ""),
-                   ('\xe2\x80\x93', '-'),
+    middle_items = [
+        ('  ', ' '),
+        ('\xc2\xa0', ""),
+        ('\xe2\x80\x93', '-'),
     ]
     for i, r in middle_items:
-        s = s.replace(i ,r)
+        s = s.replace(i, r)
     s = s.lower()
     replacements = [
-                   ('usd.', 'USD'),
-                   ('usd', 'USD'),
-                   ('pvp', 'PVP'),
-                   ('vehic ', 'vehiculos '),
+        ('usd.', 'USD'),
+        ('usd', 'USD'),
+        ('pvp', 'PVP'),
+        ('vehic ', 'vehiculos '),
     ]
     for i, r in replacements:
         s = s.replace(i, r)
@@ -55,13 +60,17 @@ def clean_desc(s):
     return s
 
 
-Ice = namedtuple("Ice", ['codigo', 'porcentaje', 'descripcion', 'fecha_inicio', 'fecha_fin', 'id'])
-Iva = namedtuple("Iva", ['codigo', 'porcentaje', 'descripcion', 'fecha_inicio', 'fecha_fin', 'id'])
-Retencion = namedtuple("Retencion", ['codigo', 'porcentaje', 'descripcion', 'fecha_inicio', 'fecha_fin', 'id'])
+Ice = namedtuple("Ice", ['codigo', 'porcentaje', 'descripcion',
+                         'fecha_inicio', 'fecha_fin', 'id'])
+Iva = namedtuple("Iva", ['codigo', 'porcentaje', 'descripcion',
+                         'fecha_inicio', 'fecha_fin', 'id'])
+Retencion = namedtuple("Retencion", ['codigo', 'porcentaje', 'descripcion',
+                                     'fecha_inicio', 'fecha_fin', 'id'])
 
 ices = []
 ivas = []
 retenciones = []
+
 
 def process():
     lines = data.splitlines()
@@ -82,18 +91,18 @@ def process():
         values = split_parts(value)
 
         res = dict(zip(keys, values))
-        convert_TIPO_IMPUESTO = {
-            "I": "Ice",
-            "R": "Retencion",
-            "A": "Iva",
-            "B": "Botellas",
-        }
+        # convert_TIPO_IMPUESTO = {
+        #     "I": "Ice",
+        #     "R": "Retencion",
+        #     "A": "Iva",
+        #     "B": "Botellas",
+        # }
         d = dict(codigo=res['CODIGO'],
-                porcentaje=Decimal(res['PORCENTAJE']),
-                descripcion=clean_desc(res['DESCRIPCION']),
-                fecha_inicio=get_date(res['FECHA_INICIO']),
-                fecha_fin=get_date(res['FECHA_FIN']),
-                id=None)
+                 porcentaje=Decimal(res['PORCENTAJE']),
+                 descripcion=clean_desc(res['DESCRIPCION']),
+                 fecha_inicio=get_date(res['FECHA_INICIO']),
+                 fecha_fin=get_date(res['FECHA_FIN']),
+                 id=None)
         if res['TIPO_IMPUESTO'] == 'I':
             d = Ice(**d)
             ices.append(d)
@@ -105,12 +114,12 @@ def process():
             retenciones.append(d)  # FIXME: Incompleto
 
 process()
-#for ice in ices:
-#    print ice
-#for iva in ivas:
-#    print iva
-#for retencion in retenciones:
-#    print retencion
+# for ice in ices:
+#     print ice
+# for iva in ivas:
+#     print iva
+# for retencion in retenciones:
+#     print retencion
 res = []
 
 ivas.append(Iva(codigo='0',
