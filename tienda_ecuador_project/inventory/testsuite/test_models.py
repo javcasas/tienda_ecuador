@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 from inventory import models
 
-from customer_accounts.testsuite.test_models import MakeBaseInstances
+from stakeholders.testsuite.test_models import MakeBaseInstances
 
 from util.testsuite.helpers import (add_instance,
                                     TestHelpersMixin)

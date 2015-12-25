@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url
-from customer_accounts import views
+from stakeholders import views
 
 urlpatterns = patterns(
     '',

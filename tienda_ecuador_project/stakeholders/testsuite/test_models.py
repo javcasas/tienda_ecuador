@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 
 from company_accounts.testsuite.test_models import MakeBaseInstances
-from customer_accounts import models
+from stakeholders import models
 
 from util.testsuite.helpers import (add_instance,
                                     TestHelpersMixin)

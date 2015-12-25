@@ -39,7 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'sri',
     'company_accounts',
-    'customer_accounts',
+    'stakeholders',
     'inventory',
     'billing',
     'accounts_receivable',

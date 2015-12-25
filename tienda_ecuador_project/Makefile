@@ -1,6 +1,6 @@
 APPS = sri \
 	company_accounts \
-    customer_accounts \
+    stakeholders \
 	inventory \
 	billing \
 	accounts_receivable \

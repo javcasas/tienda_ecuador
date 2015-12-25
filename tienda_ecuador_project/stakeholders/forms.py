@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django import forms
-from customer_accounts import models
+from stakeholders import models
 
 
 class CustomerForm(forms.ModelForm):

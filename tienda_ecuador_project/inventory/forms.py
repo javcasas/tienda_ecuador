@@ -55,3 +55,69 @@ class ItemForm(forms.ModelForm):
         except self.Meta.model.DoesNotExist:
             pass
         return cleaned_data
+
+
+class BatchForm(forms.ModelForm):
+    code = forms.CharField(
+        label='Código',
+        max_length=50,
+        help_text="Por favor teclee un código para el artículo.")
+    unit_cost = forms.DecimalField(
+        label='Coste',
+        decimals=4)
+    date = forms.DateField(
+        initial=datetime.date.today,
+        label='Fecha')
+
+    # An inline class to provide additional information on the form.
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        model = models.Batch
+        fields = ('code', 'unit_cost', 'date',)
+
+    def clean(self):
+        cleaned_data = super(BatchForm, self).clean()
+        # Check unique constraint
+        try:
+            self.Meta.model.objects.get(item=self.instance.item,
+                                        code=cleaned_data['code'])
+            self.add_error('code',
+                           u'Código repetido, por favor utilice otro código.')
+        except self.Meta.model.DoesNotExist:
+            pass
+        return cleaned_data
+
+
+class SKUForm(forms.ModelForm):
+    code = forms.CharField(
+        label='Código',
+        max_length=50,
+        help_text="Por favor teclee un código para el artículo.")
+    unit_price = forms.DecimalField(
+        label='Precio',
+        decimas=4)
+    qty = forms.DecimalField(
+        label='Cantidad',
+        decimals=4)
+    establecimiento = forms.ModelChoiceField(
+        label='Establecimiento',
+        queryset=None,
+        help_text=u'Seleccione el establecimiento en el que está localizada la mercadería')
+
+    # An inline class to provide additional information on the form.
+    class Meta:
+        # Provide an association between the ModelForm and a model
+        model = models.Item
+        fields = ('code', 'unit_cost', 'date',)
+
+    def clean(self):
+        cleaned_data = super(SKUForm, self).clean()
+        # Check unique constraint
+        try:
+            self.Meta.model.objects.get(item=self.instance.item,
+                                        code=cleaned_data['code'])
+            self.add_error('code',
+                           u'Código repetido, por favor utilice otro código.')
+        except self.Meta.model.DoesNotExist:
+            pass
+        return cleaned_data

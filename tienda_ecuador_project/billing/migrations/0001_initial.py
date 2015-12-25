@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('customer_accounts', '0001_initial'),
+        ('stakeholders', '0001_initial'),
         ('inventory', '0001_initial'),
         ('company_accounts', '0001_initial'),
     ]
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('date', models.DateTimeField()),
                 ('secuencial', models.IntegerField(default=0, blank=True)),
                 ('company', models.ForeignKey(to='company_accounts.Company')),
-                ('issued_to', models.ForeignKey(blank=True, to='customer_accounts.Customer', null=True)),
+                ('issued_to', models.ForeignKey(blank=True, to='stakeholders.Customer', null=True)),
                 ('punto_emision', models.ForeignKey(blank=True, to='company_accounts.PuntoEmision', null=True)),
             ],
             options={

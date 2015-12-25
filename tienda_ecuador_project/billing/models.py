@@ -13,7 +13,7 @@ from util.validators import IsCedula, IsRuc
 from util import signature
 
 from company_accounts.models import Company, Establecimiento, PuntoEmision
-from customer_accounts.models import Customer
+from stakeholders.models import Customer
 from inventory.models import SKU
 from sri.models import ComprobanteSRIMixin, SRIStatus
 

@@ -19,18 +19,27 @@ TipoIdentificacion = Enum(
 )
 
 
-class Customer(models.Model):
+class Stakeholder(models.Model):
     """
     Represents a generic customer
     """
     razon_social = models.CharField(max_length=100)
+    identificacion = models.CharField(max_length=100)
+    email = models.CharField(max_length=100, blank=True)
+    company = models.ForeignKey(Company)
+
+    class Meta:
+        abstract = True
+
+
+class Customer(Stakeholder):
+    """
+    Represents a generic customer
+    """
+    direccion = models.CharField(max_length=100, blank=True)
     tipo_identificacion = models.CharField(
         max_length=100,
         choices=TipoIdentificacion.__OPTIONS__)
-    identificacion = models.CharField(max_length=100)
-    email = models.CharField(max_length=100, blank=True)
-    direccion = models.CharField(max_length=100, blank=True)
-    company = models.ForeignKey(Company)
 
     def __unicode__(self):
         return u"{}({})".format(self.razon_social,
@@ -51,3 +60,11 @@ class Customer(models.Model):
     def get_absolute_url(self):
         return reverse('customer_detail',
                        kwargs={'pk': self.pk})
+
+
+class Seller(Stakeholder):
+    pass
+
+
+class Transportist(Stakeholder):
+    is_rise = models.BooleanField(default=False)
