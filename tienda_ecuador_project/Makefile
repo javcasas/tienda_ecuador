@@ -2,6 +2,7 @@ APPS = sri \
 	company_accounts \
     stakeholders \
 	inventory \
+    purchases \
 	billing \
 	accounts_receivable \
 	reports \

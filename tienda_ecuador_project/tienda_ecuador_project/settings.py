@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'company_accounts',
     'stakeholders',
     'inventory',
+    'purchases',
     'billing',
     'accounts_receivable',
     'registration',
