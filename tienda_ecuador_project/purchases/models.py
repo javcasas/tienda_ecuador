@@ -18,7 +18,7 @@ class Purchase(models.Model):
     """
     date = models.DateField(
         default=date.today)
-    xml_content = models.FileField(
+    xml_content = models.TextField(
         )
     seller = models.ForeignKey(
         stakeholders.Seller)
@@ -26,4 +26,4 @@ class Purchase(models.Model):
         default=False)
     comment = models.TextField(
         blank=True)
-    number = models.CharField(max_length=20, blank=True)
+    number = models.CharField(max_length=20)

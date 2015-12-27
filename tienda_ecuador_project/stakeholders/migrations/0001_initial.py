@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('razon_social', models.CharField(max_length=100)),
+                ('nombre_comercial', models.CharField(max_length=100, blank=True)),
                 ('identificacion', models.CharField(max_length=100)),
                 ('email', models.CharField(max_length=100, blank=True)),
                 ('direccion', models.CharField(max_length=100, blank=True)),
@@ -32,6 +33,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('razon_social', models.CharField(max_length=100)),
+                ('nombre_comercial', models.CharField(max_length=100, blank=True)),
                 ('identificacion', models.CharField(max_length=100)),
                 ('email', models.CharField(max_length=100, blank=True)),
                 ('company', models.ForeignKey(to='company_accounts.Company')),
@@ -46,6 +48,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('razon_social', models.CharField(max_length=100)),
+                ('nombre_comercial', models.CharField(max_length=100, blank=True)),
                 ('identificacion', models.CharField(max_length=100)),
                 ('email', models.CharField(max_length=100, blank=True)),
                 ('is_rise', models.BooleanField(default=False)),

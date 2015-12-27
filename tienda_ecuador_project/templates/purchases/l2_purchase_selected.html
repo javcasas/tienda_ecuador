@@ -1,0 +1,10 @@
+{% extends 'purchases/l1_company_selected.html' %}
+{% block title %}{{ purchase.number }} - {{ block.super }}{% endblock %}
+
+{% block left_menu %}
+{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'purchase_detail' purchase.id %}'>{{ purchase.number }}</a></li>
+{% endblock %}

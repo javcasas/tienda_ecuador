@@ -1,0 +1,23 @@
+{% extends 'purchases/l2_purchase_selected.html' %}
+{% load bootstrap3 %}
+{% load links %}
+
+{% block body %}
+{{ block.super }}
+<div class='col-xs-12'>
+    <table class='table table-hover'>
+        <tr>
+            <th>Vendedor</th><td>{{ purchase.seller.identificacion }} {{ purchase.seller.nombre_comercial }} {{ purchase.seller.razon_social }}</td>
+        </tr>
+        <tr>
+            <th>Número de comprobante</th><td>{{ purchase.number }}</td>
+        </tr>
+    </table>
+    {% buttons %}
+        {% buttons_menu %}
+            {#% edit_button "customer_update" customer.id %#}
+            {#% back_button 'customer_index' company.id %#}
+        {% endbuttons_menu %}
+    {% endbuttons %}
+</div>
+{% endblock %}

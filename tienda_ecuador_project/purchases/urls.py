@@ -13,6 +13,8 @@ urlpatterns = patterns(
     # Purchase views
     url(r'^create_from_xml/(?P<company_id>[0-9]+)/$',
         views.PurchaseCreateFromXMLView.as_view(), name='purchase_create_from_xml'),
+    url(r'^purchase/(?P<pk>[0-9]+)/$',
+        views.PurchaseDetailView.as_view(), name='purchase_detail'),
     url(r'^generate_retention/(?P<pk>[0-9]+)/$',
         views.PurchaseGenerateRetentionView.as_view(), name='purchase_generate_retention'),
     url(r'^add_items_to_inventory/(?P<pk>[0-9]+)/$',

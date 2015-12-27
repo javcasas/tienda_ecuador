@@ -24,6 +24,7 @@ class Stakeholder(models.Model):
     Represents a generic customer
     """
     razon_social = models.CharField(max_length=100)
+    nombre_comercial = models.CharField(max_length=100, blank=True)
     identificacion = models.CharField(max_length=100)
     email = models.CharField(max_length=100, blank=True)
     company = models.ForeignKey(Company)
