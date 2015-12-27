@@ -14,11 +14,16 @@ from stakeholders import models as stakeholders
 
 class Purchase(models.Model):
     """
-    A licence model
+    Model for purchases
     """
     date = models.DateField(
         default=date.today)
-    xml_content = models.DateField(
-        default=date.today)
+    xml_content = models.FileField(
+        )
     seller = models.ForeignKey(
         stakeholders.Seller)
+    closed = models.BooleanField(
+        default=False)
+    comment = models.TextField(
+        blank=True)
+    number = models.CharField(max_length=20, blank=True)

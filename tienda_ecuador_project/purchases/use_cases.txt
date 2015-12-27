@@ -1,0 +1,10 @@
+* Comprar
+    Añadir compra a la base de datos
+    Generar retención
+    Añadir items comprados al inventario
+    Cerrar compra
+
+* Devolver items
+    Partiendo de compra cerrada
+    Cancelar SKUs
+    Almacenar comentario

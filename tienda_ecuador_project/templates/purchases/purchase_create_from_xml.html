@@ -1,0 +1,22 @@
+{% extends 'purchases/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% load links %}
+
+{% block title %}Nueva compra - {{ block.super }} {% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>Cargar compra desde factura electrónica</h1>
+        <form method='post' action='.' class='form' enctype='multipart/form-data'>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                {% buttons_menu %}
+                    {% save_button %}
+                    {% dont_save_button 'purchases_main_menu' company.id %}
+                {% endbuttons_menu %}
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock %}

@@ -27,6 +27,8 @@ urlpatterns = [
         include('stakeholders.urls',)),
     url(r'^inventory/',
         include('inventory.urls',)),
+    url(r'^purchases/',
+        include('purchases.urls',)),
     url(r'^billing/', include('billing.urls')),
     url(r'^accounts_receivable/', include('accounts_receivable.urls')),
     url(r'^reports/', include('reports.urls')),

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import date
 from django import forms
 import models
 import sri.models as sri
@@ -64,9 +65,9 @@ class BatchForm(forms.ModelForm):
         help_text="Por favor teclee un código para el artículo.")
     unit_cost = forms.DecimalField(
         label='Coste',
-        decimals=4)
+        decimal_places=4)
     date = forms.DateField(
-        initial=datetime.date.today,
+        initial=date.today,
         label='Fecha')
 
     # An inline class to provide additional information on the form.
@@ -89,16 +90,12 @@ class BatchForm(forms.ModelForm):
 
 
 class SKUForm(forms.ModelForm):
-    code = forms.CharField(
-        label='Código',
-        max_length=50,
-        help_text="Por favor teclee un código para el artículo.")
     unit_price = forms.DecimalField(
         label='Precio',
-        decimas=4)
+        decimal_places=4)
     qty = forms.DecimalField(
         label='Cantidad',
-        decimals=4)
+        decimal_places=4)
     establecimiento = forms.ModelChoiceField(
         label='Establecimiento',
         queryset=None,
@@ -108,7 +105,7 @@ class SKUForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.Item
-        fields = ('code', 'unit_cost', 'date',)
+        fields = ('unit_price', 'qty',)
 
     def clean(self):
         cleaned_data = super(SKUForm, self).clean()
