@@ -1,0 +1,54 @@
+{% extends 'purchases/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% load decimal_format %}
+{% load links %}
+{% load date_management %}
+
+{% block title %}Compras - {{ block.super }} {% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'purchase_year_archive' company.id year.year %}'>{{ year | date:'Y' }}</a></li>
+{% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>Compras</h1>
+        <div>
+        <a href='{% url 'purchase_year_archive' company.id previous_year.year %}'
+           class='pull-left btn btn-default'>
+                <span class='glyphicon glyphicon-chevron-left'></span>
+                {{ previous_year.year }}</a>
+        {% if next_year %}
+            <a href='{% url 'purchase_year_archive' company.id next_year.year %}'
+               class='pull-right btn btn-default'>
+                    <span class='glyphicon glyphicon-chevron-right'></span>
+                    {{ next_year.year }}</a>
+        {% endif %}
+        </div>
+        <table class='table table-hover'>
+            <thead>
+                <tr>
+                    <th>Mes</th>
+                    <th>Total comprado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for date, items, total in date_content %}
+                    <tr>
+                        <td>{{ date.month|month_name }} / {{ date.year }}</td>
+                        <td>{{ total | money_2d }}</td>
+                        <td>{% fullwidth_button 'Detalle' 'purchase_month_archive' company.id date.year date.month %}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan='3'>No hay compras</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% include "purchases/purchase_list_table.html" with purchases=object_list %}
+    </div>
+{% endblock %}

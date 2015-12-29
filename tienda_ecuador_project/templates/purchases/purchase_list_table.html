@@ -1,0 +1,29 @@
+{% load decimal_format %}
+{% load links %}
+
+<table class='table table-hover'>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Empresa</th>
+            <th>Serie</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for purchase in purchases %}
+            <tr>
+                <td>{{ purchase.date }}</td>
+                <td>{% firstof purchase.seller.nombre_comercial purchase.seller.razon_social %}</td>
+                <td>{{ purchase.number }}</td>
+                <td>{{ purchase.total | money_2d }}</td>
+                <td>{% fullwidth_button 'Detalle' 'purchase_detail' purchase.id %}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan='5'>No hay compras</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

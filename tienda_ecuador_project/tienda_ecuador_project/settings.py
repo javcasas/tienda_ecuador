@@ -87,6 +87,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
             'debug': True,
+            #'string_if_invalid': '%s',
         },
     },
 ]

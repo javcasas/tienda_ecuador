@@ -1,0 +1,32 @@
+{% extends 'purchases/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% load links %}
+
+{% block title %}Compras - {{ block.super }} {% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>Compras</h1>
+        <table class='table table-hover'>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Empresa</th>
+                    <th>Serie</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for purchase in purchase_list %}
+                <tr>
+                    <td>{{ purchase.date }}</td>
+                    <td>{% firstof purchase.seller.nombre_comercial purchase.seller.razon_social %} ({{ purchase.seller.identificacion }})</td>
+                    <td>{{ purchase.number }}</td>
+                    <td>{% fullwidth_button "Detalle" 'purchase_detail' purchase.id %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

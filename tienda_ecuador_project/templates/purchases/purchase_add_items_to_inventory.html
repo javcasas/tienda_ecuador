@@ -1,0 +1,75 @@
+{% extends 'purchases/l2_purchase_selected.html' %}
+{% load bootstrap3 %}
+{% load links %}
+{% load decimal_format %}
+
+{% block body %}
+{{ block.super }}
+<div class='col-xs-12'>
+    <h1>Añadir artículos en compra {{ purchase.number }} al inventario</h1>
+    <form action='.' method='post' class='form'>
+        <table class='table table-hover table-vertical-center'>
+            <tbody>
+                {% for item in detalles %}
+                    <tr id='item-{{ forloop.counter0 }}'>
+                        <td>{{ item.cantidad }}x</td>
+                        <td>{{ item.descripcion }}<br/>
+                            <strong>Precio Unitario:</strong> {{ item.precioUnitario }} <br/>
+                            <strong>Descuento:</strong> {{ item.descuento }}<br/>
+                            <strong>Subtotal:</strong> {{ item.precioTotalSinImpuesto }}<br/>
+                            {% for impuesto in item.impuestos %}
+                                <strong>
+                                    {% if impuesto.codigo == '2' %} IVA
+                                    {% elif impuesto.codigo == '3' %} ICE
+                                    {% else %} Impuesto {{ impuesto.codigo }}
+                                    {% endif %}
+                                    {{ impuesto.tarifa }}%:
+                                </strong>
+                                {{ impuesto.valor }}<br/>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <input type='checkbox' checked='checked' class='form-control'></input>
+                        </td>
+                    </tr>
+                    <script>
+function update_{{ forloop.counter0 }} (){
+    var is_checked = $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop('checked');
+    if(is_checked){
+        $('#item-{{ forloop.counter0 }}').addClass("success");
+    } else {
+        $('#item-{{ forloop.counter0 }}').removeClass("success");
+    }
+}
+update_{{ forloop.counter0 }}();
+$('#item-{{ forloop.counter0 }}').click(function () {
+    var is_checked = $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop('checked');
+    if(is_checked){
+        $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop("checked", "");
+    } else {
+        $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop("checked", "checked");
+    }
+    update_{{ forloop.counter0 }}();
+});
+                    </script>
+                {% endfor %}
+            </tbody>
+        </table>
+        <label for='establecimiento'>Establecimiento</label>
+        <select name='establecimiento' class='form-control'>
+            {% for establecimiento in establecimientos %}
+             <option value='{{ establecimiento.id }}'>{{ establecimiento.descripcion }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    {% buttons %}
+        {% buttons_menu %}
+            {#% button "Hacer retención" "purchase_generate_retention" purchase.id %#}
+            {% if not purchase.closed %}
+                {% button "Añadir artículos al Inventario" "purchase_add_items_to_inventory_xml" purchase.id %}
+                {% button "Cerrar compra" "purchase_finish" purchase.id %}
+            {% endif %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
+</div>
+{% endblock %}

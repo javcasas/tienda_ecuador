@@ -38,6 +38,26 @@
             </div>
         </div>
 
+        <div class='col-xs-12'>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Informes</h3>
+                </div>
+                <div class="panel-body">
+                    {% now 'Y' as year %}
+                    {% now 'm' as month %}
+                    {% now 'F' as month_name %}
+                    {% now 'd' as day %}
+                    <a href='{% url 'purchase_day_archive' company.id year month day %}'
+                       class='btn btn-default btn-lg col-xs-6 col-sm-4'>Compras en {{ day }} de {{ month_name }} de {{ year }}</a>
+                    <a href='{% url 'purchase_month_archive' company.id year month %}'
+                       class='btn btn-default btn-lg col-xs-6 col-sm-4'>Compras en {{ month_name }} de {{ year }}</a>
+                    <a href='{% url 'purchase_year_archive' company.id year %}'
+                       class='btn btn-default btn-lg col-xs-6 col-sm-4'>Compras en el año {{ year }}</a>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 {% endblock %}

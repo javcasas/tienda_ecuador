@@ -20,7 +20,8 @@ class Migration(migrations.Migration):
                 ('xml_content', models.TextField()),
                 ('closed', models.BooleanField(default=False)),
                 ('comment', models.TextField(blank=True)),
-                ('number', models.CharField(max_length=20, blank=True)),
+                ('number', models.CharField(max_length=20)),
+                ('total', models.DecimalField(max_digits=20, decimal_places=8)),
                 ('seller', models.ForeignKey(to='stakeholders.Seller')),
             ],
             options={

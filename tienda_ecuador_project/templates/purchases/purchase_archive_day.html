@@ -1,0 +1,34 @@
+{% extends 'purchases/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% load decimal_format %}
+{% load links %}
+{% load date_management %}
+
+{% block title %}Compras - {{ block.super }} {% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'purchase_year_archive' company.id day.year %}'>{{ day | date:'Y' }}</a></li>
+    <li><a href='{% url 'purchase_month_archive' company.id day.year day.month %}'>{{ day | date:'F' }}</a></li>
+    <li><a href='{% url 'purchase_day_archive' company.id day.year day.month day.day %}'>{{ day | date:'d' }}</a></li>
+{% endblock %}
+
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>Compras</h1>
+        <div>
+        <a href='{% url 'purchase_day_archive' company.id previous_day.year previous_day.month previous_day.day %}'
+           class='pull-left btn btn-default'>
+                <span class='glyphicon glyphicon-chevron-left'></span>
+                {{ previous_day }}</a>
+        {% if next_day %}
+            <a href='{% url 'purchase_day_archive' company.id next_day.year next_day.month next_day.day %}'
+               class='pull-right btn btn-default'>
+                    <span class='glyphicon glyphicon-chevron-right'></span>
+                    {{ next_day }}</a>
+        {% endif %}
+        </div>
+        {% include "purchases/purchase_list_table.html" with purchases=object_list %}
+    </div>
+{% endblock %}
