@@ -15,7 +15,7 @@ tz = pytz.timezone('America/Guayaquil')
 
 class CustomerView(object):
     """
-    Base class for an Item View
+    Base class for an Customer View
     """
     model = models.Customer
     context_object_name = 'customer'
@@ -30,6 +30,9 @@ class CustomerView(object):
 
 class CustomerListView(CompanySelected, CustomerView, ListView):
     context_object_name = "customer_list"
+
+    def get_queryset(self):
+        return self.model.objects.filter(company=self.company).exclude(identificacion='9999999999999')
 
 
 class CustomerDetailView(CustomerView, CompanySelected, DetailView):

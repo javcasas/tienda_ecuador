@@ -64,7 +64,7 @@ class BillAddItemForm(forms.ModelForm):
         label="Cantidad",
         initial=1,
         help_text='Por favor introduzca la cantidad.')
-    copy_from = forms.ModelChoiceField(
+    sku = forms.ModelChoiceField(
         label='Artículo',
         queryset=None,
         help_text="Seleccione un artículo que añadir a la factura.")
@@ -73,7 +73,7 @@ class BillAddItemForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.BillItem
-        fields = ('qty', 'copy_from')
+        fields = ('qty', 'sku')
 
 
 class BillItemForm(forms.ModelForm):

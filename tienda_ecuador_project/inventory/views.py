@@ -1,5 +1,6 @@
 import pytz
 
+from django.db.models import Max
 from django.shortcuts import get_object_or_404
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
@@ -12,8 +13,39 @@ import forms
 from company_accounts.views import (CompanyView,
                                     CompanySelected,
                                     EstablecimientoSelected)
+import company_accounts.models
+from django.forms.models import model_to_dict
+
+import util.json
+
 
 tz = pytz.timezone('America/Guayaquil')
+
+
+class JSONResponseMixin(object):
+    """
+    A mixin that can be used to render a JSON response.
+    """
+    def render_to_json_response(self, context, **response_kwargs):
+        """
+        Returns a JSON response, transforming 'context' to make the payload.
+        """
+        return JsonResponse(
+            self.get_data(context),
+            safe=False,
+            **response_kwargs
+        )
+
+    def get_data(self, context):
+        """
+        Returns an object that will be serialized as JSON by json.dumps().
+        """
+        # Note: This is *EXTREMELY* naive; in reality, you'll need
+        # to do much more complex handling to ensure that arbitrary
+        # objects -- such as Django model instances or querysets
+        # -- can be serialized as JSON.
+        return map(model_to_dict,
+                   list(self.model.objects.filter(company=self.company)))
 
 
 class CompanyProfileView(CompanyView, CompanySelected, DetailView):
@@ -47,9 +79,9 @@ class ItemListView(CompanySelected, ItemView, ListView):
     context_object_name = "item_list"
 
 
-# class ItemListViewJson(JSONResponseMixin, ItemListView):
-#     def render_to_response(self, context, **response_kwargs):
-#         return self.render_to_json_response(context, **response_kwargs)
+class ItemListViewJson(JSONResponseMixin, ItemListView):
+    def render_to_response(self, context, **response_kwargs):
+        return self.render_to_json_response(context, **response_kwargs)
 
 
 class ItemDetailView(ItemView, CompanySelected, DetailView):
@@ -167,18 +199,21 @@ class BatchCreateView(ItemSelected, BatchView, CreateView):
     """
     Create view for items
     """
-    template_name_suffix = '_create_form'
-    # form_class = forms.ItemForm
+    form_class = forms.BatchForm
 
-    def form_valid(self, form):
+    def get_form(self, **kwargs):
+        form = super(BatchCreateView, self).get_form(**kwargs)
+        form.fields['code'].initial = (models.Batch.objects
+                                       .filter(item=self.item)
+                                       .aggregate(Max('code'))['code__max']) or 1
         form.instance.item = self.item
-        return super(BatchCreateView, self).form_valid(form)
+        return form
 
 
 class BatchUpdateView(BatchView, ItemSelected, UpdateView):
     """
     """
-    # form_class = forms.ItemForm
+    form_class = forms.BatchForm
 
 
 class BatchDeleteView(BatchView, ItemSelected, DeleteView):
@@ -237,9 +272,19 @@ class SKUEstablecimientoListView(EstablecimientoSelected, SKUView, ListView):
         return self.model.objects.filter(establecimiento=self.establecimiento)
 
 
-# class ItemListViewJson(JSONResponseMixin, ItemListView):
-#     def render_to_response(self, context, **response_kwargs):
-#         return self.render_to_json_response(context, **response_kwargs)
+class SKUEstablecimientoListJSONView(EstablecimientoSelected,
+                                     SKUView,
+                                     util.json.ListJSONResponseMixin,
+                                     ListView):
+    """
+    View that shows the items for the current company
+    """
+    context_object_name = "sku_list"
+    template_name_suffix = '_establecimiento_list'
+    fields_to_return = ['code', 'name', 'id', 'qty', 'unit_price', 'location']
+
+    def get_queryset(self):
+        return self.model.objects.filter(establecimiento=self.establecimiento)
 
 
 class SKUDetailView(SKUView, BatchSelected, DetailView):
@@ -253,17 +298,29 @@ class SKUCreateView(BatchSelected, SKUView, CreateView):
     Create view for items
     """
     template_name_suffix = '_create_form'
-    # form_class = forms.ItemForm
+    form_class = forms.SKUForm
 
-    def form_valid(self, form):
+    def get_form(self, **kwargs):
+        form = super(SKUCreateView, self).get_form(**kwargs)
+        form.fields['establecimiento'].queryset = (company_accounts.models
+                                                   .Establecimiento.objects
+                                                   .filter(company=self.company))
         form.instance.batch = self.batch
-        return super(SKUCreateView, self).form_valid(form)
+        return form
 
 
 class SKUUpdateView(SKUView, BatchSelected, UpdateView):
     """
     """
-    # form_class = forms.ItemForm
+    form_class = forms.SKUForm
+    def get_form(self, **kwargs):
+        form = super(SKUUpdateView, self).get_form(**kwargs)
+        form.fields['establecimiento'].queryset = (company_accounts.models
+                                                   .Establecimiento.objects
+                                                   .filter(company=self.company))
+        form.instance.batch = self.batch
+        return form
+
 
 
 class SKUDeleteView(SKUView, BatchSelected, DeleteView):

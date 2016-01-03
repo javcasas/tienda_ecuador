@@ -9,7 +9,7 @@
           {{ payment.plazo_pago.descripcion }}
           {% endif %}
       </td>
-      <td>{{ payment.cantidad|price2d }} ({{ payment.porcentaje }}%)</td>
+      <td>{{ payment.cantidad|price2d }} ({{ payment.porcentaje | floatformat:0 }}%)</td>
       <td>{{ payment.forma_pago.descripcion }}</td>
     </tr>
   {% empty %}

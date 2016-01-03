@@ -64,6 +64,7 @@ class FieldsTest(MakeBaseInstances, TestCase, TestHelpersMixin):
         self.tests = [
             (models.Item, base_data['Item'],
                 {"company": self.company,
+                 'code': '22222',
                  }),
         ]
 

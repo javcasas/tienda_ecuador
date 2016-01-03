@@ -10,6 +10,7 @@ from django.core.files.storage import FileSystemStorage
 
 from util import signature
 from stakeholders import models as stakeholders
+import inventory.models
 
 
 class Purchase(models.Model):
@@ -28,3 +29,10 @@ class Purchase(models.Model):
         blank=True)
     number = models.CharField(max_length=20)
     total = models.DecimalField(max_digits=20, decimal_places=8)
+
+    @property
+    def batches(self):
+        return inventory.models.Batch.objects.filter(purchase=self)
+
+    def __unicode__(self):
+        return u"{} - {}".format(self.seller.identificacion, self.number)

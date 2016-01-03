@@ -12,14 +12,28 @@ from django.views.generic.edit import CreateView, UpdateView, FormView
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.views.generic.list import ListView
+from django.db import transaction
 
 import models
 import forms
 from util import signature
 from sri.models import AmbienteSRI
+import sri.models
 import company_accounts.views
 import stakeholders.models
+import inventory.models
 
+def tree_to_dict(tree):
+    items = tree.getchildren()
+    tags = {item.tag for item in items}
+    if len(tags) == 0:
+        return tree.text
+    elif len(tags) == 1:
+        return [tree_to_dict(item) for item in items]
+    elif len(tags) == len(items):
+        return {item.tag: tree_to_dict(item) for item in items}
+    else:
+        raise Exception("Error on {}".format(tree))
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -127,24 +141,99 @@ class PurchaseAddItemsToInventoryView(PurchaseView, PurchaseSelected, DetailView
 
     def get_context_data(self, **kwargs):
         res = super(PurchaseAddItemsToInventoryView, self).get_context_data(**kwargs)
-        tree = ET.fromstring(res['purchase'].xml_content)
+        tree = ET.fromstring(self.purchase.xml_content)
         res['xml'] = tree
-        def tree_to_dict(tree):
-            items = tree.getchildren()
-            tags = {item.tag for item in items}
-            if len(tags) == 0:
-                return tree.text
-            elif len(tags) == 1:
-                return [tree_to_dict(item) for item in items]
-            elif len(tags) == len(items):
-                return {item.tag: tree_to_dict(item) for item in items}
-            else:
-                raise Exception("Error on {}".format(tree))
             
         res['detalles'] = tree_to_dict(tree.find('detalles'))
         res['establecimientos'] = company_accounts.models.Establecimiento.objects.filter(company=self.company)
-            
         return res
+
+    def post(self, request, **kwargs):
+        detalles = tree_to_dict(ET.fromstring(self.purchase.xml_content).find('detalles'))
+        info_factura = tree_to_dict(ET.fromstring(self.purchase.xml_content).find('infoFactura'))
+        info_tributaria = tree_to_dict(ET.fromstring(self.purchase.xml_content).find('infoTributaria'))
+
+        establecimiento = company_accounts.models.Establecimiento.objects.filter(company=self.company).get(id=request.POST['establecimiento'])
+        print establecimiento
+        with transaction.atomic():
+            for i, detalle in enumerate(detalles):
+                action = request.POST['action-{}'.format(i)]
+                if action == 'noop':
+                    pass
+                elif action == 'create':
+                    for decimales_qty in range(0, 3):
+                        if (Decimal(detalle['cantidad']) * 10 ** decimales_qty) % 1 == 0:
+                            break
+                    else:
+                        decimales_qty = 3
+
+                    code = (detalle['codigoPrincipal'].strip() or
+                            detalle['codigoAuxiliar'].strip() or
+                            str(hash(detalle['descripcion']) % 10000000))
+                    item, created = inventory.models.Item.objects.get_or_create(
+                        company=self.company,
+                        name=detalle['descripcion'],
+                        description='',
+                        tipo=inventory.models.ItemTipo.options.producto,
+                        decimales_qty=decimales_qty,
+                        distributor_code=detalle['codigoPrincipal'],
+                        code=code)
+                    for impuesto in detalle['impuestos']:
+                        if impuesto['codigo'] == '2':
+                            iva = sri.models.Iva.objects.get(
+                                codigo=impuesto['codigoPorcentaje'],
+                                porcentaje=Decimal(impuesto['tarifa']))
+                            item.tax_items.add(iva)
+                        elif impuesto['codigo'] == '3':
+                            ice = sri.models.Ice.objects.get(
+                                codigo=impuesto['codigoPorcentaje'],
+                                porcentaje=Decimal(impuesto['tarifa']))
+                            item.tax_items.add(ice)
+                        else:
+                            raise Exception("Codigo de impuesto desconocido: {}".format(impuesto['codigo']))
+
+                    d, m, y = info_factura['fechaEmision'].split("/")
+                    batch, created = inventory.models.Batch.objects.get_or_create(
+                        item=item,
+                        unit_cost=Decimal(detalle['precioUnitario']),
+                        code=1,
+                        acquisition_date=date(int(y), int(m), int(d)),
+                        purchase=self.purchase)
+
+                    sku, created = inventory.models.SKU.objects.get_or_create(
+                        batch=batch,
+                        qty=Decimal(detalle['cantidad']),
+                        unit_price=2 * batch.unit_cost,
+                        establecimiento=establecimiento,
+                        location=' ')
+                    print i, 'CREATE'
+                elif action == 'add':
+                    item_id = request.POST['selected-item-{}'.format(i)]
+                    if not item_id:
+                        return self.get(request, **kwargs)
+                    item = inventory.models.Item.objects.filter(company=self.company).get(id=item_id)
+                    d, m, y = info_factura['fechaEmision'].split("/")
+                    curr_code = max([i.code for i in inventory.models.Batch.objects.filter(item=item)] + [0])
+                    batch, created = inventory.models.Batch.objects.get_or_create(
+                        item=item,
+                        unit_cost=Decimal(detalle['precioUnitario']),
+                        code=curr_code + 1,
+                        acquisition_date=date(int(y), int(m), int(d)),
+                        purchase=self.purchase)
+
+                    sku, created = inventory.models.SKU.objects.get_or_create(
+                        batch=batch,
+                        qty=Decimal(detalle['cantidad']),
+                        unit_price=2 * batch.unit_cost,
+                        establecimiento=establecimiento,
+                        location=' ')
+                    print i, 'ADD', item
+                else:
+                    raise Exception("Unknown action")
+            purchase = self.purchase
+            purchase.closed = True
+            purchase.save()
+            return redirect("purchase_detail", purchase.id)
 
 
 class PurchaseFinishView(View):

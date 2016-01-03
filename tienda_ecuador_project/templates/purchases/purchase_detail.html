@@ -6,6 +6,7 @@
 {% block body %}
 {{ block.super }}
 <div class='col-xs-12'>
+    <h1>Detalle de la compra {{ purchase }} </h1>
     <table class='table table-hover'>
         <tr>
             <th>Vendedor</th><td>({{ purchase.seller.identificacion }}) {% firstof purchase.seller.nombre_comercial purchase.seller.razon_social %}</td>
@@ -19,6 +20,29 @@
         <tr>
             <th>Total</th><td>{{ purchase.total | money_2d }}</td>
         </tr>
+    </table>
+    <h2>Inventario Asociado</h2>
+    <table class='table table-hover'>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Artículo</th>
+                <th>Establecimiento</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for batch in purchase.batches %}
+                {% for sku in batch.skus %}
+                    <tr>
+                        <td>{{ sku.code }}</td>
+                        <td>{{ sku }}</td>
+                        <td>{{ sku.establecimiento }}</td>
+                        <td>{% fullwidth_button 'Detalle' 'sku_detail' sku.id %}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
     </table>
     {% buttons %}
         {% buttons_menu %}

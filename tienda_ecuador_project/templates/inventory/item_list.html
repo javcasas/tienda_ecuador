@@ -10,10 +10,12 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
+    <h1>Artículos</h1>
     {% include 'inventory/item/item_list_table.html' %}
     {% buttons %}
         {% buttons_menu %}
-            {% button "Nuevo Artículo" 'item_create' company.id %}
+            {% primary_button "Nuevo Artículo" 'item_create' company.id %}
+            {% button "Volver" 'inventory_main_menu' company.id %}
         {% endbuttons_menu %}
     {% endbuttons %}
     </div>

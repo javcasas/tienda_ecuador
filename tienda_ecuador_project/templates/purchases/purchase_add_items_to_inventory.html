@@ -8,59 +8,105 @@
 <div class='col-xs-12'>
     <h1>Añadir artículos en compra {{ purchase.number }} al inventario</h1>
     <form action='.' method='post' class='form'>
-        <table class='table table-hover table-vertical-center'>
-            <tbody>
-                {% for item in detalles %}
-                    <tr id='item-{{ forloop.counter0 }}'>
-                        <td>{{ item.cantidad }}x</td>
-                        <td>{{ item.descripcion }}<br/>
-                            <strong>Precio Unitario:</strong> {{ item.precioUnitario }} <br/>
-                            <strong>Descuento:</strong> {{ item.descuento }}<br/>
-                            <strong>Subtotal:</strong> {{ item.precioTotalSinImpuesto }}<br/>
-                            {% for impuesto in item.impuestos %}
-                                <strong>
-                                    {% if impuesto.codigo == '2' %} IVA
-                                    {% elif impuesto.codigo == '3' %} ICE
-                                    {% else %} Impuesto {{ impuesto.codigo }}
-                                    {% endif %}
-                                    {{ impuesto.tarifa }}%:
-                                </strong>
-                                {{ impuesto.valor }}<br/>
-                            {% endfor %}
-                        </td>
-                        <td>
-                            <input type='checkbox' checked='checked' class='form-control'></input>
-                        </td>
-                    </tr>
+        {% csrf_token %}
+        <div class='form-group'>
+            <label for='establecimiento'>Establecimiento</label>
+            <select name='establecimiento' class='form-control'>
+                {% for establecimiento in establecimientos %}
+                 <option value='{{ establecimiento.id }}'>{{ establecimiento.descripcion }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% for item in detalles %}
+            <div class='col-xs-12 form-group' id='div-{{ forloop.counter0 }}'>
+                <label class='col-xs-12'>{{ item.cantidad }}x {{ item.descripcion }}</label>
+                <div class='col-xs-12 col-lg-5'>
+                        <strong>Precio Unitario:</strong> {{ item.precioUnitario }} <br/>
+                        <strong>Descuento:</strong> {{ item.descuento }}<br/>
+                        <strong>Subtotal:</strong> {{ item.precioTotalSinImpuesto }}<br/>
+                        {% for impuesto in item.impuestos %}
+                            <strong>
+                                {% if impuesto.codigo == '2' %} IVA
+                                {% elif impuesto.codigo == '3' %} ICE
+                                {% else %} Impuesto {{ impuesto.codigo }}
+                                {% endif %}
+                                {{ impuesto.tarifa }}%:
+                            </strong>
+                            {{ impuesto.valor }}<br/>
+                        {% endfor %}
+                </div>
+                <div class='col-xs-1 col-lg-1 text-center'>
+                    <span class='glyphicon glyphicon-chevron-right'></span>
+                </div>
+                <div class='col-xs-11 col-lg-6'>
+                    <div class="btn-group" data-toggle="buttons">
+                        <label class="btn btn-primary active">
+                            <input type="radio" name="action-{{ forloop.counter0 }}"
+                                   id='select-{{ forloop.counter0 }}-noop'
+                                   autocomplete="off" checked value='noop'> No Agregar
+                        </label>
+                        <label class="btn btn-primary">
+                            <input type="radio" name="action-{{ forloop.counter0 }}"
+                                   id='select-{{ forloop.counter0 }}-create'
+                                   autocomplete="off" value='create'> Crear Nuevo Artículo
+                        </label>
+                        <label class="btn btn-primary">
+                            <input type="radio" name="action-{{ forloop.counter0 }}"
+                                   id='select-{{ forloop.counter0 }}-add'
+                                   autocomplete="off" value='add'> Agregar a Artículo Existente
+                        </label>
+                    </div>
+
+                    <input id='search_item-{{ forloop.counter0 }}' type="text"
+                           class="dropdown-toggle form-control col-xs-12"
+                           style='display: none' placeholder='Seleccionar Artículo'
+                           value='' />
+                    <ul class="dropdown-menu col-xs-12"></ul>
+                    <input type='hidden' name='selected-item-{{ forloop.counter0 }}' value='' />
+
                     <script>
-function update_{{ forloop.counter0 }} (){
-    var is_checked = $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop('checked');
-    if(is_checked){
-        $('#item-{{ forloop.counter0 }}').addClass("success");
+function update_{{ forloop.counter0 }} () {
+    if($("#select-{{ forloop.counter0 }}-add").prop("checked")) {
+        $('#search_item-{{ forloop.counter0 }}').show();
     } else {
-        $('#item-{{ forloop.counter0 }}').removeClass("success");
+        $('#search_item-{{ forloop.counter0 }}').hide();
+    }
+    if($("#select-{{ forloop.counter0 }}-noop").prop("checked")) {
+        $('#div-{{ forloop.counter0 }}').removeClass('bg-success');
+        $('#div-{{ forloop.counter0 }}').addClass('bg-danger');
+    } else {
+        $('#div-{{ forloop.counter0 }}').addClass('bg-success');
+        $('#div-{{ forloop.counter0 }}').removeClass('bg-danger');
     }
 }
-update_{{ forloop.counter0 }}();
-$('#item-{{ forloop.counter0 }}').click(function () {
-    var is_checked = $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop('checked');
-    if(is_checked){
-        $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop("checked", "");
-    } else {
-        $('#item-{{ forloop.counter0 }} input[type=checkbox]').prop("checked", "checked");
-    }
-    update_{{ forloop.counter0 }}();
+$('input[name=action-{{ forloop.counter0 }}]').change(function () {
+    update_{{ forloop.counter0 }} ();
 });
+
+update_{{ forloop.counter0 }} ();
+
+prepare_search_box(
+    '#search_item-{{ forloop.counter0 }}',
+    function (item) {
+        return item.code + " - " + item.name;
+    },
+    function (item) {
+        $('input[name=selected-item-{{ forloop.counter0 }}]').prop("value", item.id);
+        $('input[name=selected-item-{{ forloop.counter0 }}] + ul').hide();
+        $('#search_item-{{ forloop.counter0 }}').val(item.code + " - " + item.name);
+    },
+    '{% url 'item_index_json' company.id %}',
+    ['name', 'code', 'distributor_code', 'description'],
+    "<span style='color: #777'>No se encontró ningún artículo</span>",
+    "Error cargando lista"
+);
                     </script>
-                {% endfor %}
-            </tbody>
-        </table>
-        <label for='establecimiento'>Establecimiento</label>
-        <select name='establecimiento' class='form-control'>
-            {% for establecimiento in establecimientos %}
-             <option value='{{ establecimiento.id }}'>{{ establecimiento.descripcion }}</option>
-            {% endfor %}
-        </select>
+                </div>
+            </div>
+            <div class='col-xs-12 spaced-bottom'></div>
+        {% endfor %}
+        <button type='submit' class='btn btn-primary form-control'>Añadir artículos seleccionados al inventario</button>
     </form>
     {% buttons %}
         {% buttons_menu %}

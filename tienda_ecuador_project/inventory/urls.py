@@ -11,8 +11,8 @@ urlpatterns = patterns(
     # Item views
     url(r'^item/index/(?P<company_id>[0-9]+)/$',
         views.ItemListView.as_view(), name='item_index'),
-#    url(r'^item/index/(?P<company_id>[0-9]+)/json/$',
-#        views.ItemListViewJson.as_view(), name='item_index_json'),
+    url(r'^item/index/(?P<company_id>[0-9]+)/json/$',
+        views.ItemListViewJson.as_view(), name='item_index_json'),
     url(r'^item/new/c/(?P<company_id>[0-9]+)/$',
         views.ItemCreateView.as_view(), name='item_create'),
     url(r'^item/detail/(?P<pk>[0-9]+)/$',
@@ -37,6 +37,8 @@ urlpatterns = patterns(
     # SKU views
     url(r'^sku/index/(?P<establecimiento_id>[0-9]+)/$',
         views.SKUEstablecimientoListView.as_view(), name='sku_establecimiento_index'),
+    url(r'^sku/index/(?P<establecimiento_id>[0-9]+)/json/$',
+        views.SKUEstablecimientoListJSONView.as_view(), name='sku_establecimiento_list_json'),
     url(r'^sku/new/c/(?P<batch_id>[0-9]+)/$',
         views.SKUCreateView.as_view(), name='sku_create'),
     url(r'^sku/detail/(?P<pk>[0-9]+)/$',

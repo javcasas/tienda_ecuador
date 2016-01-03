@@ -6,16 +6,32 @@
 {% block body %}
 {{ block.super }}
 <div class='col-xs-12'>
-    <h1>Remesa {{ batch }}</h1>
+    <h1>Lote {{ batch }}</h1>
     <table class='table table-hover'>
         <tr>
-            <th>Código</th> <td>{{ item.code }}-{{ batch.code }}</td>
+            <th>Artículo</th>
+            <td>{{ item }}</td>
+            <td>{% fullwidth_button 'Detalle' 'item_detail' item.id %}</td>
         </tr>
         <tr>
-            <th>Nombre</th> <td>{{ item.name }}</td>
+            <th>Código</th>
+            <td>{{ item.code }}-{{ batch.code }}</td>
+            <td></td>
         </tr>
         <tr>
-            <th>Descripción</th> <td>{{ item.description }}</td>
+            <th>Descripción</th>
+            <td>{{ item.description }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>Factura de Compra asociada</th>
+            {% if batch.purchase %}
+                <td>{{ batch.purchase }}</td>
+                <td>{% fullwidth_button 'Detalle' 'purchase_detail' batch.purchase.id %}</td>
+            {% else %}
+                <td>No hay compra asociada</td>
+                <td></td>
+            {% endif %}
         </tr>
     </table>
     {% buttons %}
@@ -24,27 +40,27 @@
         {% endbuttons_menu %}
     {% endbuttons %}
 
-    <h2>SKUs</h2>
+    <h2>Inventario Asociado</h2>
     <table class='table table-hover'>
         <thead>
             <tr>
+                <th>Establecimiento</th>
                 <th>Cantidad</th>
                 <th>Precio de Venta</th>
-                <th>Establecimiento</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             {% for sku in batch.skus %}
                 <tr>
+                    <td> {{ sku.establecimiento }} </td>
                     <td> {{ sku.qty }} </td>
                     <td> {{ sku.unit_price | money_2d }} </td>
-                    <td> {{ sku.establecimiento }} </td>
                     <td> {% fullwidth_button 'Detalle' 'sku_detail' sku.id %} </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan='4'>No hay SKUs</td>
+                    <td colspan='4'>No hay inventario asociado</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -52,7 +68,7 @@
 
     {% buttons %}
         {% buttons_menu %}
-            {% back_button "item_index" company.id %}
+            {% back_button "item_detail" item.id %}
         {% endbuttons_menu %}
     {% endbuttons %}
 

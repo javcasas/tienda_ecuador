@@ -1,15 +1,36 @@
-{% extends 'billing/l2_item_selected.html' %}
+{% extends 'inventory/l2_item_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
+{% load test_tag %}
 
-{% block title %}Editar item {{ item.sku }} - {{ block.super }}{% endblock %}
+{% block title %}
+    {% if batch %}
+        Editar {{ batch }}
+    {% else %}
+        Nuevo Lote
+    {% endif %}
+- {{ block.super }}{% endblock %}
+
 {% block body %}
     {{ block.super }}
-    <form method='post' action='.' class='form'>
-        {% csrf_token %}
-        {% bootstrap_form form %}
-        {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'item_detail' item.id %}' class='btn btn-default'>Cancelar</a>
-        {% endbuttons %}
-    </form>
+    <div class='col-xs-12'>
+        {% if batch %}
+            <h1>Editar Lote {{ batch }}</h1>
+        {% else %}
+            <h1>Nuevo lote del artículo {{ item }}</h1>
+        {% endif %}
+        <form method='post' action='.' class='form'>
+            {% csrf_token %}
+            {% captureas after %}{{item.code}} - {% endcaptureas %}
+            {% bootstrap_field form.code addon_before=after %}
+            {% bootstrap_field form.unit_cost addon_before="$" addon_after="por unidad" %}
+            {% bootstrap_field form.acquisition_date %}
+            {% buttons %}
+                {% buttons_menu %}
+                    {% save_button %}
+                    {% dont_save_button 'item_detail' item.id %}
+                {% endbuttons_menu %}
+            {% endbuttons %}
+        </form>
+    </div>
 {% endblock %}

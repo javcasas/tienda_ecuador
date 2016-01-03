@@ -23,6 +23,7 @@ from company_accounts.models import (CompanyUser,
                                      Establecimiento,
                                      PuntoEmision)
 from company_accounts.licence_helpers import licence_required
+import inventory.models
 
 from util import signature
 from util import sri_sender
@@ -278,8 +279,7 @@ class ItemUpdateView(ItemView, CompanySelected, UpdateView):
 
 
 class ItemDeleteView(ItemView, CompanySelected, DeleteView):
-    @property
-    def success_url(self):
+    def get_success_url(self):
         return reverse("item_index", args=(self.company.id, ))
 
 
@@ -325,8 +325,7 @@ class CustomerUpdateView(CustomerView, CompanySelected, UpdateView):
 
 
 class CustomerDeleteView(CustomerView, CompanySelected, DeleteView):
-    @property
-    def success_url(self):
+    def get_success_url(self):
         view_name = "{}_index".format(self.context_object_name)
         return reverse(view_name, args=(self.company.id, ))
 
@@ -381,8 +380,7 @@ class BillSelected(PuntoEmisionSelected):
         context['bill'] = self.bill
         return context
 
-    @property
-    def success_url(self):
+    def get_success_url(self):
         """
         Generic success URL, goes back to the proforma bill detail view
         """
@@ -571,18 +569,18 @@ class BillNewCustomerView(BillSelected,
         bill.save()
         return res
 
-    @property
-    def success_url(self):
+    def get_success_url(self):
         return reverse('bill_detail', args=(self.bill.id, ))
 
 
 class BillDeleteView(BillView,
                      PuntoEmisionSelected,
                      DeleteView):
-    @property
-    def success_url(self):
+
+    def get_success_url(self):
         view_name = "{}_company_index".format(self.context_object_name)
         return reverse(view_name, args=(self.company.id, ))
+
 
 class BillSendToCustomerView(BillView,
                              PuntoEmisionSelected,
@@ -1070,38 +1068,20 @@ class BillAddItemView(BillSelected,
 
     def get_form(self, *args, **kwargs):
         form = super(self.__class__, self).get_form(*args, **kwargs)
-        form.fields['copy_from'].queryset = models.Item.objects.filter(
-            company=self.company)
+        form.fields['sku'].queryset = inventory.models.SKU.objects.filter(
+            batch__item__company=self.company)
         return form
 
     def form_valid(self, form):
-        copy_from = form.cleaned_data["copy_from"]
-        copy_from = (models.Item.objects
-                     .filter(company=self.company)
-                     .get(id=copy_from.id))
         form.instance.bill = self.bill
-
-        item_vals = {}
-        for field in copy_from.__dict__.keys():
-            if field.startswith("_"):
-                continue
-            if field.endswith("_id"):
-                continue
-            if field in ['qty', 'id']:
-                continue
-            item_vals[field] = getattr(copy_from, field)
-
-        current_item = models.BillItem.objects.filter(**item_vals)
-        for k, v in item_vals.iteritems():
-            setattr(form.instance, k, v)
-        if current_item:
-            form.instance.id = current_item[0].id
-            form.instance.qty = current_item[0].qty + form.instance.qty
-        res = super(BillAddItemView, self).form_valid(form)
-        form.instance.tax_items.add(copy_from.iva)
-        if copy_from.ice:
-            form.instance.tax_items.add(copy_from.ice)
-        return res
+        # Add item to existing one if exists
+        try:
+            prev = self.model.objects.get(bill=self.bill, sku=form.instance.sku)
+            form.instance.id = prev.id
+            form.instance.qty += 1
+        except self.model.DoesNotExist:
+            pass
+        return super(BillAddItemView, self).form_valid(form)
 
 
 class BillItemUpdateView(BillItemView,

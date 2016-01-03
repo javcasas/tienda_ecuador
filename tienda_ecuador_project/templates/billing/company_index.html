@@ -21,13 +21,6 @@
             {% endbuttons %}
         </div>
 
-        <div class='col-xs-12 col-md-6 even-section'>
-            <h1>Clientes</h1>
-            {% include 'billing/customer/customer_list_table.html' with show_all_items_button=True %}
-            {% buttons %}
-                <a href="{% url 'customer_create' company.id %}" class='btn btn-primary'>Nuevo cliente</a>
-            {% endbuttons %}
-        </div>
     </div>
     <div class='col-xs-12'>
         <div class='col-xs-12 col-md-6 even-section'>
@@ -35,13 +28,6 @@
             {% include 'billing/bill/bill_list_table.html' with show_all_items_button=True %}
         </div>
 
-        <div class='col-xs-12 col-md-6 even-section'>
-            <h1>Artículos en venta</h1>
-            {% include 'billing/item/item_list_table.html' with show_all_items_button=True %}
-            {% buttons %}
-                <a href="{% url 'item_create' company.id %}" class='btn btn-primary'>Nuevo Artículo</a>
-            {% endbuttons %}
-        </div>
     </div>
 
 {% endblock %}

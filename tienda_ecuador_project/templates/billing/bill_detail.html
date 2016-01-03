@@ -301,17 +301,17 @@ function get_base_dict_for_post() {
 prepare_search_box(
     '#search_item',
     function (item) {
-        return item.sku + " - " + item.name;
+        return item.code + " - " + item.name;
     },
     function (item) {
         var data_to_post = get_base_dict_for_post();
-        data_to_post['copy_from'] = item.id;
+        data_to_post['sku'] = item.id;
         data_to_post['qty'] = '1';
         $.post('{% url "bill_add_item" bill.id %}', data_to_post)
             .always(reload_tables);
     },
-    '{% url 'item_index_json' company.id %}',
-    ['sku', 'name', 'description'],
+    '{% url 'sku_establecimiento_list_json' establecimiento.id %}',
+    ['code', 'name', 'location'],
     "<span style='color: #777'>No se encontró ningún artículo</span>",
     "Error cargando lista"
 );

@@ -3,5 +3,10 @@
 
 {% block left_menu %}
     {{ block.super }}
-    <li><a href="{% url 'sku_create' batch.id %}">Nuevo inventario</a></li>
+    <li><a href="{% url 'sku_create' batch.id %}">Nuevo Inventario</a></li>
+{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'batch_detail' batch.id %}'>{{ batch }}</a></li>
 {% endblock %}

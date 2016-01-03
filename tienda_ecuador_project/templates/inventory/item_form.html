@@ -1,15 +1,18 @@
-{% extends 'billing/l2_item_selected.html' %}
+{% extends 'inventory/l2_item_selected.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Editar item {{ item.sku }} - {{ block.super }}{% endblock %}
+{% block title %}Editar artículo {{ item.sku }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
-    <form method='post' action='.' class='form'>
-        {% csrf_token %}
-        {% bootstrap_form form %}
-        {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'item_detail' item.id %}' class='btn btn-default'>Cancelar</a>
-        {% endbuttons %}
-    </form>
+    <div class='even-section col-xs-12'>
+        <h1>Editar Artículo</h1>
+        <form method='post' action='.' class='form'>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button type='submit' class='btn btn-primary'>Guardar</button>
+                <a href='{% url 'item_detail' item.id %}' class='btn btn-default'>Cancelar</a>
+            {% endbuttons %}
+        </form>
+    </div>
 {% endblock %}

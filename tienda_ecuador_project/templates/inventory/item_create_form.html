@@ -1,6 +1,11 @@
-{% extends 'billing/l1_company_selected.html' %}
+{% extends 'inventory/l1_company_selected.html' %}
 {% load bootstrap3 %}
 {% load links %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'item_index' company.id %}'>Artículos</a></li>
+{% endblock %}
 
 {% block title %}Nuevo Artículo - {{ block.super }}{% endblock %}
 {% block body %}

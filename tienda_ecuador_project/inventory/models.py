@@ -8,13 +8,14 @@ import company_accounts.models
 from sri.models import Tax, Iva, Ice
 
 from util.enum import Enum
+import purchases.models
 
 
 ItemTipo = Enum(
     "ItemTipo",
     (
-        ('producto', 'Producto'),
-        ('servicio', 'Servicio'),
+        ('producto', 'Producto (ej. papas, muebles, televisores)'),
+        ('servicio', 'Servicio (ej. reparación, transporte, instalación)'),
     )
 )
 
@@ -22,10 +23,10 @@ ItemTipo = Enum(
 ItemDecimales = Enum(
     "ItemDecimales",
     (
-        (0, 'Unidades Enteras'),
-        (1, '1 Decimal'),
-        (2, '2 Decimales'),
-        (3, '3 Decimales'),
+        (0, 'El artículo se vende por unidades enteras'),
+        (2, 'El artículo se vende por décimas partes'),
+        (2, 'El artículo se vende por centésimas partes (centímetros)'),
+        (3, 'El artículo se vende por milésimas partes (gramos, milímetros)'),
     )
 )
 
@@ -36,13 +37,13 @@ class Item(models.Model):
     """
     name = models.CharField(max_length=50)
     code = models.CharField(max_length=50)
+    distributor_code = models.CharField(max_length=50, blank=True)
     description = models.CharField(max_length=500, blank=True)
     tax_items = models.ManyToManyField(Tax)
     tipo = models.CharField(
         max_length=10,
         choices=ItemTipo.__OPTIONS__)
     decimales_qty = models.IntegerField(
-        max_length=1,
         choices=ItemDecimales.__OPTIONS__,
         default=0)
     company = models.ForeignKey(company_accounts.models.Company)
@@ -98,8 +99,9 @@ class Batch(models.Model):
     """
     item = models.ForeignKey(Item)
     unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
-    code = models.CharField(max_length=50)
+    code = models.IntegerField()
     acquisition_date = models.DateField()
+    purchase = models.ForeignKey(purchases.models.Purchase, blank=True, null=True)
 
     class Meta:
         unique_together = (("item", "code"),)
@@ -110,6 +112,9 @@ class Batch(models.Model):
     @property
     def skus(self):
         return SKU.objects.filter(batch=self)
+
+    def __unicode__(self):
+        return u"{}-{}".format(self.item.code, self.code)
 
 
 class SKU(models.Model):
@@ -133,5 +138,13 @@ class SKU(models.Model):
     def code(self):
         return u"{}-{}".format(self.batch.item.code, self.batch.code)
 
+    @property
+    def name(self):
+        return self.batch.item.name
+
     def get_absolute_url(self):
         return reverse("sku_detail", args=(self.id,))
+
+    def __unicode__(self):
+        fmt_string = u"{:." + unicode(self.batch.item.decimales_qty) + u"f} x {}"
+        return fmt_string.format(self.qty, self.batch.item.name)

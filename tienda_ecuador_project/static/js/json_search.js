@@ -1,8 +1,25 @@
-function prepare_search_box(selector, gen_name_fn, callback_fn, data_url, fields_to_search,
-                            no_match_msg, error_loading_msg) {
+// <input id='selector' type="text" class="dropdown-toggle form-control col-xs-12"
+//        placeholder='Añadir Artículo'
+//        value=''
+//        autofocus />
+// <ul class="dropdown-menu col-xs-12"></ul>
+
+function prepare_search_box(
+    selector,           // JQuery selector
+    gen_name_fn,        // Generates a name from the items being searched
+    callback_fn,        // onclick for each item selected
+    data_url,           // URL to get a JSON of all the items to search
+    fields_to_search,   // List of fields to search
+    no_match_msg,       // Message to show when no items match the search
+    error_loading_msg   // Message to show when there was a problem loading the list
+) {
     // Helper for loading the JSON data
     var data = null;
+    var retries = 0;
     function load_items() {
+        if(retries > 3){
+            return;
+        }
         $.getJSON(data_url)
         .done(function (dt) {
             data = dt;
@@ -18,7 +35,7 @@ function prepare_search_box(selector, gen_name_fn, callback_fn, data_url, fields
         control.append(
             $("<li></li>").append(
                 $("<a></a>")
-                    .attr("href", "")
+                    .attr("href", "#")
                     .click(function () {callback_fn(item); return false;})
                     .html(name)));
     }
@@ -59,6 +76,7 @@ function prepare_search_box(selector, gen_name_fn, callback_fn, data_url, fields
         if(data == null) {
             add_text_only_link(error_loading_msg);
             load_items();
+            control.show();
             return;
         } else {
             var to_show = [];
@@ -67,6 +85,13 @@ function prepare_search_box(selector, gen_name_fn, callback_fn, data_url, fields
                     to_show.push(item);
                 }
             }
+
+            // Search full name
+            $.each(data, function (i, item) {
+                if(gen_name_fn(item).toLowerCase() == current_text) {
+                    select_item(item);
+                }
+            });
 
             // Search all the fields
             $.each(fields_to_search, function (i, field) {

@@ -5,3 +5,8 @@
     {{ block.super }}
     <li><a href="{% url 'sku_create' batch.id %}">Nuevo inventario</a></li>
 {% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'sku_detail' sku.id %}'>{{ sku }}</a></li>
+{% endblock %}

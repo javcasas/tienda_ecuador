@@ -1,15 +1,17 @@
-{% extends 'billing/l2_item_selected.html' %}
+{% extends 'inventory/l2_item_selected.html' %}
 {% load bootstrap3 %}
 {% load links %}
 
-{% block title %}Nueva Remesa - {{ block.super }}{% endblock %}
+{% block title %}Nuevo Lote - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-        <h1>Nueva remesa</h1>
+        <h1>Nuevo lote del artículo {{ item }}</h1>
         <form method='post' action='.' class='form'>
             {% csrf_token %}
-            {% bootstrap_form form %}
+            {% bootstrap_field form.code addon_before=item.code %}
+            {% bootstrap_field form.unit_cost addon_before="$" addon_after="por unidad" %}
+            {% bootstrap_field form.date %}
             {% buttons %}
                 {% buttons_menu %}
                     {% save_button %}

@@ -10,4 +10,5 @@
 
 {% block breadcrumbs %}
     <li><a href='{% url 'company_accounts:company_main_menu' company.id %}'>{{ company.nombre_comercial }}</a></li>
+    <li><a href='{% url 'inventory_main_menu' company.id %}'>Inventario</a></li>
 {% endblock %}

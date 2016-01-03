@@ -1,16 +1,20 @@
 {% extends 'inventory/l3_batch_selected.html' %}
 {% load bootstrap3 %}
 {% load links %}
+{% load decimal_format %}
+{% load test_tag %}
 
-{% block title %}Nuevo inventario - {{ block.super }}{% endblock %}
+{% block title %}Editar inventario {{ sku }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-        <h1>Nuevo inventario en lote {{ batch }}</h1>
-        <h3>Artículo {{ item.name }}</h3>
+        <h1>Editar Inventario {{ sku }}</h1>
         <form method='post' action='.' class='form'>
             {% csrf_token %}
-            {% bootstrap_form form %}
+            {% bootstrap_field form.qty %}
+            {% captureas after %} Coste: {{ batch.unit_cost | money_4d }}{% endcaptureas %}
+            {% bootstrap_field form.unit_price addon_before='$' addon_after=after %}
+            {% bootstrap_field form.establecimiento %}
             {% buttons %}
                 {% buttons_menu %}
                     {% save_button %}

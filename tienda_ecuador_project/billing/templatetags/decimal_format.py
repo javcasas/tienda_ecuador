@@ -45,6 +45,13 @@ def money_2d(value):
     return "$" + decimals(value, 2)
 
 @register.filter
+def money_4d(value):
+    """
+    Price with two decimals
+    """
+    return "$" + decimals(value, 4)
+
+@register.filter
 def price4d(value):
     """
     Price with four decimals
