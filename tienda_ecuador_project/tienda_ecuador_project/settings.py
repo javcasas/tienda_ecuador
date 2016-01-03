@@ -37,6 +37,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
+    'registration',
+    'bootstrap3',
+
     'util',
     'sri',
     'company_accounts',
@@ -45,8 +50,6 @@ INSTALLED_APPS = (
     'purchases',
     'billing',
     'accounts_receivable',
-    'registration',
-    'bootstrap3',
     'reports',
     'public_receipts',
 )
@@ -59,6 +62,7 @@ LOGIN_URL = '/accounts/login/'  # The page users are directed to if they are not
                                 # and are trying to access pages requiring authentication
 
 MIDDLEWARE_CLASSES = (
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,19 +70,16 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'django.middleware.security.SecurityMiddleware',
 )
 
 ROOT_URLCONF = 'tienda_ecuador_project.urls'
 
-TEMPLATE_DIRS = [  # Django 1.7 compatibility
-    os.path.join(BASE_DIR, 'templates'),
-]
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': TEMPLATE_DIRS,
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -106,6 +107,24 @@ DATABASES = {
     }
 }
 
+
+# Password validation
+# https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/

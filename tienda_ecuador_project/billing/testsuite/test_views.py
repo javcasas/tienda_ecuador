@@ -1512,7 +1512,7 @@ class PopulateBillingTest(TestCase):
         r = c.post("/accounts/login/",
                    {'username': 'test', 'password': 'test'})
         self.assertEquals(r['location'],
-                          "http://testserver" + reverse('company_accounts:company_select'))
+                          reverse('company_accounts:company_select'))
 
         # It seems I can view customers and items for a different company
         # FIXME: re-enable tests
