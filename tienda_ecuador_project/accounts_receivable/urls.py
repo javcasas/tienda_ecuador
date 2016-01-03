@@ -1,8 +1,7 @@
 from django.conf.urls import patterns, url
 from accounts_receivable import views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # Index views
     url(r'^(?P<pk>[0-9]+)$',
         views.CompanyIndexView.as_view(), name='accounts_receivable_index'),
@@ -22,4 +21,4 @@ urlpatterns = patterns(
         name='receivable_confirm_received'),
     url(r'^receivable/(?P<receivable_id>[0-9]+)/claim/$',
         views.PaymentCreateView.as_view(), name='receivable_claim'),
-)
+]

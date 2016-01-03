@@ -1,8 +1,7 @@
 from django.conf.urls import patterns, url
 from stakeholders import views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^customer/list/(?P<company_id>[0-9]+)/$',
         views.CustomerListView.as_view(), name='customer_index'),
     url(r'^customer/new/(?P<company_id>[0-9]+)/$',
@@ -13,4 +12,4 @@ urlpatterns = patterns(
         views.CustomerUpdateView.as_view(), name='customer_update'),
     url(r'^customer/delete/(?P<pk>[0-9]+)/$',
         views.CustomerDeleteView.as_view(), name='customer_delete'),
-)
+]

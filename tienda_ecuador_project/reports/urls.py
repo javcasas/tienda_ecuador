@@ -1,8 +1,7 @@
 from django.conf.urls import patterns, url
 from reports import views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # Index views
     url(r'^(?P<pk>[0-9]+)$',
         views.ReportsIndexView.as_view(), name='reports_index'),
@@ -54,4 +53,4 @@ urlpatterns = patterns(
     url(r'^sri/(?P<company_id>[0-9]+)/bills/(?P<year>[0-9]+)/pruebas/$',
         views.BillYearListReport.as_view(ambiente_sri='pruebas'),
         name='report_yearly_bills.pruebas'),
-)
+]

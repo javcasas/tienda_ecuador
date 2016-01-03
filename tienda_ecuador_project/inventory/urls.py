@@ -1,8 +1,7 @@
 from django.conf.urls import patterns, url
 from inventory import views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # Main menu
     url(r'^(?P<pk>[0-9]+)/$',
         views.CompanyProfileView.as_view(
@@ -47,4 +46,4 @@ urlpatterns = patterns(
         views.SKUUpdateView.as_view(), name='sku_update'),
     url(r'^sku/delete/(?P<pk>[0-9]+)/$',
         views.SKUDeleteView.as_view(), name='sku_delete'),
-)
+]

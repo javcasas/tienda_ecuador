@@ -2,8 +2,7 @@ from django.conf.urls import patterns, url
 from billing import views
 from sri.models import SRIStatus, AmbienteSRI
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     #######################
     # Index views
     #######################
@@ -149,4 +148,4 @@ urlpatterns = patterns(
         views.BillListView.as_view(
             template_name='billing/bill/bill_list_table.html',
         ), name='bill_list_table'),
-)
+]

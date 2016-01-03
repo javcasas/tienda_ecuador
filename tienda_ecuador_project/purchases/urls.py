@@ -2,8 +2,7 @@ from django.conf.urls import patterns, url
 from purchases import views, forms
 from django.contrib.auth.decorators import login_required
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # Index views
     #url(r'^$',
     #    login_required(views.LoggedInIndexView.as_view()), name='company_select'),
@@ -38,4 +37,4 @@ urlpatterns = patterns(
             month_format="%m",
         ),
         name="purchase_day_archive"),
-)
+]

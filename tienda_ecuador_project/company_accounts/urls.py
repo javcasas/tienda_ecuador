@@ -2,8 +2,7 @@ from django.conf.urls import patterns, url
 from company_accounts import views, forms
 from django.contrib.auth.decorators import login_required
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # Index views
     url(r'^$',
         login_required(views.LoggedInIndexView.as_view()), name='company_select'),
@@ -48,4 +47,4 @@ urlpatterns = patterns(
         views.PuntoEmisionDetailView.as_view(), name='punto_emision_detail'),
     url(r'^punto_emision/(?P<pk>[0-9]+)/edit/$',
         views.PuntoEmisionUpdateView.as_view(), name='punto_emision_update'),
-)
+]
