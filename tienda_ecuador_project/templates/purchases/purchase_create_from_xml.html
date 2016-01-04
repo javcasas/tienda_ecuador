@@ -4,6 +4,11 @@
 
 {% block title %}Nueva compra - {{ block.super }} {% endblock %}
 
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url "purchase_create_from_xml" company.id %}'>Nueva Compra desde factura electrónica</a></li>
+{% endblock %}
+
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>

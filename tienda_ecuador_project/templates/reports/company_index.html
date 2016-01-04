@@ -2,59 +2,43 @@
 
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Informes - {{ block.super }}{% endblock %}
 
 {% block body %}
     {{ block.super }}
-    <div class='col-xs-12 even-section'>
-        {% include 'company_accounts/company_brand_info.html' with app_text_name='Informes' %}
-
+    {% include 'company_accounts/company_brand_info.html' with app_text_name='Informes' %}
+    <div class='col-xs-12'>
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">SRI</h3>
             </div>
             <div class="panel-body">
-                <a href='{% url 'report_daily_income' company.id year month day %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Ingresos Diarios</a>
-                <a href='{% url 'report_monthly_income' company.id year month %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Ingresos Mensuales</a>
-                <a href='{% url 'report_yearly_income' company.id year %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Ingresos Anuales</a>
+                {% main_menu_button 'Ingresos Diarios'   'report_daily_income'   company.id year month day %}
+                {% main_menu_button 'Ingresos Mensuales' 'report_monthly_income' company.id year month %}
+                {% main_menu_button 'Ingresos Anuales'   'report_yearly_income'  company.id year %}
 
-                <a href='{% url 'report_daily_bills' company.id year month day %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Facturación Diaria</a>
-                <a href='{% url 'report_monthly_bills' company.id year month %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Facturación Mensual</a>
-                <a href='{% url 'report_yearly_bills' company.id year %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Facturación Anual</a>
+                {% main_menu_button 'Facturación Diaria'  'report_daily_bills'   company.id year month day %}
+                {% main_menu_button 'Facturación Mensual' 'report_monthly_bills' company.id year month %}
+                {% main_menu_button 'Facturación Anual'   'report_yearly_bills'  company.id year %}
             </div>
         </div>
 
-        <div class="panel panel-default">
+        <div class="panel panel-default panel-toggleable toggled-off">
             <div class="panel-heading">
-                <h3 class="panel-title" id='pruebas-header'>SRI (Entorno de Pruebas)</h3>
+                <h3 class="panel-title">SRI (Entorno de Pruebas)</h3>
             </div>
-            <div class="panel-body" id='pruebas-buttons'>
-                <a href='{% url 'report_daily_income.pruebas' company.id year month day %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Ingresos Diarios</a>
-                <a href='{% url 'report_monthly_income.pruebas' company.id year month %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Ingresos Mensuales</a>
-                <a href='{% url 'report_yearly_income.pruebas' company.id year %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Ingresos Anuales</a>
+            <div class="panel-body">
+                {% main_menu_button 'Ingresos Diarios'   'report_daily_income.pruebas'   company.id year month day %}
+                {% main_menu_button 'Ingresos Mensuales' 'report_monthly_income.pruebas' company.id year month %}
+                {% main_menu_button 'Ingresos Anuales'   'report_yearly_income.pruebas'  company.id year %}
 
-                <a href='{% url 'report_daily_bills.pruebas' company.id year month day %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Facturación Diaria</a>
-                <a href='{% url 'report_monthly_bills.pruebas' company.id year month %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Facturación Mensual</a>
-                <a href='{% url 'report_yearly_bills.pruebas' company.id year %}'
-                   class='btn btn-default btn-lg col-xs-6 col-sm-4'>Facturación Anual</a>
+                {% main_menu_button 'Facturación Diaria'  'report_daily_bills.pruebas'   company.id year month day %}
+                {% main_menu_button 'Facturación Mensual' 'report_monthly_bills.pruebas' company.id year month %}
+                {% main_menu_button 'Facturación Anual'   'report_yearly_bills.pruebas'  company.id year %}
             </div>
         </div>
-        <script>
-            $('#pruebas-header').on('click', function () { $('#pruebas-buttons').toggle(); });
-            $('#pruebas-buttons').hide();
-        </script>
     </div>
 
 {% endblock %}

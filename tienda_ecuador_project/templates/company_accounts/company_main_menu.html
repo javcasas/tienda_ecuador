@@ -10,35 +10,32 @@
     {{ block.super }}
 
     {% include 'company_accounts/company_issues.html' %}
+    {% include 'company_accounts/company_brand_info.html' with app_text_name='Menú General' %}
 
-    <div class='col-xs-12 even-section'>
-        {% include 'company_accounts/company_brand_info.html' with app_text_name='Menú General' %}
-
-        <div class='col-xs-12'>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Aplicaciones</h3>
-                </div>
-                <div class="panel-body">
-                    {% main_menu_button 'Facturación' 'company_index' company.id %}
-                    {% main_menu_button 'Cuentas por Cobrar' 'accounts_receivable_index' company.id %}
-                    {% main_menu_button 'Informes' 'reports_index' company.id %}
-                    {% main_menu_button 'Clientes' 'customer_index' company.id %}
-                    {% main_menu_button 'Inventario' 'inventory_main_menu' company.id %}
-                    {% main_menu_button 'Compras' 'purchases_main_menu' company.id %}
-                </div>
+    <div class='col-xs-12'>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Aplicaciones</h3>
+            </div>
+            <div class="panel-body">
+                {% main_menu_button 'Facturación' 'company_index' company.id %}
+                {% main_menu_button 'Cuentas por Cobrar' 'accounts_receivable_index' company.id %}
+                {% main_menu_button 'Informes' 'reports_index' company.id %}
+                {% main_menu_button 'Clientes' 'customer_index' company.id %}
+                {% main_menu_button 'Inventario' 'inventory_main_menu' company.id %}
+                {% main_menu_button 'Compras' 'purchases_main_menu' company.id %}
             </div>
         </div>
+    </div>
 
-        <div class='col-xs-12'>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Configuración</h3>
-                </div>
-                <div class="panel-body">
-                    {% main_menu_button 'Empresa' 'company_accounts:company_profile' company.id %}
-                    {% main_menu_button 'Establecimientos' 'company_accounts:company_structure' company.id %}
-                </div>
+    <div class='col-xs-12'>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Configuración</h3>
+            </div>
+            <div class="panel-body">
+                {% main_menu_button 'Empresa' 'company_accounts:company_profile' company.id %}
+                {% main_menu_button 'Establecimientos' 'company_accounts:company_structure' company.id %}
             </div>
         </div>
     </div>
