@@ -133,8 +133,7 @@ class ItemUpdateView(ItemView, CompanySelected, UpdateView):
 
 
 class ItemDeleteView(ItemView, CompanySelected, DeleteView):
-    @property
-    def success_url(self):
+    def get_success_url(self):
         return reverse("item_index", args=(self.company.id, ))
 
 
@@ -217,8 +216,7 @@ class BatchUpdateView(BatchView, ItemSelected, UpdateView):
 
 
 class BatchDeleteView(BatchView, ItemSelected, DeleteView):
-    @property
-    def success_url(self):
+    def get_success_url(self):
         return reverse("batch_index", args=(self.item.id, ))
 
 
@@ -324,6 +322,5 @@ class SKUUpdateView(SKUView, BatchSelected, UpdateView):
 
 
 class SKUDeleteView(SKUView, BatchSelected, DeleteView):
-    @property
-    def success_url(self):
+    def get_success_url(self):
         return reverse("sku_index", args=(self.batch.id, ))

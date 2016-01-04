@@ -2,31 +2,57 @@
 
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Menú General - {{ block.super }}{% endblock %}
 
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
+        {% include 'company_accounts/company_brand_info.html' with app_text_name='Facturación' %}
 
-        <div class='col-xs-12 col-md-6 even-section'>
-            <h1>Pre Facturas</h1>
-            {% include 'billing/bill/bill_list_table.html' with show_all_items_button=True bill_list=prebill_list%}
-            {% buttons %}
-                {% if single_punto_emision %}
-                    <a href="{% url 'bill_create' single_punto_emision.id %}" class='btn btn-primary'>Nueva factura</a>
-                {% else %}
-                    {# TODO Ir a punto de emision #}
-                {% endif %}
-            {% endbuttons %}
+        <div class='col-xs-12'>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Operaciones</h3>
+                </div>
+                <div class="panel-body">
+                    {% if single_punto_emision %}
+                        {% main_menu_button 'Nueva Factura' 'bill_create' single_punto_emision.id %}
+                    {% else %}
+                        {# TODO Ir a punto de emision #}
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-    </div>
-    <div class='col-xs-12'>
-        <div class='col-xs-12 col-md-6 even-section'>
-            <h1>Facturas Emitidas</h1>
-            {% include 'billing/bill/bill_list_table.html' with show_all_items_button=True %}
+        <div class='col-xs-12'>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Listados</h3>
+                </div>
+                <div class="panel-body">
+                    {% main_menu_button 'Facturas Incompletas' 'bill_company_index' company.id %}
+                    {% main_menu_button 'Facturas Emitidas' 'bill_company_index.accepted' company.id %}
+                </div>
+            </div>
         </div>
+
+        <div class='col-xs-12'>
+            <div class="panel panel-default panel-toggleable toggled-off">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Facturas por Estado</h3>
+                </div>
+                <div class="panel-body">
+                    {% main_menu_button 'No Enviadas' 'bill_company_index' company.id %}
+                    {% main_menu_button 'Listas para Enviar' 'bill_company_index.ready_to_send' company.id %}
+                    {% main_menu_button 'Enviadas' 'bill_company_index.sent' company.id %}
+                    {% main_menu_button 'Aceptadas' 'bill_company_index.accepted' company.id %}
+                    {% main_menu_button 'Anuladas' 'bill_company_index.annulled' company.id %}
+                </div>
+            </div>
+        </div>
+
 
     </div>
 

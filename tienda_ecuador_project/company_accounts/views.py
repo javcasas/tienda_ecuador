@@ -250,8 +250,7 @@ class CompanyUploadCertView(CompanyView, CompanySelected, FormView):
     template_name = "company_accounts/company_upload_cert.html"
     form_class = forms.CertificateForm
 
-    @property
-    def success_url(self):
+    def get_success_url(self):
         return reverse("company_accounts:company_profile", args=(self.company.id,))
 
     def form_valid(self, form):

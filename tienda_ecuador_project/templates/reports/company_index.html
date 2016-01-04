@@ -8,7 +8,7 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12 even-section'>
-        <h1>Informes</h1>
+        {% include 'company_accounts/company_brand_info.html' with app_text_name='Informes' %}
 
         <div class="panel panel-default">
             <div class="panel-heading">

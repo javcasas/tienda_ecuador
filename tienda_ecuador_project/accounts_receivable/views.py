@@ -101,8 +101,7 @@ class PaymentCreateView(ReceivableSelected, CreateView):
         form.instance.receivable = self.receivable
         return super(PaymentCreateView, self).form_valid(form)
 
-    @property
-    def success_url(self):
+    def get_success_url(self):
         if self.receivable.amount_left <= 0:
             print "ASDFASDFASD"
             return reverse("receivable_confirm_received", args=(self.receivable.id,))

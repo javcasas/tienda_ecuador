@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import socket
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -89,7 +90,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
             'debug': True,
-            #'string_if_invalid': '%s',
         },
     },
 ]
@@ -165,7 +165,7 @@ LOGGING = {
             'filename': 'sri_debug.log',
             'formatter': 'multiline'
         },
-       'console': {
+        'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
         },
@@ -178,3 +178,13 @@ LOGGING = {
         },
     },
 }
+
+SITE_ID = 1
+
+hostname = socket.gethostname()
+if "javier" not in hostname:
+    # Production settings
+    print "Setting production configuration"
+    DEBUG = False
+    TEMPLATES[0]['OPTIONS']['debug'] = False
+    TEMPLATES[0]['OPTIONS']['string_if_invalid'] = ''

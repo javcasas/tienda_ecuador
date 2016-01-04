@@ -55,7 +55,6 @@ class CustomerUpdateView(CustomerView, CompanySelected, UpdateView):
 
 
 class CustomerDeleteView(CustomerView, CompanySelected, DeleteView):
-    @property
-    def success_url(self):
+    def get_success_url(self):
         view_name = "{}_index".format(self.context_object_name)
         return reverse(view_name, args=(self.company.id, ))

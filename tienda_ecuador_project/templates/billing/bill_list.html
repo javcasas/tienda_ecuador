@@ -1,5 +1,7 @@
 {% extends 'billing/l1_company_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
+
 {% block title %}Facturas - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
@@ -12,12 +14,14 @@
     <div class='col-xs-12'>
         <h1>Facturas</h1>
         {% include 'billing/bill/bill_list_table.html' %}
-        <div>
-            <a href='{% url "bill_company_index" company.id %}' class='btn btn-default'>Pre Facturas</a>
-            <a href='{% url "bill_company_index.ready_to_send" company.id %}' class='btn btn-default'>Facturas listas para enviar</a>
-            <a href='{% url "bill_company_index.sent" company.id %}' class='btn btn-default'>Facturas enviadas</a>
-            <a href='{% url "bill_company_index.accepted" company.id %}' class='btn btn-default'>Facturas aceptadas</a>
-            <a href='{% url "bill_company_index.annulled" company.id %}' class='btn btn-default'>Facturas anuladas</a>
-        </div>
+        {% buttons %}
+            {% buttons_menu %}
+                {% button 'Pre Facturas' "bill_company_index" company.id %}
+                {% button 'Facturas listas para enviar' "bill_company_index.ready_to_send" company.id %}
+                {% button 'Facturas enviadas' "bill_company_index.sent" company.id %}
+                {% button 'Facturas aceptadas' "bill_company_index.accepted" company.id %}
+                {% button 'Facturas anuladas' "bill_company_index.annulled" company.id %}
+            {% endbuttons_menu %}
+        {% endbuttons %}
     </div>
 {% endblock %}

@@ -1,0 +1,20 @@
+{% include 'company_accounts/company_issues.html' %}
+<div class='col-xs-12 col-lg-6 text-center' style='padding:20px'>
+    {% if company.logo %}
+        <img src='/{{ company.logo }}' alt='{{ company.nombre_comercial }}' />
+    {% else %}
+        <img src='/static/img/logo_141x132.png' alt=''/>
+    {% endif %}
+</div>
+<div class='col-xs-12 col-lg-6'>
+    <h1>{{company.nombre_comercial}}</h1>
+    <h4>{{company.razon_social}}</h4>
+    <h3>RUC: {{company.ruc}}</h3>
+    <h3>Dirección Matriz</h3>
+    <h4>{{company.direccion_matriz}}</h4>
+</div>
+{% if app_text_name %}
+<div class='col-xs-12'>
+    <h1 class='text-center'>{{ app_text_name }}</h1>
+</div>
+{% endif %}
