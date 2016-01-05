@@ -105,7 +105,12 @@ class PurchaseCreateFromXMLView(company_accounts.views.CompanySelected, FormView
         d, m, y = dt.split("/")
         try:
             purchase = models.Purchase.objects.get(
-                xml_content=form.cleaned_data['xml_content_text'],
+                seller=seller,
+                number="{}-{}-{}".format(
+                    tree.find("infoTributaria/estab").text,
+                    tree.find("infoTributaria/ptoEmi").text,
+                    tree.find("infoTributaria/secuencial").text,
+                ),
             )
         except models.Purchase.DoesNotExist:
             purchase = models.Purchase(

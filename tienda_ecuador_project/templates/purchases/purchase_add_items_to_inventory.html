@@ -86,21 +86,20 @@ $('input[name=action-{{ forloop.counter0 }}]').change(function () {
 
 update_{{ forloop.counter0 }} ();
 
-prepare_search_box(
-    '#search_item-{{ forloop.counter0 }}',
-    function (item) {
-        return item.code + " - " + item.name;
-    },
-    function (item) {
-        $('input[name=selected-item-{{ forloop.counter0 }}]').prop("value", item.id);
-        $('input[name=selected-item-{{ forloop.counter0 }}] + ul').hide();
-        $('#search_item-{{ forloop.counter0 }}').val(item.code + " - " + item.name);
-    },
-    '{% url 'item_index_json' company.id %}',
-    ['name', 'code', 'distributor_code', 'description'],
-    "<span style='color: #777'>No se encontró ningún artículo</span>",
-    "Error cargando lista"
-);
+prepare_search_box({
+    selector: '#search_item-{{ forloop.counter0 }}',
+    gen_name_fn: function (item) {
+                    console.log(item);
+                    return item.code + " - " + item.name;
+                 },
+    callback_fn: function (item) {
+                    $('input[name=selected-item-{{ forloop.counter0 }}]').prop("value", item.id);
+                    $('input[name=selected-item-{{ forloop.counter0 }}] + ul').hide();
+                    $('#search_item-{{ forloop.counter0 }}').val(item.code + " - " + item.name);
+                 },
+    data_url: '{% url 'item_index_json' company.id %}',
+    fields_to_search: ['name', 'code', 'distributor_code', 'description'],
+});
                     </script>
                 </div>
             </div>

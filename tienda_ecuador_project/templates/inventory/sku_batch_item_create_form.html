@@ -7,16 +7,16 @@
     <li><a href='{% url 'item_index' company.id %}'>Artículos</a></li>
 {% endblock %}
 
-{% block title %}Nuevo Artículo - {{ block.super }}{% endblock %}
+{% block title %}Nuevo {{ tipo }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-        <h1>Nuevo artículo</h1>
+        <h1>Nuevo {{ tipo }}</h1>
         <form method='post' action='.' class='form'>
             {% csrf_token %}
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Artículo</h3>
+                    <h3 class="panel-title">{{ tipo }}</h3>
                 </div>
                 <div class="panel-body">
                     {% bootstrap_field form.name %}
@@ -36,14 +36,14 @@
                     {% bootstrap_field form.acquisition_date %}
                     {% bootstrap_field form.establecimiento %}
                     {% bootstrap_field form.qty %}
-                    {% bootstrap_field form.unit_cost %}
-                    {% bootstrap_field form.unit_price %}
+                    {% bootstrap_field form.unit_cost addon_before='$' %}
+                    {% bootstrap_field form.unit_price addon_before='$' %}
                 </div>
             </div>
             {% buttons %}
                 {% buttons_menu %}
                     {% save_button %}
-                    {% dont_save_button 'item_index' company.id %}
+                    {% dont_save_button 'inventory_main_menu' company.id %}
                 {% endbuttons_menu %}
             {% endbuttons %}
         </form>

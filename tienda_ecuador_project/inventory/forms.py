@@ -129,29 +129,51 @@ class SKUForm(forms.ModelForm):
             pass
         return cleaned_data
 
+class SmartModelChoiceField(forms.ModelChoiceField):
+    def __init__(self, *args, **kwargs):
+        res = super(SmartModelChoiceField, self).__init__(*args, **kwargs)
+        self._saved_widget = self.widget
+        self._saved_initial = self.initial
+        return res
+
+    def _set_queryset(self, queryset):
+        if queryset and len(queryset) == 1:
+            self.widget = forms.HiddenInput()
+            self.initial = queryset[0]
+        else:
+            try:
+                self.widget = self._saved_widget
+                self.initial = self._saved_initial
+            except AttributeError:
+                # During __init__
+                pass
+        return super(SmartModelChoiceField, self)._set_queryset(queryset)
+
+    queryset = property(forms.ModelChoiceField._get_queryset, _set_queryset)
 
 class ItemBatchSKUForm(forms.ModelForm):
     name = forms.CharField(
-        label='Nombre',
+        label=u'Nombre',
         max_length=50,
-        help_text="La denominación artículo.")
+        help_text=u"La denominación del artículo.")
     code = forms.CharField(
-        label='Código',
+        label=u'Código',
         max_length=50,
-        help_text="Código asignado al artículo.")
+        help_text=u"Código asignado al artículo.")
     tipo = forms.ChoiceField(
         label='Tipo',
         choices=models.ItemTipo.__OPTIONS__,
+        widget=forms.HiddenInput(),
+        initial=models.ItemTipo.options.producto,
         help_text="Si el artículo es un producto o un servicio.")
     decimales_qty = forms.ChoiceField(
         label='Decimales en cantidad',
         choices=models.ItemDecimales.__OPTIONS__)
     description = forms.CharField(
-        label="Descripción",
+        label=u"Descripción",
         max_length=500,
         widget=forms.Textarea(),
-        required=False,
-        help_text="Descripción del artículo")
+        required=False)
     iva = forms.ModelChoiceField(
         label='IVA',
         queryset=sri.Iva.objects,
@@ -178,7 +200,7 @@ class ItemBatchSKUForm(forms.ModelForm):
         label='Cantidad',
         help_text=u'La cantidad que hay almacenada en el establecimiento',
         decimal_places=4)
-    establecimiento = forms.ModelChoiceField(
+    establecimiento = SmartModelChoiceField(
         label='Establecimiento',
         queryset=None,
         help_text=u'El establecimiento en el que está localizada la mercadería')
@@ -191,3 +213,40 @@ class ItemBatchSKUForm(forms.ModelForm):
                   ('name', 'code', 'iva', 'ice', 'tipo', 'description',
                    'decimales_qty') +
                   ('code', 'unit_cost', 'acquisition_date'))
+
+
+class ServiceBatchSKUForm(ItemBatchSKUForm):
+    # Newly hidden fields
+    tipo = forms.ChoiceField(
+        choices=models.ItemTipo.__OPTIONS__,
+        widget=forms.HiddenInput(),
+        initial=models.ItemTipo.options.servicio)
+    qty = UpdatedDecimalField(
+        widget=forms.HiddenInput(),
+        initial=10000000,
+        decimal_places=4)
+    unit_cost = UpdatedDecimalField(
+        widget=forms.HiddenInput(),
+        initial=Decimal(0),
+        decimal_places=4)
+    acquisition_date = forms.DateField(
+        initial=date.today,
+        widget=forms.HiddenInput())
+    decimales_qty = forms.ChoiceField(
+        widget=forms.HiddenInput(),
+        initial=0,
+        choices=models.ItemDecimales.__OPTIONS__)
+
+    # Same fields with different data
+    name = forms.CharField(
+        label='Nombre',
+        max_length=50,
+        help_text=u"La denominación del Servicio.")
+    code = forms.CharField(
+        label='Código',
+        max_length=50,
+        help_text=u"Código asignado al Servicio.")
+    establecimiento = SmartModelChoiceField(
+        label='Establecimiento',
+        queryset=None,
+        help_text=u'El establecimiento donde se venderá el servicio')

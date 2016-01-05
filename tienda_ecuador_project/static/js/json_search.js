@@ -16,7 +16,7 @@ function prepare_search_box(ob)
     // Generates a name from the items being searched
     var gen_name_fn = ob.gen_name_fn || console.log("No gen_name_fn provided");
     // Post-processes the name of the item
-    var gen_name_post_process_fn = ob.gen_name_post_process_fn || function (x) { return x; };
+    var gen_name_post_process_fn = ob.gen_name_post_process_fn || function (item, text) { return text; };
     // onclick for each item selected
     var callback_fn = ob.callback_fn || console.log("No callback_fn provided");
     // URL to get a JSON of all the items to search

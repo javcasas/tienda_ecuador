@@ -1,4 +1,6 @@
+# * encoding: utf-8 *
 import pytz
+import datetime as dt
 
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
@@ -7,6 +9,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 from django.http import JsonResponse
+from django.db import transaction
 
 import models
 import forms
@@ -338,49 +341,52 @@ class ItemBatchSKUCreateView(CompanySelected, SKUView, CreateView):
     def get_form(self, *args):
         form = super(ItemBatchSKUCreateView, self).get_form(*args)
         form.instance.company = self.company
-        form.fields['establecimiento'].queryset = (company_accounts.models
-                                                   .Establecimiento.objects
-                                                   .filter(company=self.company))
+        establecimientos = (company_accounts.models
+                            .Establecimiento.objects
+                            .filter(company=self.company))
+        form.fields['establecimiento'].queryset = establecimientos
         form.fields['tipo'].widget = django.forms.HiddenInput()
         form.fields['tipo'].initial = 'producto'
         return form
 
     def form_valid(self, form):
-        res = super(ItemBatchSKUCreateView, self).form_valid(form)
-        if form.data['ice']:
-            form.instance.tax_items.add(
-                models.Ice.objects.get(pk=form.data['ice']))
-        form.instance.tax_items.add(
-            models.Iva.objects.get(pk=form.data['iva']))
-        return res
+        with transaction.atomic():
+            data = form.cleaned_data
+            item, _ = models.Item.objects.get_or_create(
+                name=data['name'],
+                code=data['code'],
+                description=data['description'],
+                tipo=data['tipo'],
+                decimales_qty=data['decimales_qty'],
+                company=self.company)
+            if data['ice']:
+                item.tax_items.add(data['ice'])
+            item.tax_items.add(data['iva'])
+
+            batch, _ = models.Batch.objects.get_or_create(
+                item=item,
+                unit_cost=data['unit_cost'],
+                code=1,
+                acquisition_date=data['acquisition_date'])
+
+            form.instance.batch = batch
+            res = super(ItemBatchSKUCreateView, self).form_valid(form)
+            return res
+
+    def get_context_data(self, **kwargs):
+        context = super(ItemBatchSKUCreateView, self).get_context_data(**kwargs)
+        context['tipo'] = u'Artículo'
+        return context
 
 
-class ServiceBatchSKUCreateView(CompanySelected, SKUView, CreateView):
+class ServiceBatchSKUCreateView(ItemBatchSKUCreateView):
     """
     Create view for items
     """
-    form_class = forms.ItemBatchSKUForm
+    form_class = forms.ServiceBatchSKUForm
     template_name_suffix = '_batch_item_create_form'
 
-    def get_form(self, *args):
-        form = super(ServiceBatchSKUCreateView, self).get_form(*args)
-        form.instance.company = self.company
-        form.fields['establecimiento'].queryset = (company_accounts.models
-                                                   .Establecimiento.objects
-                                                   .filter(company=self.company))
-        form.fields['tipo'].widget = django.forms.HiddenInput()
-        form.fields['tipo'].initial = 'servicio'
-        form.fields['qty'].widget = django.forms.HiddenInput()
-        form.fields['qty'].initial = 10000000
-        form.fields['unit_cost'].widget = django.forms.HiddenInput()
-        form.fields['unit_cost'].initial = 0
-        return form
-
-    def form_valid(self, form):
-        res = super(ServiceBatchSKUCreateView, self).form_valid(form)
-        if form.data['ice']:
-            form.instance.tax_items.add(
-                models.Ice.objects.get(pk=form.data['ice']))
-        form.instance.tax_items.add(
-            models.Iva.objects.get(pk=form.data['iva']))
-        return res
+    def get_context_data(self, **kwargs):
+        context = super(ServiceBatchSKUCreateView, self).get_context_data(**kwargs)
+        context['tipo'] = u'Servicio'
+        return context
