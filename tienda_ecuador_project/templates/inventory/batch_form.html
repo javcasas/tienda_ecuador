@@ -28,7 +28,11 @@
             {% buttons %}
                 {% buttons_menu %}
                     {% save_button %}
-                    {% dont_save_button 'item_detail' item.id %}
+                    {% if batch %}
+                        {% dont_save_button 'batch_detail' batch.id %}
+                    {% else %}
+                        {% dont_save_button 'item_detail' item.id %}
+                    {% endif %}
                 {% endbuttons_menu %}
             {% endbuttons %}
         </form>

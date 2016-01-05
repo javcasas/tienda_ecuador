@@ -54,8 +54,8 @@
             {% for sku in batch.skus %}
                 <tr>
                     <td> {{ sku.establecimiento }} </td>
-                    <td> {{ sku.qty }} </td>
-                    <td> {{ sku.unit_price | money_2d }} </td>
+                    <td class='{{ sku.css_warnings.qty }}'> {{ sku.qty | decimals:item.decimales_qty }} </td>
+                    <td class='{{ sku.css_warnings.margin }}'> {{ sku.unit_price | money_2d }} (margen: {{ sku.margin_percent|decimals:0}}%) </td>
                     <td> {% fullwidth_button 'Detalle' 'sku_detail' sku.id %} </td>
                 </tr>
             {% empty %}
@@ -68,6 +68,7 @@
 
     {% buttons %}
         {% buttons_menu %}
+            {% primary_button 'Nuevo Inventario' "sku_create" batch.id %}
             {% back_button "item_detail" item.id %}
         {% endbuttons_menu %}
     {% endbuttons %}

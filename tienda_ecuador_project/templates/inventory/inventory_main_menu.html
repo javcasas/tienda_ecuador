@@ -18,6 +18,8 @@
                     <h3 class="panel-title">Operaciones</h3>
                 </div>
                 <div class="panel-body">
+                    {% main_menu_button 'Poner Artículo en Venta' 'item_batch_sku_create' company.id %}
+                    {% main_menu_button 'Poner Servicio en Venta' 'service_batch_sku_create' company.id %}
                     {% main_menu_button 'Artículos en Venta' 'item_index' company.id %}
                 </div>
             </div>

@@ -7,6 +7,13 @@ urlpatterns = [
         views.CompanyProfileView.as_view(
             template_name='inventory/inventory_main_menu.html',
         ), name='inventory_main_menu'),
+
+    # Fast create views
+    url(r'^item_batch_sku/new/c/(?P<company_id>[0-9]+)/$',
+        views.ItemBatchSKUCreateView.as_view(), name='item_batch_sku_create'),
+    url(r'^service_batch_sku/new/c/(?P<company_id>[0-9]+)/$',
+        views.ServiceBatchSKUCreateView.as_view(), name='service_batch_sku_create'),
+
     # Item views
     url(r'^item/index/(?P<company_id>[0-9]+)/$',
         views.ItemListView.as_view(), name='item_index'),

@@ -142,9 +142,41 @@ class SKU(models.Model):
     def name(self):
         return self.batch.item.name
 
+    def substract(self, qty):
+        self.qty -= qty
+        self.save()
+
     def get_absolute_url(self):
         return reverse("sku_detail", args=(self.id,))
 
     def __unicode__(self):
         fmt_string = u"{:." + unicode(self.batch.item.decimales_qty) + u"f} x {}"
         return fmt_string.format(self.qty, self.batch.item.name)
+
+    @property
+    def margin(self):
+        return self.unit_price - self.batch.unit_cost
+
+    @property
+    def margin_percent(self):
+        cost = self.batch.unit_cost
+        price = self.unit_price
+        return ((price/cost) - 1) * 100
+
+    @property
+    def warnings(self):
+        res = {}
+        if self.qty <= 0:
+            res['qty'] = 'danger'
+        elif self.qty <= 10:
+            res['qty'] = 'warning'
+
+        if self.margin_percent < 10:
+            res['margin'] = 'danger'
+        elif self.margin_percent < 50:
+            res['margin'] = 'warning'
+        return res
+
+    @property
+    def css_warnings(self):
+        return {key: 'bg-' + val for key, val in self.warnings.iteritems()}

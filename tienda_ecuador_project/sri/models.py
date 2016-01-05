@@ -48,8 +48,12 @@ SRIStatus = Enum(
         # Al enviar se genera XML, clave de acceso
         #     y se incrementan secuenciales
         ('ReadyToSend', 'Enviando al SRI'),
+        # Enviada al SRI, esperando aceptacion o rechazo
         ('Sent', 'Enviada al SRI'),
+        # Aceptada por el SRI
         ('Accepted', 'Aceptada por el SRI'),
+        # Rechazada por el SRI, puede volver a ser modificada y enviada
+        ('Rejected', 'Rechazada por el SRI'),
 
         # Estaba aceptado por el SRI y fue anulado
         ('Annulled', 'Anulado'),
@@ -102,7 +106,7 @@ class ComprobanteSRIMixin(models.Model):
             # Not saved yet
             return True
         prev = self.__class__.objects.get(id=self.id)
-        return prev.status == SRIStatus.options.NotSent
+        return prev.status in [SRIStatus.options.NotSent, SRIStatus.options.Rejected]
 
     def save(self, **kwargs):
         """
@@ -149,6 +153,17 @@ class ComprobanteSRIMixin(models.Model):
         """
         return super(ComprobanteSRIMixin, self).save(**kwargs)
 
+    # SRI-related operations
+    def accept(self):
+        """
+        Marks a bill as ReadyToSend
+        """
+        assert self.status in [SRIStatus.options.NotSent, SRIStatus.options.Rejected]
+        assert self.ambiente_sri in [AmbienteSRI.options.pruebas,
+                                     AmbienteSRI.options.produccion]
+        self.status = SRIStatus.options.ReadyToSend
+        self.save()
+
     def send_to_SRI(self):
         """
         Sends a bill to SRI
@@ -162,8 +177,6 @@ class ComprobanteSRIMixin(models.Model):
             status = Sent or NotSent
             maybe Issues
         """
-        assert self.xml_content
-        assert self.clave_acceso
         assert self.status == SRIStatus.options.ReadyToSend
         assert self.ambiente_sri in [AmbienteSRI.options.pruebas,
                                      AmbienteSRI.options.produccion]
@@ -179,6 +192,23 @@ class ComprobanteSRIMixin(models.Model):
             return [convert_msg(msg) for msg in messages]
 
         with transaction.atomic():
+            punto_emision = self.punto_emision
+
+            self.ambiente_sri = punto_emision.ambiente_sri
+            self.secuencial = {
+                'pruebas': punto_emision.siguiente_secuencial_pruebas,
+                'produccion': punto_emision.siguiente_secuencial_produccion,
+            }[self.ambiente_sri]
+            self.secret_save()
+
+            # Generate and sign XML
+            xml_data, clave_acceso = self.gen_xml()
+
+            self.xml_content = xml_data
+            self.clave_acceso = clave_acceso
+            self.issues = ''
+            self.secret_save()
+
             enviar_comprobante_result = sri_sender.enviar_comprobante(
                 self.xml_content, entorno=self.ambiente_sri)
             if enviar_comprobante_result.estado == 'RECIBIDA':
@@ -195,11 +225,11 @@ class ComprobanteSRIMixin(models.Model):
                 enviar_msgs = (enviar_comprobante_result.comprobantes
                                .comprobante[0].mensajes.mensaje)
                 self.issues = json.dumps(convert_messages(enviar_msgs))
-                self.status = SRIStatus.options.NotSent
+                self.status = SRIStatus.options.Rejected
                 self.secret_save()
                 res = False
         assert self.status in [SRIStatus.options.Sent,
-                               SRIStatus.options.NotSent]
+                               SRIStatus.options.Rejected]
         return res
 
     def validate_in_SRI(self):
@@ -256,7 +286,7 @@ class ComprobanteSRIMixin(models.Model):
                 self.fecha_autorizacion = autorizacion.fechaAutorizacion
                 self.issues = json.dumps(
                     convert_messages(autorizacion.mensajes.mensaje))
-                self.status = SRIStatus.options.NotSent
+                self.status = SRIStatus.options.Rejected
                 self.secret_save()
                 res = False
             else:  # Aun no procesado??
@@ -276,7 +306,7 @@ class ComprobanteSRIMixin(models.Model):
         elif self.status == SRIStatus.options.Accepted:
             assert self.fecha_autorizacion
             assert self.numero_autorizacion
-        elif self.status == SRIStatus.options.NotSent:
+        elif self.status == SRIStatus.options.Rejected:
             assert self.fecha_autorizacion
             assert self.issues
         else:

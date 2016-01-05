@@ -1,0 +1,51 @@
+{% extends 'inventory/l1_company_selected.html' %}
+{% load bootstrap3 %}
+{% load links %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'item_index' company.id %}'>Artículos</a></li>
+{% endblock %}
+
+{% block title %}Nuevo Artículo - {{ block.super }}{% endblock %}
+{% block body %}
+    {{ block.super }}
+    <div class='col-xs-12'>
+        <h1>Nuevo artículo</h1>
+        <form method='post' action='.' class='form'>
+            {% csrf_token %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Artículo</h3>
+                </div>
+                <div class="panel-body">
+                    {% bootstrap_field form.name %}
+                    {% bootstrap_field form.code %}
+                    {% bootstrap_field form.iva %}
+                    {% bootstrap_field form.ice %}
+                    {% bootstrap_field form.tipo %}
+                    {% bootstrap_field form.description %}
+                    {% bootstrap_field form.decimales_qty %}
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Inventario</h3>
+                </div>
+                <div class="panel-body">
+                    {% bootstrap_field form.acquisition_date %}
+                    {% bootstrap_field form.establecimiento %}
+                    {% bootstrap_field form.qty %}
+                    {% bootstrap_field form.unit_cost %}
+                    {% bootstrap_field form.unit_price %}
+                </div>
+            </div>
+            {% buttons %}
+                {% buttons_menu %}
+                    {% save_button %}
+                    {% dont_save_button 'item_index' company.id %}
+                {% endbuttons_menu %}
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock %}

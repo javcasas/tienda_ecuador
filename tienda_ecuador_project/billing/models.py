@@ -125,7 +125,7 @@ class Bill(ComprobanteSRIMixin, models.Model):
         return Pago.objects.filter(bill=self)
 
     def get_absolute_url(self):
-        if self.status == SRIStatus.options.NotSent:
+        if self.status in [SRIStatus.options.NotSent, SRIStatus.options.Rejected]:
             return reverse('bill_detail',
                            kwargs={'pk': self.pk})
         else:
@@ -145,25 +145,16 @@ class Bill(ComprobanteSRIMixin, models.Model):
         else:
             return None
 
-    def send_to_SRI(self):
-        punto_emision = self.punto_emision
-
-        self.ambiente_sri = punto_emision.ambiente_sri
-        self.secuencial = {
-            'pruebas': punto_emision.siguiente_secuencial_pruebas,
-            'produccion': punto_emision.siguiente_secuencial_produccion,
-        }[self.ambiente_sri]
-        self.secret_save()
-
-        # Generate and sign XML
-        xml_data, clave_acceso = self.gen_xml()
-
-        self.xml_content = xml_data
-        self.clave_acceso = clave_acceso
-        self.issues = ''
-        self.secret_save()
-
-        return super(Bill, self).send_to_SRI()
+    def accept(self):
+        # Only decrease inventory when the bill goes from NotSent to ReadyToSend
+        # not when it goes from Rejected to ReadyToSend
+        decrease_inventory = self.status == SRIStatus.options.NotSent
+        with transaction.atomic():
+            res = super(Bill, self).accept()
+            if decrease_inventory:
+                for item in self.items:
+                    item.substract_from_inventory()
+                    
 
     def validate_in_SRI(self):
         res = super(Bill, self).validate_in_SRI()
@@ -172,8 +163,8 @@ class Bill(ComprobanteSRIMixin, models.Model):
             import accounts_receivable.models
             for payment in self.payment:
                 if payment.plazo_pago.unidad_tiempo == 'dias':
-                    payment_date = (date.today()
-                                    + timedelta(days=payment.plazo_pago.tiempo))
+                    payment_date = (self.date
+                                    + timedelta(days=payment.plazo_pago.tiempo)).date()
                 r = accounts_receivable.models.Receivable(
                     bill=self,
                     qty=payment.cantidad,
@@ -433,6 +424,9 @@ class BillItem(models.Model):
     @property
     def code(self):
         return self.sku.code
+
+    def substract_from_inventory(self):
+        self.sku.substract(self.qty)
 
 
 ############################################

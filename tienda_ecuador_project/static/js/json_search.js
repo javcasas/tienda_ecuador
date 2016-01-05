@@ -4,15 +4,30 @@
 //        autofocus />
 // <ul class="dropdown-menu col-xs-12"></ul>
 
-function prepare_search_box(
-    selector,           // JQuery selector
-    gen_name_fn,        // Generates a name from the items being searched
-    callback_fn,        // onclick for each item selected
-    data_url,           // URL to get a JSON of all the items to search
-    fields_to_search,   // List of fields to search
-    no_match_msg,       // Message to show when no items match the search
-    error_loading_msg   // Message to show when there was a problem loading the list
-) {
+function prepare_search_box(ob)
+{
+    if (!(ob !== null && typeof ob === 'object')) {
+        console.log("Invalid parameter for prepare search box");
+        return;
+    }
+    // Parameters
+    // JQuery selector
+    var selector = ob.selector || console.log("No selector provided");
+    // Generates a name from the items being searched
+    var gen_name_fn = ob.gen_name_fn || console.log("No gen_name_fn provided");
+    // Post-processes the name of the item
+    var gen_name_post_process_fn = ob.gen_name_post_process_fn || function (x) { return x; };
+    // onclick for each item selected
+    var callback_fn = ob.callback_fn || console.log("No callback_fn provided");
+    // URL to get a JSON of all the items to search
+    var data_url = ob.data_url || console.log("No data_url provided");
+    // List of fields to search
+    var fields_to_search = ob.fields_to_search || console.log("No fields to search provided");
+    // Message to show when no items match the search
+    var no_match_msg = ob.no_match_msg || "<span style='color: #777'>No se encontró ningún artículo</span>";
+    // Message to show when there was a problem loading the list
+    var error_loading_msg = ob.error_loading_msg || "Error cargando lista";
+
     // Helper for loading the JSON data
     var data = null;
     var retries = 0;
@@ -114,7 +129,7 @@ function prepare_search_box(
                         }
                     });
                     var res = parts.join("");
-                    add_link(res, item);
+                    add_link(gen_name_post_process_fn(item, res), item);
                 });
             } else {
                 add_text_only_link(no_match_msg);

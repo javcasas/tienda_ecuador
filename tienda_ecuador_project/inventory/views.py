@@ -94,7 +94,6 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
     """
     Create view for items
     """
-    template_name_suffix = '_create_form'
     form_class = forms.ItemForm
 
     def get_form(self, *args):
@@ -295,7 +294,6 @@ class SKUCreateView(BatchSelected, SKUView, CreateView):
     """
     Create view for items
     """
-    template_name_suffix = '_create_form'
     form_class = forms.SKUForm
 
     def get_form(self, **kwargs):
@@ -303,6 +301,7 @@ class SKUCreateView(BatchSelected, SKUView, CreateView):
         form.fields['establecimiento'].queryset = (company_accounts.models
                                                    .Establecimiento.objects
                                                    .filter(company=self.company))
+        form.fields['qty'].decimal_places = self.item.decimales_qty
         form.instance.batch = self.batch
         return form
 
@@ -316,6 +315,7 @@ class SKUUpdateView(SKUView, BatchSelected, UpdateView):
         form.fields['establecimiento'].queryset = (company_accounts.models
                                                    .Establecimiento.objects
                                                    .filter(company=self.company))
+        form.fields['qty'].decimal_places = self.item.decimales_qty
         form.instance.batch = self.batch
         return form
 
@@ -324,3 +324,63 @@ class SKUUpdateView(SKUView, BatchSelected, UpdateView):
 class SKUDeleteView(SKUView, BatchSelected, DeleteView):
     def get_success_url(self):
         return reverse("sku_index", args=(self.batch.id, ))
+
+
+import django.forms
+# Fast create views
+class ItemBatchSKUCreateView(CompanySelected, SKUView, CreateView):
+    """
+    Create view for items
+    """
+    form_class = forms.ItemBatchSKUForm
+    template_name_suffix = '_batch_item_create_form'
+
+    def get_form(self, *args):
+        form = super(ItemBatchSKUCreateView, self).get_form(*args)
+        form.instance.company = self.company
+        form.fields['establecimiento'].queryset = (company_accounts.models
+                                                   .Establecimiento.objects
+                                                   .filter(company=self.company))
+        form.fields['tipo'].widget = django.forms.HiddenInput()
+        form.fields['tipo'].initial = 'producto'
+        return form
+
+    def form_valid(self, form):
+        res = super(ItemBatchSKUCreateView, self).form_valid(form)
+        if form.data['ice']:
+            form.instance.tax_items.add(
+                models.Ice.objects.get(pk=form.data['ice']))
+        form.instance.tax_items.add(
+            models.Iva.objects.get(pk=form.data['iva']))
+        return res
+
+
+class ServiceBatchSKUCreateView(CompanySelected, SKUView, CreateView):
+    """
+    Create view for items
+    """
+    form_class = forms.ItemBatchSKUForm
+    template_name_suffix = '_batch_item_create_form'
+
+    def get_form(self, *args):
+        form = super(ServiceBatchSKUCreateView, self).get_form(*args)
+        form.instance.company = self.company
+        form.fields['establecimiento'].queryset = (company_accounts.models
+                                                   .Establecimiento.objects
+                                                   .filter(company=self.company))
+        form.fields['tipo'].widget = django.forms.HiddenInput()
+        form.fields['tipo'].initial = 'servicio'
+        form.fields['qty'].widget = django.forms.HiddenInput()
+        form.fields['qty'].initial = 10000000
+        form.fields['unit_cost'].widget = django.forms.HiddenInput()
+        form.fields['unit_cost'].initial = 0
+        return form
+
+    def form_valid(self, form):
+        res = super(ServiceBatchSKUCreateView, self).form_valid(form)
+        if form.data['ice']:
+            form.instance.tax_items.add(
+                models.Ice.objects.get(pk=form.data['ice']))
+        form.instance.tax_items.add(
+            models.Iva.objects.get(pk=form.data['iva']))
+        return res

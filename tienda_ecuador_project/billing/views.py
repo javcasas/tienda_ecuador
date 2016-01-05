@@ -670,8 +670,8 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
             return HttpResponse("Bill has no 'punto_emision'",
                                 status=412, reason='Precondition Failed')
         bill.date = datetime.now(tz=pytz.timezone('America/Guayaquil'))
-        bill.status = SRIStatus.options.ReadyToSend
         bill.save()
+        bill.accept()
         return success('Aceptado')
 
 

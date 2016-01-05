@@ -33,7 +33,7 @@ urlpatterns = [
     # Bill lists by status
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': SRIStatus.options.NotSent}
+            queryset_filters={'status__in': [SRIStatus.options.NotSent, SRIStatus.options.Rejected]}
         ), name='bill_company_index'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/ready_to_send/$',
         views.BillCompanyListView.as_view(

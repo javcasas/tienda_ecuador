@@ -12,10 +12,10 @@
             <th>Código</th> <td>{{ sku.code }}</td>
         </tr>
         <tr>
-            <th>Cantidad</th> <td>{{ sku.qty }}</td>
+            <th>Cantidad</th> <td class='{{ sku.css_warnings.qty }}'>{{ sku.qty | decimals:item.decimales_qty }}</td>
         </tr>
         <tr>
-            <th>Precio Unitario</th> <td>{{ sku.unit_price | money_2d }}</td>
+            <th>Precio de Venta Unitario</th> <td class='{{ sku.css_warnings.margin }}'>{{ sku.unit_price | money_2d }} (margen: {{ sku.margin_percent|decimals:0 }}%)</td>
         </tr>
         <tr>
             <th>Establecimiento</th> <td>{{ sku.establecimiento }}</td>

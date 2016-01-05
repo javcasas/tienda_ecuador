@@ -1,17 +1,44 @@
-{% extends 'inventory/l2_item_selected.html' %}
+{% extends 'inventory/l1_company_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
-{% block title %}Editar artículo {{ item.sku }} - {{ block.super }}{% endblock %}
+{% block title %}
+    {% if item %}
+        Editar artículo {{ item.sku }}
+    {% else %}
+        Nuevo Artículo
+    {% endif %}
+- {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'item_index' company.id %}'>Artículos</a></li>
+    {% if item %}
+        <li><a href='{% url 'item_detail' item.id %}'>{{ item }}</a></li>
+        <li><a href='{% url 'item_update' item.id %}'>Editar</a></li>
+    {% else %}
+        <li><a href='{% url 'item_create' company.id %}'>Nuevo Artículo</a></li>
+    {% endif %}
+{% endblock %}
+
 {% block body %}
     {{ block.super }}
     <div class='even-section col-xs-12'>
-        <h1>Editar Artículo</h1>
+        {% if item %}
+            <h1>Editar Artículo {{ item }}</h1>
+        {% else %}
+            <h1>Nuevo Artículo</h1>
+        {% endif %}
         <form method='post' action='.' class='form'>
             {% csrf_token %}
             {% bootstrap_form form %}
             {% buttons %}
                 <button type='submit' class='btn btn-primary'>Guardar</button>
-                <a href='{% url 'item_detail' item.id %}' class='btn btn-default'>Cancelar</a>
+                {% if item %}
+                    {% dont_save_button 'item_detail' item.id %}
+                {% else %}
+                    {% dont_save_button 'item_index' company.id %}
+                {% endif %}
             {% endbuttons %}
         </form>
     </div>

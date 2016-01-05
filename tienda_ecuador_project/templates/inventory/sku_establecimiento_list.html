@@ -22,8 +22,9 @@
                 <tr>
                     <td> {{ sku.code }} </td>
                     <td> {{ sku.batch.item.name }} </td>
-                    <td> {{ sku.qty }} </td>
-                    <td> {{ sku.unit_price | money_2d }} </td>
+                    <td class='{{ sku.css_warnings.qty }}'>
+                        {{ sku.qty | decimals:sku.batch.item.decimales_qty }} </td>
+                    <td class='{{ sku.css_warnings.margin }}'> {{ sku.unit_price | money_2d }} (margen: {{ sku.margin_percent | decimals:0 }}%)</td>
                     <td> {% fullwidth_button 'Detalle' 'sku_detail' sku.id %} </td>
                 </tr>
             {% empty %}
