@@ -2,10 +2,11 @@
 {% block title %}{{ company.nombre_comercial }} - {{ block.super }}{% endblock %}
 
 {% block left_nav_bar %}
-    <li><a href="{% url 'billing_index' %}">Facturación</a></li>
+    <li><a href="{% url 'company_accounts:company_profile' company.id %}">Detalles de {% firstof company.nombre_comercial company.razon_social %}</a></li>
+    <li><a href="{% url 'company_accounts:company_structure' company.id %}">Establecimientos</a></li>
     {# TODO Llenar #}
 {% endblock %}
 
 {% block breadcrumbs %}
-    <li><a href='{% url 'company_accounts:company_main_menu' company.id %}'>{{ company.nombre_comercial }}</a></li>
+    <li><a href='{% url 'company_accounts:company_main_menu' company.id %}'>{% firstof company.nombre_comercial company.razon_social %}</a></li>
 {% endblock %}
