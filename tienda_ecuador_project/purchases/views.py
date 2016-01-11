@@ -1,27 +1,27 @@
 from datetime import date, timedelta
 import pytz
-import json
 from decimal import Decimal
 import xml.etree.ElementTree as ET
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import View
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, FormView
+from django.views.generic.edit import FormView
 from django.core.urlresolvers import reverse
-from django.db.models import Count
 from django.views.generic.list import ListView
 from django.db import transaction
+from django.views.generic.dates import (YearArchiveView,
+                                        MonthArchiveView,
+                                        DayArchiveView)
+from util.custom_calendar import first_day_of_next_month
 
 import models
 import forms
-from util import signature
-from sri.models import AmbienteSRI
 import sri.models
 import company_accounts.views
 import stakeholders.models
 import inventory.models
+
 
 def tree_to_dict(tree):
     items = tree.getchildren()
@@ -36,6 +36,7 @@ def tree_to_dict(tree):
         raise Exception("Error on {}".format(tree))
 
 tz = pytz.timezone('America/Guayaquil')
+
 
 class PurchaseSelected(company_accounts.views.CompanySelected):
     @property
@@ -57,6 +58,7 @@ class PurchaseSelected(company_accounts.views.CompanySelected):
         context['purchase'] = self.purchase
         return context
 
+
 class PurchaseView(object):
     """
     Base class for an Item View
@@ -72,16 +74,21 @@ class PurchaseView(object):
         return self.model.objects.get(id=self.kwargs['pk']).id
 
 
-class PurchasesMainMenuView(company_accounts.views.CompanyView, company_accounts.views.CompanySelected, DetailView):
+class PurchasesMainMenuView(company_accounts.views.CompanyView,
+                            company_accounts.views.CompanySelected,
+                            DetailView):
     template_name = 'purchases/purchases_main_menu.html'
 
 
-class PurchaseCreateFromXMLView(company_accounts.views.CompanySelected, FormView):
+class PurchaseCreateFromXMLView(company_accounts.views.CompanySelected,
+                                FormView):
     template_name = 'purchases/purchase_create_from_xml.html'
     form_class = forms.PurchaseCreateFromXMLForm
+
     def get_form(self, form_class=None):
         form = super(PurchaseCreateFromXMLView, self).get_form(form_class)
-        form.company = self.company  # Provide the current company so it can be checked against
+        # Provide the current company so it can be checked against
+        form.company = self.company
         return form
 
     def form_valid(self, form):
@@ -100,7 +107,7 @@ class PurchaseCreateFromXMLView(company_accounts.views.CompanySelected, FormView
                 company=self.company,
                 nombre_comercial=tree.find("infoTributaria/nombreComercial").text)
             seller.save()
-                
+
         dt = tree.find("infoFactura/fechaEmision").text
         d, m, y = dt.split("/")
         try:
@@ -127,7 +134,7 @@ class PurchaseCreateFromXMLView(company_accounts.views.CompanySelected, FormView
                 total=Decimal(tree.find("infoFactura/importeTotal").text))
             purchase.save()
         self.success_url = reverse("purchase_detail", args=(purchase.id,))
-        return super(PurchaseCreateFromXMLView, self).form_valid(form)    
+        return super(PurchaseCreateFromXMLView, self).form_valid(form)
 
 
 class PurchaseListView(PurchaseView, company_accounts.views.CompanySelected, ListView):
@@ -136,6 +143,7 @@ class PurchaseListView(PurchaseView, company_accounts.views.CompanySelected, Lis
 
 class PurchaseDetailView(PurchaseView, PurchaseSelected, DetailView):
     pass
+
 
 class PurchaseGenerateRetentionView(View):
     pass
@@ -148,18 +156,19 @@ class PurchaseAddItemsToInventoryView(PurchaseView, PurchaseSelected, DetailView
         res = super(PurchaseAddItemsToInventoryView, self).get_context_data(**kwargs)
         tree = ET.fromstring(self.purchase.xml_content)
         res['xml'] = tree
-            
         res['detalles'] = tree_to_dict(tree.find('detalles'))
-        res['establecimientos'] = company_accounts.models.Establecimiento.objects.filter(company=self.company)
+        res['establecimientos'] = (company_accounts.models.Establecimiento
+                                   .objects.filter(company=self.company))
         return res
 
     def post(self, request, **kwargs):
-        detalles = tree_to_dict(ET.fromstring(self.purchase.xml_content).find('detalles'))
-        info_factura = tree_to_dict(ET.fromstring(self.purchase.xml_content).find('infoFactura'))
-        info_tributaria = tree_to_dict(ET.fromstring(self.purchase.xml_content).find('infoTributaria'))
+        tree = ET.fromstring(self.purchase.xml_content)
+        detalles = tree_to_dict(tree.find('detalles'))
+        info_factura = tree_to_dict(tree.find('infoFactura'))
 
-        establecimiento = company_accounts.models.Establecimiento.objects.filter(company=self.company).get(id=request.POST['establecimiento'])
-        print establecimiento
+        establecimiento = (company_accounts.models.Establecimiento
+                           .objects.filter(company=self.company)
+                                   .get(id=request.POST['establecimiento']))
         with transaction.atomic():
             for i, detalle in enumerate(detalles):
                 action = request.POST['action-{}'.format(i)]
@@ -195,7 +204,8 @@ class PurchaseAddItemsToInventoryView(PurchaseView, PurchaseSelected, DetailView
                                 porcentaje=Decimal(impuesto['tarifa']))
                             item.tax_items.add(ice)
                         else:
-                            raise Exception("Codigo de impuesto desconocido: {}".format(impuesto['codigo']))
+                            raise Exception("Codigo de impuesto desconocido: {}"
+                                            .format(impuesto['codigo']))
 
                     d, m, y = info_factura['fechaEmision'].split("/")
                     batch, created = inventory.models.Batch.objects.get_or_create(
@@ -216,9 +226,12 @@ class PurchaseAddItemsToInventoryView(PurchaseView, PurchaseSelected, DetailView
                     item_id = request.POST['selected-item-{}'.format(i)]
                     if not item_id:
                         return self.get(request, **kwargs)
-                    item = inventory.models.Item.objects.filter(company=self.company).get(id=item_id)
+                    item = (inventory.models.Item
+                            .objects.filter(company=self.company).get(id=item_id))
                     d, m, y = info_factura['fechaEmision'].split("/")
-                    curr_code = max([i.code for i in inventory.models.Batch.objects.filter(item=item)] + [0])
+                    curr_code = max([i.code for i in (inventory.models.Batch
+                                                      .objects.filter(item=item))] +
+                                    [0])
                     batch, created = inventory.models.Batch.objects.get_or_create(
                         item=item,
                         unit_cost=Decimal(detalle['precioUnitario']),
@@ -244,11 +257,10 @@ class PurchaseAddItemsToInventoryView(PurchaseView, PurchaseSelected, DetailView
 class PurchaseFinishView(View):
     pass
 
-from django.views.generic.dates import YearArchiveView, MonthArchiveView, DayArchiveView
-from util.custom_calendar import first_day_of_next_month
 
-
-class PurchaseYearView(PurchaseView, company_accounts.views.CompanySelected, YearArchiveView):
+class PurchaseYearView(PurchaseView,
+                       company_accounts.views.CompanySelected,
+                       YearArchiveView):
     date_field = 'date'
     make_object_list = True
     allow_empty = True
@@ -267,7 +279,9 @@ class PurchaseYearView(PurchaseView, company_accounts.views.CompanySelected, Yea
         return context
 
 
-class PurchaseMonthView(PurchaseView, company_accounts.views.CompanySelected, MonthArchiveView):
+class PurchaseMonthView(PurchaseView,
+                        company_accounts.views.CompanySelected,
+                        MonthArchiveView):
     date_field = 'date'
     make_object_list = True
     allow_empty = True
@@ -286,10 +300,13 @@ class PurchaseMonthView(PurchaseView, company_accounts.views.CompanySelected, Mo
         return context
 
 
-class PurchaseDayView(PurchaseView, company_accounts.views.CompanySelected, DayArchiveView):
+class PurchaseDayView(PurchaseView,
+                      company_accounts.views.CompanySelected,
+                      DayArchiveView):
     date_field = 'date'
     make_object_list = True
     allow_empty = True
+
     def get_context_data(self, **kwargs):
         context = super(PurchaseDayView, self).get_context_data(**kwargs)
         print context.keys()

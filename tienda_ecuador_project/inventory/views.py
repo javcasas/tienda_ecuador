@@ -1,6 +1,5 @@
 # * encoding: utf-8 *
 import pytz
-import datetime as dt
 
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
@@ -10,6 +9,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 from django.http import JsonResponse
 from django.db import transaction
+import django.forms
 
 import models
 import forms
@@ -313,6 +313,7 @@ class SKUUpdateView(SKUView, BatchSelected, UpdateView):
     """
     """
     form_class = forms.SKUForm
+
     def get_form(self, **kwargs):
         form = super(SKUUpdateView, self).get_form(**kwargs)
         form.fields['establecimiento'].queryset = (company_accounts.models
@@ -323,13 +324,11 @@ class SKUUpdateView(SKUView, BatchSelected, UpdateView):
         return form
 
 
-
 class SKUDeleteView(SKUView, BatchSelected, DeleteView):
     def get_success_url(self):
         return reverse("sku_index", args=(self.batch.id, ))
 
 
-import django.forms
 # Fast create views
 class ItemBatchSKUCreateView(CompanySelected, SKUView, CreateView):
     """

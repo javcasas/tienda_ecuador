@@ -1,5 +1,8 @@
+import json
 from decimal import Decimal
-from django.http import JsonResponse
+
+from django.http import JsonResponse, HttpResponse
+
 
 class ListJSONResponseMixin(object):
     """
@@ -27,6 +30,7 @@ class ListJSONResponseMixin(object):
         Returns an object that will be serialized as JSON by json.dumps().
         """
         items = self.get_queryset()
+
         def model_to_dict(item, fields=self.fields_to_return):
             fields = sorted(fields)
             res = {}
@@ -48,7 +52,26 @@ class mydict(dict):
             self[name] = ob
             return ob
 
-#d = mydict()
-#print d[1][2][3][4]
-#d[1][2][3][4] = 5
-#print d
+
+def success(msg):
+    return HttpResponse(
+        json.dumps({
+            'success': True,
+            'msg': msg
+        }))
+
+
+def failure(msg):
+    return HttpResponse(
+        json.dumps({
+            'success': False,
+            'msg': msg
+        }))
+
+
+def not_yet(msg):
+    return HttpResponse(
+        json.dumps({
+            'success': False,
+            'msg': msg
+        }))

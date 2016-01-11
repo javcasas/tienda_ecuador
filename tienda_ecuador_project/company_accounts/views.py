@@ -12,7 +12,7 @@ from django.db.models import Count
 
 import models
 import forms
-from licence_helpers import LicenceControlMixin, valid_licence, licence_required
+from licence_helpers import LicenceControlMixin
 from util import signature
 from sri.models import AmbienteSRI
 
@@ -203,6 +203,7 @@ class CompanyProfileUpdateView(CompanyView, CompanySelected, UpdateView):
     View that shows a general index for a given company
     """
     form_class = forms.CompanyForm
+
     def form_valid(self, form):
         res = super(CompanyProfileUpdateView, self).form_valid(form)
         new_company = form.instance

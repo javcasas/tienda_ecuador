@@ -6,12 +6,13 @@ urls = {
     'pruebas': {
         'recepcion': "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantes?wsdl",
         'autorizacion': 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantes?wsdl',
-    },        
+    },
     'produccion': {
         'recepcion': 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
         'autorizacion': 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
     },
 }
+
 
 def enviar_comprobante(xml_data, entorno='pruebas'):
     client = Client(urls[entorno]['recepcion'])
@@ -19,6 +20,7 @@ def enviar_comprobante(xml_data, entorno='pruebas'):
     result = client.service.validarComprobante(xml_data.encode('base64'))
     logger.info("enviar_comprobante {entorno} response: {res}".format(entorno=entorno, res=result))
     return result
+
 
 def autorizar_comprobante(clave_acceso, entorno='pruebas'):
     client = Client(urls[entorno]['autorizacion'])

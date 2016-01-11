@@ -1,22 +1,13 @@
-import tempfile
-import os
-import base64
 import pytz
-from datetime import datetime, timedelta
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.views.generic import View
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView, UpdateView
 from django.core.urlresolvers import reverse
-from django.http import JsonResponse
-from django.forms.models import model_to_dict
 
 import models
 import forms
-import billing.models
 from company_accounts.views import CompanyView, CompanySelected
 
 tz = pytz.timezone('America/Guayaquil')
@@ -50,20 +41,24 @@ class ReceivableDetailView(ReceivableView, CompanySelected, DetailView):
     """
     """
 
+
 class ReceivableUpdateView(ReceivableView, CompanySelected, UpdateView):
     """
     """
     form_class = forms.ReceivableForm
 
+
 class ReceivableConfirmReceivedView(ReceivableView, CompanySelected, DetailView):
     """
     """
     template_name_suffix = '_confirm_received'
+
     def post(self, request, pk):
         r = self.get_object()
         r.received = True
         r.save()
         return redirect("receivable_detail", r.id)
+
 
 class ReceivableSelected(CompanySelected):
     @property
@@ -84,6 +79,7 @@ class ReceivableSelected(CompanySelected):
         context = super(ReceivableSelected, self).get_context_data(**kwargs)
         context['receivable'] = self.receivable
         return context
+
 
 class PaymentCreateView(ReceivableSelected, CreateView):
     """

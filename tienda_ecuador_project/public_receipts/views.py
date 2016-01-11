@@ -1,31 +1,17 @@
-import tempfile
-import os
-import base64
 import pytz
-from datetime import datetime, timedelta
-from io import BytesIO
 
-from reportlab.pdfgen import canvas
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
 from django.views.generic import View
-from django.views.generic.list import ListView
-from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.core.urlresolvers import reverse
-from django.http import JsonResponse
-from django.forms.models import model_to_dict
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 
 import billing.models
-from company_accounts.views import CompanyView, CompanySelected
 
 tz = pytz.timezone('America/Guayaquil')
 
+
 class ReceiptForm(TemplateView):
-    template_name='public_receipts/index.html'
+    template_name = 'public_receipts/index.html'
 
     def post(self, request):
         if request.POST['clave']:
@@ -69,6 +55,7 @@ class ReceiptView(PublicReceiptView, View):
             return render(request,
                           'public_receipts/not_found.html',
                           {'clave': clave})
+
 
 class ReceiptXMLView(PublicReceiptView, View):
     """

@@ -4,6 +4,7 @@ from django import forms
 from accounts_receivable import models
 import billing.models
 
+
 class ReceivableForm(forms.ModelForm):
     comment = forms.CharField(
         label='Comentario',
@@ -19,6 +20,7 @@ class ReceivableForm(forms.ModelForm):
         # Provide an association between the ModelForm and a model
         model = models.Receivable
         fields = ('comment', 'received',)
+
 
 class PaymentForm(forms.ModelForm):
     date = forms.DateField(

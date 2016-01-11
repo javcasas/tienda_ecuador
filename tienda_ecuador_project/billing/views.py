@@ -29,6 +29,7 @@ from util import signature
 from util import sri_sender
 from sri.models import SRIStatus
 from util import mail
+import util.json
 import accounts_receivable.models
 
 tz = pytz.timezone('America/Guayaquil')
@@ -181,19 +182,19 @@ class CompanyIndex(CompanySelected, View):
             #               .filter(company=company)
             #               .order_by('sku')[:5],
             'bill_list':
-                models.Bill.objects
-                           .filter(company=company)
-                           .filter(status=SRIStatus.options.Accepted)[:5],
+                (models.Bill.objects
+                            .filter(company=company)
+                            .filter(status=SRIStatus.options.Accepted)[:5]),
             'prebill_list':
-                models.Bill.objects
-                           .filter(punto_emision__establecimiento__company=company)
-                           .filter(status=SRIStatus.options.NotSent)
-                           .order_by("number")[:5],
+                (models.Bill.objects
+                            .filter(punto_emision__establecimiento__company=company)
+                            .filter(status=SRIStatus.options.NotSent)
+                            .order_by("number")[:5]),
             'customer_list':
-                models.Customer.objects
-                               .filter(company=company)
-                               .exclude(identificacion='9999999999999')
-                               .order_by('identificacion')[:5],
+                (models.Customer.objects
+                                .filter(company=company)
+                                .exclude(identificacion='9999999999999')
+                                .order_by('identificacion')[:5]),
             'company': company,
             'single_punto_emision': self.single_punto_emision,
             'user': self.request.user,
@@ -208,7 +209,7 @@ class ItemView(object):
     """
     Base class for an Item View
     """
-    #model = models.Item
+    # model = models.Item
     context_object_name = 'item'
 
     def get_queryset(self):
@@ -242,7 +243,7 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
     Create view for items
     """
     template_name_suffix = '_create_form'
-    #form_class = forms.ItemForm
+    # form_class = forms.ItemForm
 
     def get_form(self, *args):
         res = super(ItemCreateView, self).get_form(*args)
@@ -259,7 +260,7 @@ class ItemCreateView(CompanySelected, ItemView, CreateView):
 
 
 class ItemUpdateView(ItemView, CompanySelected, UpdateView):
-    #form_class = forms.ItemForm
+    # form_class = forms.ItemForm
 
     def get_form(self, *args, **kwargs):
         form = super(ItemUpdateView, self).get_form(*args, **kwargs)
@@ -652,17 +653,10 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
 
     def post(self, request, pk):
         # Local vars
-        def success(msg):
-            return HttpResponse(
-                json.dumps({
-                    'success': True,
-                    'msg': msg
-                }))
-
         bill = self.get_object()
         if bill.status in [SRIStatus.options.ReadyToSend, SRIStatus.options.Sent,
                            SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
-            return success('Ya Aceptado')
+            return util.json.success('Ya Aceptado')
         if bill.status != SRIStatus.options.NotSent:
             return HttpResponse("Bill status is not 'NotSent'",
                                 status=412, reason='Precondition Failed')
@@ -672,7 +666,7 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         bill.date = datetime.now(tz=pytz.timezone('America/Guayaquil'))
         bill.save()
         bill.accept()
-        return success('Aceptado')
+        return util.json.success('Aceptado')
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -683,33 +677,20 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_disabled'
 
     def post(self, request, pk):
-        def success(msg):
-            return HttpResponse(
-                json.dumps({
-                    'success': True,
-                    'msg': msg
-                }))
-        def failure(msg):
-            return HttpResponse(
-                json.dumps({
-                    'success': False,
-                    'msg': msg
-                }))
-
         bill = self.get_object()
         if bill.status in [SRIStatus.options.Sent,
                            SRIStatus.options.Accepted,
                            SRIStatus.options.Annulled]:
-            return success("Ya enviado")
+            return util.json.success("Ya enviado")
         if bill.status != SRIStatus.options.ReadyToSend:
             return HttpResponse("Bill status is not 'a enviar'",
                                 status=412, reason='Precondition Failed')
 
         send_res = bill.send_to_SRI()
         if send_res:
-            return success("Enviado")
+            return util.json.success("Enviado")
         else:
-            return failure("Factura rechazada")
+            return util.json.failure("Factura rechazada")
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -720,38 +701,20 @@ class BillEmitValidateView(BillView, PuntoEmisionSelected, DetailView):
     template_name_suffix = '_disabled'
 
     def post(self, request, pk):
-        def success(msg):
-            return HttpResponse(
-                json.dumps({
-                    'success': True,
-                    'msg': msg
-                }))
-        def failure(msg):
-            return HttpResponse(
-                json.dumps({
-                    'success': False,
-                    'msg': msg
-                }))
-        def not_yet(msg):
-            return HttpResponse(
-                json.dumps({
-                    'success': False,
-                    'msg': msg
-                }))
         bill = self.get_object()
         if bill.status in [SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
-            return success("Ya Validado")
+            return util.json.success("Ya Validado")
         if bill.status in [SRIStatus.options.NotSent]:
-            return failure("Ya Rechazado")
+            return util.json.failure("Ya Rechazado")
         if bill.status != SRIStatus.options.Sent:
             return HttpResponse("Bill status is not 'sent'",
                                 status=412, reason='Precondition Failed')
 
         res = bill.validate_in_SRI()
         if res:
-            return success("Aceptado")
+            return util.json.success("Aceptado")
         elif bill.status == SRIStatus.options.NotSent:
-            return failure("Rechazado")
+            return util.json.failure("Rechazado")
         elif bill.status == SRIStatus.options.Sent:
             return HttpResponse(u"Aún no procesada", status=412, reason='Precondition Failed')
 
@@ -994,13 +957,19 @@ def gen_bill_xml(request, bill, codigo=None):
         'produccion': '2'
     }[bill.ambiente_sri]
 
-    info_tributaria['tipo_emision'] = '1'   # 1: normal
-                                            # 2: indisponibilidad sistema
-    info_tributaria['cod_doc'] = '01'   # 01: factura
-                                        # 04: nota de credito
-                                        # 05: nota de debito
-                                        # 06: guia de remision
-                                        # 07: comprobante de retencion
+    info_tributaria['tipo_emision'] = {
+        'normal': '1',
+        'indisponibilidad_sistema': '2'
+    }['normal']
+
+    info_tributaria['cod_doc'] = {
+        'factura': '01',
+        'nota_de_credito': '04',
+        'nota_de_debito': '05',
+        'guia_de_remision': '06',
+        'comprobante_de_retencion': '07',
+    }['factura']
+
     c = models.ClaveAcceso()
     # proformabill.date = proformabill.date.astimezone(
     #     pytz.timezone('America/Guayaquil'))  # FIXME

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 from django import forms
-#from inventory.models import Item_tipo_OPTIONS, Item_decimales_OPTIONS
-import sri.models as sri
 from billing import models
 
 
@@ -110,6 +108,7 @@ class BillItemForm(forms.ModelForm):
         fields = ('sku', 'name', 'qty', 'unit_price', 'description',
                   'unit_cost', 'bill')
 
+
 class SendToCustomerForm(forms.Form):
     subject = forms.CharField(
         label="Asunto",
@@ -120,6 +119,7 @@ class SendToCustomerForm(forms.Form):
         max_length=500,
         widget=forms.Textarea(),
         help_text="Por favor teclee una descripción.")
+
     class Meta:
         # Provide an association between the ModelForm and a model
         fields = ('subject', 'text',)

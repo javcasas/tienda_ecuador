@@ -4,7 +4,6 @@ from django import forms
 import models
 import sri.models as sri
 from decimal import Decimal
-from django.core import validators
 from util.forms import UpdatedDecimalField
 
 
@@ -52,8 +51,9 @@ class ItemForm(forms.ModelForm):
         cleaned_data = super(ItemForm, self).clean()
         # Check unique constraint
         try:
-            ob = self.Meta.model.objects.get(company=self.instance.company,
-                                        code=cleaned_data['code'])
+            ob = self.Meta.model.objects.get(
+                company=self.instance.company,
+                code=cleaned_data['code'])
             if self.instance.id != ob.id:
                 self.add_error('code',
                                u'Código repetido, por favor utilice otro código.')
@@ -85,15 +85,15 @@ class BatchForm(forms.ModelForm):
         cleaned_data = super(BatchForm, self).clean()
         # Check unique constraint
         try:
-            ob = self.Meta.model.objects.get(item=self.instance.item,
-                                        code=cleaned_data['code'])
+            ob = self.Meta.model.objects.get(
+                item=self.instance.item,
+                code=cleaned_data['code'])
             if self.instance.id != ob.id:
                 self.add_error('code',
                                u'Código repetido, por favor utilice otro código.')
         except self.Meta.model.DoesNotExist:
             pass
         return cleaned_data
-
 
 
 class SKUForm(forms.ModelForm):
@@ -129,6 +129,7 @@ class SKUForm(forms.ModelForm):
             pass
         return cleaned_data
 
+
 class SmartModelChoiceField(forms.ModelChoiceField):
     def __init__(self, *args, **kwargs):
         res = super(SmartModelChoiceField, self).__init__(*args, **kwargs)
@@ -150,6 +151,7 @@ class SmartModelChoiceField(forms.ModelChoiceField):
         return super(SmartModelChoiceField, self)._set_queryset(queryset)
 
     queryset = property(forms.ModelChoiceField._get_queryset, _set_queryset)
+
 
 class ItemBatchSKUForm(forms.ModelForm):
     name = forms.CharField(

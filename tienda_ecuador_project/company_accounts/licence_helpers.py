@@ -36,6 +36,7 @@ class LicenceControlMixin(object):
     Mixin that provides the valid_licence method
     """
     licence_required = None
+
     def valid_licence(self, valid_licences):
         return valid_licence(self.user, valid_licences)
 
