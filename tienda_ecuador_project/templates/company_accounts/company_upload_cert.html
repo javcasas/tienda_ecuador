@@ -2,6 +2,7 @@
 
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Subir Certificado de Firma - {{ block.super }}{% endblock %}
 
@@ -20,8 +21,12 @@
         <form class='form col-xs-12 col-xs-offest-0 col-lg-offset-2 col-lg-8' action='.' method='post' enctype="multipart/form-data">
             {% csrf_token %}
             {% bootstrap_form form %}
-            <button type='submit' class='btn btn-primary col-xs-6'>Subir certificado</button>
-            <a href='{% url "company_accounts:company_profile" company.id %}' class='btn btn-default col-xs-6'>Cancelar</a>
+            {% buttons %}
+                {% buttons_menu %}
+                    {% submit_button 'Cargar certificado' %}
+                    {% back_button "company_accounts:company_profile" company.id %}
+                {% endbuttons_menu %}
+            {% endbuttons %}
         </form>
     </div>
 

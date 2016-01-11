@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
 {% block title %}Crear empresa - {{ block.super }}{% endblock %}
 {% block body_block %}
@@ -10,7 +11,9 @@
             {% csrf_token %}
             {% bootstrap_form form %}
             {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
+                {% buttons_menu %}
+                    {% save_button %}
+                {% endbuttons_menu %}
             {% endbuttons %}
         </form>
     </div>

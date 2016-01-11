@@ -2,6 +2,7 @@
 
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Estructura de la Empresa - {{ block.super }}{% endblock %}
 
@@ -31,8 +32,7 @@
             <td></td>
             <td>{{ establecimiento.codigo }}</td>
             <td></td>
-            <td><a href='{% url 'company_accounts:establecimiento_detail' establecimiento.id %}'
-                   class='btn btn-default btn-block'>Detalle</a>
+            <td>{% details_button 'company_accounts:establecimiento_detail' establecimiento.id %}</td>
           </tr>
           {% for punto_emision in establecimiento.puntos_emision %}
             <tr>
@@ -41,9 +41,7 @@
               <td>{{ punto_emision.codigo }}</td>
               <td class='{% if punto_emision.ambiente_sri == 'pruebas' %}warning{% else %}success{% endif %}'>
                   {{ punto_emision.ambiente_sri.capitalize }}</td>
-              <td><a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id%}'
-                     class='btn btn-default btn-block'>Detalle</a>
-              </td>
+              <td>{% details_button 'company_accounts:punto_emision_detail' punto_emision.id %}</td>
             </tr>
           {% endfor %}
         {% endfor %}

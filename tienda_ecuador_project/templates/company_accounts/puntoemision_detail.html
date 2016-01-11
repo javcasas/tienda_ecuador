@@ -2,6 +2,7 @@
 
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block body %}
   {{ block.super }}
@@ -18,15 +19,11 @@
             <td>{{ punto_emision.siguiente_secuencial_produccion|stringformat:'09d' }}</td></tr>
       </tbody>
     </table>
-    <div class='btn-group btn-group-justified'>
-        <div class='btn-group'>
-            <a href='{% url 'company_accounts:punto_emision_update' punto_emision.id %}'
-               class='btn btn-primary'>Editar</a>
-        </div>
-        <div class='btn-group'>
-            <a href='{% url 'company_accounts:company_structure' company.id %}'
-               class='btn btn-default'>Volver</a>
-        </div>
-    </div>
+    {% buttons %}
+        {% buttons_menu %}
+            {% edit_button 'company_accounts:punto_emision_update' punto_emision.id %}
+            {% back_button 'company_accounts:company_structure' company.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
   </div>
 {% endblock %}
