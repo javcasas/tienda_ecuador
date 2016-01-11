@@ -2,21 +2,39 @@
 
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Pagar Licencia - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}
     <li><a href='{% url 'company_accounts:company_profile' company.id %}'>Perfil</a></li>
+    <li><a href='{% url 'company_accounts:pay_licence' company.id %}'>Pagar Licencia de DSSTI Facturas</a></li>
 {% endblock %}
 
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12 even-section'>
         <h1>Pagar Licencia</h1>
-        <h3>Usted ha seleccionado el plan <strong>{{ licence_name }}</strong></h3>
-        <h3>El coste de su licencia es ${{ price_to_pay }} por mes (IVA incluído)</h3>
-        <h1>Formas de pago</h1>
+        <h4>Usted ha seleccionado el plan <strong>{{ licence_name | capfirst }}</strong></h4>
+        <h4>El coste de su licencia es ${{ price_to_pay }} por mes (IVA incluído)</h4>
+        {% if company.can_sign %}
+            <div class='alert alert-warning' role='alert'>
+                <div class='col-xs-12'>
+                No hay un certificado de firma.<br/> No podrá emitir facturas hasta que no adquiera e instale un certificado de firma electrónica, aunque pague la licencia.
+                </div>
+                {% buttons %}
+                    {% buttons_menu %}
+                        {% primary_button 'Ya tengo un certificado de firma' 'company_accounts:company_upload_cert' company.id %}
+
+                        {% button 'Obtener certificado de firma' 'info_cert' %}
+                    {% endbuttons_menu %}
+                {% endbuttons %}
+                    </tr>
+                </table>
+            </div>
+        {% endif %}
+        <h3>Formas de pago</h3>
 
         <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
           <div class="panel panel-default">
@@ -33,10 +51,12 @@
                  role="tabpanel" aria-labelledby="headingOne">
               <div class="panel-body">
                 <p>Pague usando Western Union. Para ello, envíe ${{ price_to_pay }} en cualquier oficina de Western Union a</p>
-                <p>Nombre: Javier Casas Velasco</p>
-                <p>Lugar: Quito, Ecuador</p>
-                <p>Cuando lo haya enviado, introduzca los detalles en el siguiente formulario:</p>
-                <form action='.' method='post' class='form'>
+                <div class='col-xs-12 col-lg-8 col-lg-offset-2'>
+                    <p>Nombre: <strong>Javier Casas Velasco</strong></p>
+                    <p>Lugar: <strong>Quito, Ecuador</strong></p>
+                </div>
+                <p class='col-xs-12'>Cuando lo haya enviado, introduzca los detalles aquí:</p>
+                <form action='.' method='post' class='form col-xs-12 col-lg-8 col-lg-offset-2'>
                     {% csrf_token %}
                     <input type='hidden' name='payment_method' value='western_union' />
                     <div class='form-input'>
@@ -47,16 +67,19 @@
                         <label for='sender_code'>Código de Transferencia (MTCN)</label>
                         <input type='text' name='sender_code' class='form-control'/>
                     </div>
-                    <div class='form-input'>
-                        <button type='submit' class='btn btn-primary'>Confirmar Pago</button>
-                    </div>
+                    {% buttons %}
+                        {% buttons_menu %}
+                            {% submit_button 'Confirmar Pago' %}
+                            {% button 'Cancelar' 'company_accounts:company_profile' company.id%}
+                        {% endbuttons_menu %}
+                    {% endbuttons %}
                 </form>
-                <p>Emitiremos su factura en cuanto comprobemos el pago de su licencia</p>
+                <p class='col-xs-12'>Emitiremos su factura en cuanto comprobemos el pago de su licencia.</p>
               </div>
             </div>
           </div>
 
-          <div class="panel panel-default">
+          <div class="panel panel-default hidden">
             <div class="panel-heading" role="tab" id="headingTwo">
               <h4 class="panel-title">
                 <a role="button" data-toggle="collapse" data-parent="#accordion"

@@ -1,12 +1,10 @@
-{% extends 'company_accounts/l1_company_selected.html' %}
+{% extends 'company_accounts/l2_establecimiento_selected.html' %}
 {% load bootstrap3 %}
 
 {% block title %}Editar Punto de Emisión - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}
-    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>Establecimientos</a></li>
-    <li><a href='{% url 'company_accounts:establecimiento_detail' establecimiento.id %}'>{{ establecimiento.descripcion }}</a></li>
     <li><a href='{% url 'company_accounts:establecimiento_update' establecimiento.id %}'>
            Editar</a></li>
 {% endblock %}

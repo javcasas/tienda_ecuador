@@ -1,0 +1,6 @@
+{% extends 'company_accounts/l2_establecimiento_selected.html' %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id %}'>{{ punto_emision.descripcion }}</a></li>
+{% endblock %}

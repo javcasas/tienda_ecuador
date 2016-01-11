@@ -24,14 +24,23 @@
         </td>
         <td>{{ item.code }}</td>
         <td>{{ item.name }}</td>
-        <td class='visible-lg-block visible-xl-block item-qty-inline-edit'
-            data-id='{{ item.id }}' data-step='{{ item.increment_qty }}'>
-            <span class='qty-value'>{{ item.qty|qty }}</span>
+        <td class='visible-lg-block visible-xl-block item-inline-edit'
+            data-id='{{ item.id }}' data-step='{{ item.increment_qty }}'
+            data-field='qty'>
+            <span class='value'>{{ item.qty|qty }}</span>
             <span class='glyphicon glyphicon-pencil'></span>
         </td>
         <td>{{ item.unit_price|price4d }}</td>
-        <td>{{ item.total_sin_impuestos|price2d }}</td>
-        <td class='visible-lg-block visible-xl-block'>{{ item.total_impuestos|price2d }}</td>
+        <td class='item-inline-edit'
+            data-id='{{ item.id }}' data-step='0.01'
+            data-field='discount'>
+            $<span class='value'>{{ item.total_sin_impuestos|decimals:2 }}</span>
+            {% if item.discount %}
+                <span class='text-danger'>(descuento: {{ item.discount|money_2d }})</span>
+            {% endif %}
+            <span class='glyphicon glyphicon-pencil'></span>
+        </td>
+        <td class='visible-lg visible-xl'>{{ item.total_impuestos|price2d }}</td>
         <td>
             {% buttons %}
             <form action="{% url 'billitem_delete' item.id %}" method='post'>

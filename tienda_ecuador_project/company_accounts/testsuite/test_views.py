@@ -521,7 +521,10 @@ class LicenceTests(TestCase):
             HttpResponseRedirect)
         self.assertEquals(res.url, reverse("pricing"))
 
-        self.company.licence.approve('professional', date(2020, 12, 12))
+        l = self.company.licence
+        l.next_licence = 'professional'
+        l.save()
+        self.company.licence.approve(date(2020, 12, 12))
         with self.assertRaises(Exception):
             print t.dispatch(r)
 
@@ -536,6 +539,7 @@ class LicenceActivateViewTests(LoggedInTests, MakeBaseInstances, TestHelpersMixi
         """
         r = self.c.get(reverse("company_accounts:company_profile", args=(self.company.id,)))
         self.assertContains(r, "Modo Demo")
+        self.assertContains(r, "<td>No hay plan seleccionado</td>", html=True)
 
     def test_nonpaid_basic_licence(self):
         """
@@ -552,8 +556,7 @@ class LicenceActivateViewTests(LoggedInTests, MakeBaseInstances, TestHelpersMixi
         self.assertRedirects(r, reverse("company_accounts:company_profile", args=(self.company.id,)))
 
         r = self.c.get(reverse("company_accounts:company_profile", args=(self.company.id,)))
-        self.assertContains(r, "<td>Basic</td>")
-        self.assertContains(r, "Licencia Caducada")
+        self.assertContains(r, "<td>Basic</td>", html=True)
 
     def test_paid_basic_licence(self):
         """
@@ -570,22 +573,26 @@ class LicenceActivateViewTests(LoggedInTests, MakeBaseInstances, TestHelpersMixi
         self.assertRedirects(r, reverse("company_accounts:company_profile", args=(self.company.id,)))
 
         r = self.c.get(reverse("company_accounts:company_profile", args=(self.company.id,)))
-        self.assertContains(r, "<td>Basic</td>")
-        self.assertContains(r, "Licencia Caducada")
+        self.assertContains(r, "<td>Basic</td>", html=True)
+        self.assertContains(r, "Modo Demo")
         self.assertContains(r, "Renovar Licencia")  # Link to payment
         self.assertContains(r, reverse("company_accounts:pay_licence", args=(self.company.id,)))
         self.assertEquals(self.company.licence.next_licence, "basic")
 
         r = self.c.get(reverse("company_accounts:pay_licence", args=(self.company.id,)))
         self.assertContains(r, "Pagar Licencia")
-        self.assertContains(r, "Usted ha seleccionado el plan <strong>Basic</strong>")
+        self.assertContains(r, "Usted ha seleccionado el plan")
+        self.assertContains(r, "Basic")
         self.assertContains(r, "El coste de su licencia es $29 por mes (IVA incluído)")
+        self.assertContains(r, "No hay certificado de firma.")
+        self.assertContains(r, "Ya tengo un certificado de firma")
+        
         # Payment methods
         self.assertContains(r, u"Western Union")
         self.assertContains(r, u"Pague usando Western Union.")
         self.assertContains(r, u"Para ello, envíe $29 en cualquier oficina de Western Union a")
         self.assertContains(r, u"Javier Casas")
-        self.assertContains(r, u"Cuando lo haya enviado, introduzca los detalles en el siguiente formulario")
+        self.assertContains(r, u"Cuando lo haya enviado, introduzca los detalles aquí:")
         self.assertContains(r, u"Emitiremos su factura en cuanto comprobemos el pago de su licencia")
         self.assertContains(r, u"Nombres y Apellidos")
         self.assertContains(r, u"Código de Transferencia (MTCN)")

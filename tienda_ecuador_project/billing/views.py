@@ -697,7 +697,9 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
                 }))
 
         bill = self.get_object()
-        if bill.status in [SRIStatus.options.Sent, SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
+        if bill.status in [SRIStatus.options.Sent,
+                           SRIStatus.options.Accepted,
+                           SRIStatus.options.Annulled]:
             return success("Ya enviado")
         if bill.status != SRIStatus.options.ReadyToSend:
             return HttpResponse("Bill status is not 'a enviar'",
@@ -1108,15 +1110,37 @@ class BillItemUpdateViewJS(BillItemView,
             if val < 0:
                 raise Exception("Invalid QTY")
             return val
-        for field, fun in [('qty', accept_qty)]:
-            val = request.POST[field]
-            setattr(proformabill_item, field, fun(val))
+
+        def accept_new_total(val):
+            if not val:
+                val = proformabill_item.base_total_sin_impuestos
+            val = Decimal(val)
+            if not (val <= proformabill_item.base_total_sin_impuestos):
+                val = proformabill_item.base_total_sin_impuestos
+            if val < 0:
+                raise Exception("Invalid discount")
+            if val < proformabill_item.base_total_sin_impuestos - proformabill_item.max_discount:
+                raise Exception("Invalid discount")
+            return (proformabill_item.base_total_sin_impuestos - val).quantize(Decimal("0.01"))
+
+        success = False
+        for field, fun in [('qty', accept_qty),
+                           ('discount', accept_new_total)]:
+            try:
+                val = request.POST[field]
+                setattr(proformabill_item, field, fun(val))
+                success = True
+            except KeyError:
+                pass
         proformabill_item.full_clean()
         if proformabill_item.qty == 0:
             proformabill_item.delete()
         else:
             proformabill_item.save()
-        return HttpResponse("Ok")
+        if success:
+            return HttpResponse("Ok")
+        else:
+            return HttpResponse("No changes")
 
 
 class BillItemDeleteView(BillItemView,

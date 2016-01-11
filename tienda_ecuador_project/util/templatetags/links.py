@@ -27,7 +27,7 @@ class Button(object):
             template = u"<a href='{url}' class='{css_class}'>{name}</a>"
             url = reverse(self.view, args=self.view_args)
         elif self.btn_type == 'button':
-            template = u"<button type='submit' class='{css_class}'>{name}</a>"
+            template = u"<button type='submit' class='{css_class}'>{name}</button>"
             url = None
         else:
             raise Exception("Unknown button type: {}".format(self.btn_type))
@@ -48,6 +48,12 @@ def button(name, view, *view_params):
 @register.simple_tag()
 def fullwidth_button(name, view, *view_params):
     return Button(name, view=view, view_args=view_params,
+                  btn_extra_classes=['btn-block'])
+
+
+@register.simple_tag()
+def details_button(view, *view_params):
+    return Button('Detalle', view=view, view_args=view_params,
                   btn_extra_classes=['btn-block'])
 
 
@@ -84,6 +90,11 @@ def edit_button(view, *view_params):
 @register.simple_tag()
 def save_button():
     return Button('Guardar', btn_type='button', btn_class='primary', wrap_btn_group=True)
+
+
+@register.simple_tag()
+def submit_button(text):
+    return Button(text, btn_type='button', btn_class='primary', wrap_btn_group=True)
 
 
 @register.simple_tag()

@@ -1,14 +1,10 @@
-{% extends 'company_accounts/l1_company_selected.html' %}
+{% extends 'company_accounts/l3_punto_emision_selected.html' %}
 {% load bootstrap3 %}
 
 {% block title %}Editar Punto de Emisión - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}
-    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>Establecimientos</a></li>
-    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>{{ establecimiento.descripcion }}</a></li>
-    <li><a href='{% url 'company_accounts:punto_emision_detail' punto_emision.id %}'>
-           {{ punto_emision.descripcion }}</a></li>
     <li><a href='{% url 'company_accounts:punto_emision_update' punto_emision.id %}'>
            Editar</a></li>
 {% endblock %}

@@ -29,6 +29,11 @@ class PaymentForm(forms.ModelForm):
         decimal_places=2,
         min_value=0,
         help_text="Teclee la cantidad cobrada.")
+    customer_pays = forms.DecimalField(
+        label='Calculadora de Vueltos',
+        decimal_places=2,
+        min_value=0,
+        help_text="Teclee la cantidad que ha entregado el cliente.")
     method = forms.ModelChoiceField(
         label='Forma de pago',
         queryset=billing.models.FormaPago.objects,

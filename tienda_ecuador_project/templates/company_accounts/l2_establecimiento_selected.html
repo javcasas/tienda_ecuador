@@ -1,0 +1,9 @@
+{% extends 'company_accounts/l1_company_selected.html' %}
+
+{% block title %}Estructura de la Empresa - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_structure' company.id %}'>Establecimientos</a></li>
+    <li><a href='{% url 'company_accounts:establecimiento_detail' establecimiento.id %}'>{{ establecimiento.descripcion }}</a></li>
+{% endblock %}

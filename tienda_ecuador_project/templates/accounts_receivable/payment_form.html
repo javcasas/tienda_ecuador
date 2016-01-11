@@ -10,7 +10,52 @@
     <h3>Queda {{ receivable.amount_left|price2d }} por cobrar.</h3>
     <form method='post' action='.' class='form'>
         {% csrf_token %}
-        {% bootstrap_form form %}
+        {% bootstrap_field form.date %}
+        {% bootstrap_field form.method %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Pago</h3>
+            </div>
+            <div class="panel-body">
+                <div class='col-xs-12 col-lg-6'>
+                    {% bootstrap_field form.qty %}
+                </div>
+                <div class='col-xs-12 col-lg-6'>
+                    {% bootstrap_field form.customer_pays %}
+                    <h3 id='vueltos'></h3>
+                    <script>
+function calc_vueltos() {
+    var input_sel = $('#id_customer_pays');
+    var vueltos_sel = $('#vueltos');
+    var cliente_paga = input_sel.val();
+    console.log(cliente_paga);
+    if(cliente_paga) {
+        var vueltos = cliente_paga - $("#id_qty").val();
+        if (vueltos >= 0) {
+            vueltos_sel.text("Devolver al cliente $" + vueltos.toFixed(2));
+            vueltos_sel.removeClass("text-danger");
+            vueltos_sel.addClass("text-success");
+        } else {
+            vueltos_sel.text("El cliente debe pagar aún $" + (-vueltos.toFixed(2)));
+            vueltos_sel.addClass("text-danger");
+            vueltos_sel.removeClass("text-success");
+        }
+        vueltos_sel.show();
+    } else {
+        input_sel.addClass("text-danger");
+        vueltos_sel.hide();
+    }
+};
+calc_vueltos();
+$('#id_customer_pays').change(calc_vueltos);
+$('#id_customer_pays').keypress(calc_vueltos);
+$('#id_customer_pays').keydown(calc_vueltos);
+$('#id_customer_pays').keyup(calc_vueltos);
+                    </script>
+                </div>
+            </div>
+        </div>
+        {% bootstrap_field form.comment %}
         {% buttons %}
             <button type='submit' class='btn btn-primary'>Guardar</button>
             <a href='{% url 'receivable_detail' receivable.id %}' class='btn btn-default'>Cancelar</a>

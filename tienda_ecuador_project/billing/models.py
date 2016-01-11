@@ -196,7 +196,10 @@ class Bill(ComprobanteSRIMixin, models.Model):
         if self.status in [SRIStatus.options.NotSent, SRIStatus.options.ReadyToSend]:
             return self.number
         else:
-            return self.get_bill_number_from_xml()
+            try:
+                return self.get_bill_number_from_xml()
+            except ET.ParseError:
+                pass
 
     def gen_xml(self, codigo=None):
         """
@@ -355,9 +358,9 @@ class BillItem(models.Model):
     """
     Base class for items that are part of a bill
     """
-    qty = models.DecimalField(max_digits=20, decimal_places=8)
+    qty = models.DecimalField(max_digits=10, decimal_places=4)
     sku = models.ForeignKey(SKU)
-    descuento = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    discount = models.DecimalField(max_digits=15, decimal_places=4, default=0)
     bill = models.ForeignKey(Bill)
 
     def save(self, **kwargs):
@@ -373,6 +376,22 @@ class BillItem(models.Model):
             raise ValidationError("No se puede modificar la factura")
 
     @property
+    def unit_cost(self):
+        return self.sku.batch.unit_cost
+
+    @property
+    def margin_percent(self):
+        return ((self.unit_price/self.unit_cost) - 1) * 100
+
+    @property
+    def max_discount(self):
+        return (self.unit_price - self.unit_cost) * self.qty
+
+    @property
+    def base_unit_price(self):
+        return self.sku.unit_price
+
+    @property
     def unit_price(self):
         return self.sku.unit_price
 
@@ -385,8 +404,12 @@ class BillItem(models.Model):
         return self.sku.batch.item.ice
 
     @property
+    def base_total_sin_impuestos(self):
+        return (self.qty * self.unit_price)
+
+    @property
     def total_sin_impuestos(self):
-        return self.qty * self.unit_price
+        return (self.qty * self.unit_price) - self.discount
 
     @property
     def valor_ice(self):

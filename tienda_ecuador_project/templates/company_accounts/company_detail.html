@@ -54,7 +54,17 @@
                 </tr>
                 <tr>
                     <th>Plan de DSSTI Facturas</th>
-                    <td>{{ company.licence }}</td>
+                    <td>
+                        {% if company.licence.effective_licence == 'demo' %}
+                            {% if company.licence.next_licence == 'demo' %}
+                                No hay plan seleccionado
+                            {% else %}
+                                {{ company.licence.next_licence | capfirst }}
+                            {% endif %}
+                        {% else %}
+                            {{ company.licence.licence | capfirst }}
+                        {% endif %}
+                    </td>
                     <td>
                         {% fullwidth_button 'Elegir Plan' 'company_accounts:company_profile_select_plan' company.id %}
                     </td>

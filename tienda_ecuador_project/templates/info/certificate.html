@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %} DSSTI - {% endblock %}
+
+{% block body_block %}
+
+<div class='row even-section'>
+    <div class='col-xs-12 col-lg-8 col-lg-offset-2'>
+
+<h1 class='page-header'>Certificado de Firma Electrónica</h1>
+    <h2>¿Qué es?</h2>
+        <p>
+El Certificado de Firma Electrónica le permite firmar documentos electrónicos, al igual que usted puede firmar
+documentos en papel con un esfero y su mano. Se trata pues del equivalente electrónico de la firma manual.
+        </p>
+        <p>
+El Certificado de Firma Electrónica contiene información de usted, tal como sus nombres y apellidos,
+dirección, número de cédula y RUC. Además, el Certificado está firmado por una Autoridad de Certificación,
+que garantiza que dicha información es real y ha sido falsificada de ninguna manera.
+        </p>
+
+    <h2>¿Cómo es?</h2>
+        <p>El Certificado de Firma Electrónica es un fichero con extensión .p12 que contiene su información, al igual que la información de la Autoridad de Certificación que se lo ha expedido. También contiene las claves de firma, y la firma de la Autoridad de Certificación que garantiza su autenticidad.</p>
+        <p>El Certificado de Firma Electrónica también puede ser entregado en un Token, que es una llave USB para usos especiales.</p>
+        <p>El Certificado de Firma Electrónica tiene una clave sin la cual no puede ser utilizado de ninguna manera. Todos los programas que generen documentos firmados electrónicamente le pedirán su clave para poder firmar.</p>
+
+    <h2>¿Qué ventajas tiene?</h2>
+        <ul>
+            <li>Permite firmar facturas electrónicas, notas de crédito, débito y todos los comprobantes electrónicos.</li>
+            <li>Permite firmar documentos oficiales de manera electrónica.</li>
+            <li>Es necesario para tratar con la Aduana de Ecuador y así poder importar mercadería.</li>
+            <li>Permite hacer trámites oficiales por Internet, sin tener que desplazarse a la oficina correspondiente.</li>
+        </ul>
+
+    <h2>¿Cómo puedo obtener el Certificado de Firma Electrónica?</h2>
+        <p>
+        Hay varias Autoridades de Certificación que pueden emitir un Certificado de Firma Electrónica:
+        </p>
+
+        <h3>Banco Central del Ecuador</h3>
+            <p>Obtener el Certificado en el Banco Central del Ecuador es sencillo. Para ello:
+            <ol>
+                <li>
+                    Hacemos la solicitud en la Web:
+                    <a href='https://www.eci.bce.ec/web/guest/solicitud-de-certificado' target='_blank'>
+                        Solicitud de Certificado del Banco Central del Ecuador</a><br/>
+                    Asegúrese de marcar la opción de Firma de Factura Electrónica, y de solicitar el certificado en modalidad "fichero".
+                </li>
+                <li>
+                    Al cabo de unas pocas horas nos llegará un e-mail confirmando la aceptación de nuestra solicitud.
+                </li>
+                <li>
+                    Pasadas menos de 24 horas, debemos ir a la oficina del Banco Central del Ecuador que indicamos en la solicitud, y llevaremos:
+                    <ul>
+                        <li>Nuestra cédula o pasaporte original, y una copia.</li>
+                        <li>El e-mail de la confirmación impreso.</li>
+                        <li>$30.24 para pagar los costes de emisión ($27 + 12% de IVA).</li>
+                        <li>Un CD en blanco para grabar el certificado en él. Los trabajadores del Banco Central del Ecuador no graban los certificados en llaves USB, así que asegúrese de llevar un CD. Si no lleva, en los alrededores puede comprar uno, pero se lo venderán muy caro.</li>
+                    </ul>
+                    Tras pagar, inmediatamente nos emitirán el Certificado, para lo cual nos pedirán la contraseña correspondiente. Nos inventaremos una buena contraseña, y nos la aprenderemos de memoria. Sin la misma, el certificado no sirve para nada. Después grabarán el certificado en el CD, y como ejemplo de uso, lo usaremos de inmediato para firmar el contrato de condiciones de uso de la Firma Electrónica.
+                </li>
+            </ol>
+
+        <h3>Otras Autoridades de Certificación</h3>
+            <p>
+            Hay otras Autoridades de Certificación en Ecuador que le pueden ofrecer un Certificado de Firma:
+            </p>
+            <ul>
+                <li>
+                    <a href='http://www.icert.fje.gob.ec/web/guest/tarifas'>
+                    Consejo de la Judicatura
+                    </a>
+                </li>
+                <li>
+                    <a href='https://www.securitydata.net.ec/'>
+                    Security DATA
+                    </a>
+                </li>
+                <li>
+                    <a href='http://www.anf.es/es/corporacion/quienes-somos/sedes.html'>
+                    ANF AC 
+                    </a>
+                </li>
+            </ul>
+
+
+    </div>
+</div>
+
+{% endblock %}

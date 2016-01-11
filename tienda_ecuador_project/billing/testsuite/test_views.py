@@ -721,7 +721,7 @@ class BillTests(LoggedInTests, MakeBaseInstances, TestHelpersMixin, TestCase):
             self.assertContains(r, item.name)
             self.assertContains(r, item.code)
             self.assertContains(r, item.unit_price)
-            self.assertContains(r, item.descuento)
+            self.assertContains(r, item.discount)
             self.assertContains(
                 r,
                 reverse(

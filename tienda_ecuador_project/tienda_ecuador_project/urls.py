@@ -17,6 +17,12 @@ urlpatterns = [
     url(r'^benefits/$', TemplateView.as_view(template_name='benefits.html'), name='benefits'),
     url(r'^pricing/$', TemplateView.as_view(template_name='pricing.html'), name='pricing'),
     url(r'^support/$', views.SupportView.as_view(), name='support'),
+    url(r'^info/cert/$', TemplateView.as_view(
+        template_name='info/certificate.html',
+    ), name='info_cert'),
+    url(r'^info/factura_electronica/$', TemplateView.as_view(
+        template_name='info/factura_electronica.html',
+    ), name='info_factura_electronica'),
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^comprobantes/', include('public_receipts.urls', namespace='public-receipts')),

@@ -40,6 +40,10 @@ class Licence(models.Model):
         default="demo")
 
     @property
+    def company(self):
+        return Company.objects.get(licence=self)
+
+    @property
     def expired(self):
         return date.today() > self.expiration + timedelta(days=3)
 
@@ -57,16 +61,19 @@ class Licence(models.Model):
         else:
             return 0
 
-    def approve(self, next_licence, new_date):
+    def approve(self, new_date):
         """
         Approve the next licence with the new expiration date
         """
+        assert self.next_licence != 'demo'
+        next_licence = self.next_licence
         LicenceHistory(
             licence=self,
             date=datetime.now(tz=pytz.timezone('America/Guayaquil')),
             action=json.dumps(
                 {"action": "approve",
                  "next_licence": str(next_licence),
+                 "old_date": str(self.expiration),
                  "new_date": str(new_date),
                  'user_viewable': True,
                  }
@@ -274,7 +281,7 @@ class BannedCompany(models.Model):
     """
     Represents a company that is not welcome to the system
     """
-    ruc = models.CharField(max_length=100)
+    ruc = models.CharField(max_length=20)
     reason = models.TextField()
 
 
@@ -298,6 +305,21 @@ class LicenceHistory(ReadOnlyModelMixin, models.Model):
     licence = models.ForeignKey(Licence)
     date = models.DateField()
     action = models.TextField()
+
+    @property
+    def company(self):
+        return self.licence.company
+
+    def __unicode__(self):
+        try:
+            company = self.licence.company
+        except:
+            company = None
+        return u"Licence History {date}: {licence} {company} {action}".format(
+            date=self.date,
+            licence=self.licence,
+            action=self.action,
+            company=company)
 
 
 class LicenceUpdateRequest(models.Model):

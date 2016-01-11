@@ -233,10 +233,9 @@ class CompanyProfileSelectPlanView(CompanyView, CompanySelected, View):
         try:
             plan = request.POST['selected_plan']
             company = self.company
-            company.licence.next_licence = plan
-            if company.licence.effective_licence == 'demo':
-                company.licence.approve(plan, date(2010, 1, 1))
-            company.licence.save()
+            licence = company.licence
+            licence.next_licence = plan
+            licence.save()
             return redirect('company_accounts:company_profile', company.id)
         except Exception, e:
             print e
@@ -268,12 +267,12 @@ class CompanyPayLicenceView(CompanyView, CompanySelected, LicenceControlMixin, D
 
     def get_context_data(self, **kwargs):
         res = super(CompanyPayLicenceView, self).get_context_data(**kwargs)
-        res['licence_name'] = unicode(self.company.licence).capitalize()
+        res['licence_name'] = unicode(self.company.licence.next_licence).capitalize()
         res['price_to_pay'] = {
             'basic': 29,
             'professional': 69,
             'enterprise': 295,
-        }[self.company.licence.licence]
+        }[self.company.licence.next_licence]
         return res
 
     def post(self, request, **kwargs):
@@ -292,9 +291,9 @@ class CompanyPayLicenceView(CompanyView, CompanySelected, LicenceControlMixin, D
             payment.save()
             l = self.company.licence
             if l.expired:
-                l.approve(l.next_licence, date.today() + timedelta(days=30))
+                l.approve(date.today() + timedelta(days=30))
             else:
-                l.approve(l.next_licence, l.expiration + timedelta(days=30))
+                l.approve(l.expiration + timedelta(days=30))
             return redirect("company_accounts:company_profile", self.company.id)
         except AssertionError:
             pass

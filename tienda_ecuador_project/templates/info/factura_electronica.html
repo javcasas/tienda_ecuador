@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %} DSSTI - {% endblock %}
+
+{% block body_block %}
+
+<div class='row even-section'>
+    <div class='col-xs-12 col-lg-8 col-lg-offset-2'>
+
+<h1 class='page-header'>Factura Electrónica</h1>
+    <h2>¿Qué es?</h2>
+        <p>
+La Factura Electrónica es la versión moderna de la factura de toda la vida. Se trata de un documento
+electrónico que contiene los mismos datos que contenía la factura de papel, tales como:
+        </p>
+        <ul>
+            <li>Razón Social del Emisor</li>
+            <li>RUC del Emisor</li>
+            <li>Número de factura</li>
+            <li>Razón Social del Cliente</li>
+            <li>Número de Cédula, RUC o Pasaporte del Cliente</li>
+            <li>Desglose de artículos vendidos</li>
+            <li>Subtotales con IVA 0% y 12%</li>
+            <li>Total a pagar</li>
+        </ul>
+
+    <h2>¿Es el fin de las Facturas de papel?</h2>
+<p>
+No. Como tal, la Factura Electrónica busca sustituir a la Factura de papel de toda la vida, pero no la sustituye
+por completo. A menos que usted sea una entidad obligada a emitir Facturas Electrónicas
+(como son las empresas del Estado, y algunas de las grandes empresas), usted puede seguir emitiendo Facturas
+de papel.
+</p>
+
+    <h2>Si empiezo a emitir Facturas Electrónicas, ¿puedo volver a emitir Facturas de papel?</h2>
+<p>
+Sí. Usted puede emitir Facturas Electrónicas y Facturas de papel, incluso mezcladas. Así pues, si
+usted no puede emitir Facturas Electrónicas por cualquier razón (apagón, avería de su Sistema Informático,
+o cualquier otra), puede emitir en su lugar Facturas de papel.
+</p>
+
+    <h2>¿Cómo se obtiene autorización para emitir Facturas Electrónicas?</h2>
+<p>
+Todas los negocios legales pueden obtener autorización para emitir Facturas Electrónicas. Para ello hay
+que darse de alta en el entorno de Producción, en la página web del SRI.
+</p>
+
+    <h2>¿Se autoriza cada Factura Electrónica con el SRI?</h2>
+<p>
+Sí. Cada Factura Electrónica debe ser enviada al SRI con una Clave de Acceso especial,
+y si el SRI la autoriza, recibirá una Clave de Autorización, confirmando que la Factura es
+correcta y válida.
+</p>
+
+    <h2>¿Es necesario firmar las Facturas Electrónicas?</h2>
+<p>
+Sí, pero con Firma Electrónica. Cada Factura Electrónica va firmada con la Firma Electrónica del
+emisor, garantizando de esta manera que es auténtica.
+</p>
+
+    <h2>¿Es posible anular Facturas Electrónicas?</h2>
+<p>
+Sí, es posible, pero requiere cooperación del cliente. Usted no puede anular una Factura Electrónica
+sin razón. Según el Reglamento, usted debe anular una Factura con una Nota de Crédito, tanto si es
+Factura Electrónica como si es de papel. Además, se requiere confirmación del cliente para anular
+cualquier Comprobante Electrónico.
+</p>
+<p>
+Para anular un Comprobante Electrónico, usted debe ingresar a la página web del SRI, y tramitar la anulación
+del Comprobante. El SRI enviará un e-mail al receptor para confirmar que quiere anular el Comprobante. Cuando
+el receptor confirme la anulación, el comprobante pasará a estar anulado.
+</p>
+
+    <h2>Si cada Factura Electrónica es enviada al SRI, ¡el SRI sabrá todo sobre mi negocio!</h2>
+<p>
+No, el SRI sólo sabrá lo que usted vende, y lo que usted compra (a través de las facturas de otros).
+El SRI no sabe nada de su modelo de negocio, de su inventario, de cómo fabrica usted sus mercaderías,
+de cómo innova y hace avanzar su negocio, de cómo convence a sus clientes,
+de cómo se hace publicidad, de cómo ofrece algo que ninguna otra empresa
+del país tiene. ¡El SRI apenas sabe nada de su negocio!
+</p>
+<p>
+Por otra parte, empresas reconocidas como los almacenes TIA, CNT, Entrepapeles y muchas otras emiten todas
+sus Facturas en formato Electrónico, y no tienen miedo a que el SRI sepa lo que venden. Si ellos
+no tienen miedo, ¿por qué ha de tenerlo usted?
+</p>
+<p>
+Por otra parte, si usted se dedica a negocios turbios, como la venta sin factura y sin cobrar impuestos;
+o la compra de artículos de dudosa procedencia y sin factura, en DSSTI le recomendamos
+que revise su modelo de negocio. Ese tipo de negocios a menudo termina con la
+mercadería incautada, el empresario encarcelado, y el negocio cerrado.
+</p>
+
+    <h2>Algunos de mis clientes y proveedores no quieren Factura para no pagar el IVA</h2>
+<p>
+Eso no es correcto. Quien paga el IVA es el Consumidor Final, no los intermediarios. Cuando su
+proveedor se niega a hacerle factura, usted deja de tener manera de demostrar que su mercadería
+es de origen lícito. Si le hicieran una inspección, podrían requisarle la mercadería, ya que usted
+no tiene manera de demostrar que dicha mercadería no es robada.
+</p>
+<p>
+Por otra parte, si usted ha comprado mercadería con su factura adecuada, y resulta que dicha
+mercadería es robada, usted puede defenderse argumentando que usted la compró a otra
+empresa legalmente.
+</p>
+<p>
+El SRI hace inspecciones sorpresa regularmente, en las que cazan a empresarios
+que no emiten facturas. Las penas por no emitir facturas van desde la clausura del negocio
+durante una semana, hasta el cierre definitivo.
+</p>
+<p>
+Por último, usted debe recordar que el IVA y otros impuestos financian la construcción de carreteras,
+puentes, escuelas y hospitales, pagan los salarios de los policías y funcionarios del Estado. Cuando
+usted no paga impuestos, usted impide que se arregle la carretera que va a su casa, usted le roba
+los libros y los uniformes de sus hijos, y usted le quita la salud y la protección a su pareja. ¿Acaso
+usted quiere volver a esos tiempos en los que sólo había caminos de tierra, en los que sólo los
+hijos de los ricos podían ir a la Universidad, y en los que una visita al hospital era su ruina?
+</p>
+
+    </div>
+</div>
+
+{% endblock %}

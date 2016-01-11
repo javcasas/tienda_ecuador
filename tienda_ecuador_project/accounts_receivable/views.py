@@ -103,8 +103,6 @@ class PaymentCreateView(ReceivableSelected, CreateView):
 
     def get_success_url(self):
         if self.receivable.amount_left <= 0:
-            print "ASDFASDFASD"
             return reverse("receivable_confirm_received", args=(self.receivable.id,))
         else:
-            print "asdfasdfasd"
             return reverse("receivable_detail", args=(self.receivable.id,))

@@ -99,7 +99,7 @@
       <h2 class='panel-title'>Detalle</h2>
     </div>
     <div class='panel-body'>
-      <table class='table table-hover' id='detail_table'>
+      <table class='table table-hover table-valign' id='detail_table'>
         {% include "billing/bill_detail_item_table.html" %}
       </table>
       <div class='container-fluid'>
@@ -230,18 +230,18 @@ $("#detail_table").on("click", ".item-qty-popup-edit", function (){
 });
 
 $("#button-accept").click(function (){
-    accept_qty($("#modal-item-id").val(),
-               $("#new-qty").val());
+    accept_field($("#modal-item-id").val(), 'qty', $("#new-qty").val());
     $("#qty-modal").modal("hide");
 });
 
 
-$("#detail_table").on("click", ".item-qty-inline-edit", function (ev) {
+$("#detail_table").on("click", ".item-inline-edit", function (ev) {
     var td = $(this),
-        current_value = td.find(".qty-value").text(),
-        current_id = td.attr('data-id');
+        current_value = td.find(".value").text(),
+        current_id = td.attr('data-id'),
+        field = td.attr('data-field');
 
-    td.removeClass("item-qty-inline-edit");
+    td.removeClass("item-inline-edit");
     td.html("");
 
     var input = $("<input>").attr("type", "number")
@@ -254,17 +254,17 @@ $("#detail_table").on("click", ".item-qty-inline-edit", function (ev) {
     input.focus()
         .on("keypress", function(ev) {
             if(ev.which == 13) {
-                accept_qty(current_id, input.val());
+                accept_field(current_id, field, input.val());
             }
         })
         .on("blur", function (ev) {
-            accept_qty(current_id, input.val());
+            accept_field(current_id, field, input.val());
         });
 });
 
-function accept_qty(id, new_value) {
+function accept_field(id, field, new_value) {
     var data_to_post = get_base_dict_for_post();
-    data_to_post['qty'] = new_value;
+    data_to_post[field] = new_value;
     $.post("{% url 'billitem_update_js' 9999999999 %}".replace('9999999999', id), data_to_post)
         .error(function (a, b, c) {console.log([a, b, c]);})
         .always(reload_tables);

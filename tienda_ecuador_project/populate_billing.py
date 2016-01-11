@@ -54,7 +54,10 @@ def my_populate():
         nombre_comercial=u"DSSTI", ruc=u'1756760292001',
         razon_social=u'CASAS VELASCO JAVIER',
         direccion_matriz=u'C/ Francisco de Orellana Oe2-143, Tumbaco, Quito')
-    t1.licence.approve("professional", date(2020, 1, 1))
+    l = t1.licence
+    l.next_licence = 'professional'
+    l.save()
+    t1.licence.approve(date(2020, 1, 1))
     e1 = add_instance(company_accounts.Establecimiento,
                       company=t1,
                       direccion=t1.direccion_matriz,
