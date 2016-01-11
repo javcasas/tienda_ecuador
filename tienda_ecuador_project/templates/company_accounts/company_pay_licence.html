@@ -18,7 +18,7 @@
         <h1>Pagar Licencia</h1>
         <h4>Usted ha seleccionado el plan <strong>{{ licence_name | capfirst }}</strong></h4>
         <h4>El coste de su licencia es ${{ price_to_pay }} por mes (IVA incluído)</h4>
-        {% if company.can_sign %}
+        {% if not company.can_sign %}
             <div class='alert alert-warning' role='alert'>
                 <div class='col-xs-12'>
                 No hay un certificado de firma.<br/> No podrá emitir facturas hasta que no adquiera e instale un certificado de firma electrónica, aunque pague la licencia.
@@ -30,8 +30,6 @@
                         {% button 'Obtener certificado de firma' 'info_cert' %}
                     {% endbuttons_menu %}
                 {% endbuttons %}
-                    </tr>
-                </table>
             </div>
         {% endif %}
         <h3>Formas de pago</h3>

@@ -15,6 +15,7 @@ from util.testsuite.helpers import (TestHelpersMixin,
                                     make_post)
 
 from test_models import MakeBaseInstances
+from company_accounts import licence_helpers
 
 
 def get_date():
@@ -498,12 +499,12 @@ class LicenceTests(TestCase):
 
     def test_valid_licence(self):
         self.assertTrue(
-            views.valid_licence(self.user, ['demo']))
+            licence_helpers.valid_licence(self.user, ['demo']))
         self.assertFalse(
-            views.valid_licence(self.user, ['basic']))
+            licence_helpers.valid_licence(self.user, ['basic']))
 
     def test_licence_required(self):
-        @views.licence_required("professional")
+        @licence_helpers.licence_required("professional")
         class TestView(object):
             def dispatch(self, request):
                 raise Exception('blah')
@@ -584,7 +585,7 @@ class LicenceActivateViewTests(LoggedInTests, MakeBaseInstances, TestHelpersMixi
         self.assertContains(r, "Usted ha seleccionado el plan")
         self.assertContains(r, "Basic")
         self.assertContains(r, "El coste de su licencia es $29 por mes (IVA incluído)")
-        self.assertContains(r, "No hay certificado de firma.")
+        self.assertContains(r, "No hay un certificado de firma.")
         self.assertContains(r, "Ya tengo un certificado de firma")
         
         # Payment methods
