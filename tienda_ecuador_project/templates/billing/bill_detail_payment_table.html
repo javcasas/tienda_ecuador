@@ -4,9 +4,9 @@
   {% for payment in bill.payment %}
     <tr>
       <td>{% if exact_payment_date %}
-          {{payment.date}} ( {{ payment.plazo_pago.descripcion }} )
+              {{payment.date}} ( {{ payment.plazo_pago.descripcion }} )
           {% else %}
-          {{ payment.plazo_pago.descripcion }}
+              {{ payment.plazo_pago.descripcion }}
           {% endif %}
       </td>
       <td>{{ payment.cantidad|price2d }} ({{ payment.porcentaje | floatformat:0 }}%)</td>

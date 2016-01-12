@@ -1,11 +1,18 @@
 {% extends 'billing/l2_bill_selected.html' %}
+{% load bootstrap3 %}
+{% load links %}
+
 {% block title %}Añadir Item a Factura {{ proformabill }} - {{ block.super }}{% endblock %}
 {% block body %}
     {{ block.super }}
     <form method='post' action='.'>
         {% csrf_token %}
         {{ form.as_p }}
-        <button type='submit'>Submit</button>
+        {% buttons %}
+            {% buttons_menu %}
+                {% save_button %}
+                {% dont_save_button 'bill_detail' bill.id %}
+            {% endbuttons_menu %}
+        {% endbuttons %}
     </form>
-    <a href='{% url 'bill_detail' bill.id %}'>Cancel</a>
 {% endblock %}

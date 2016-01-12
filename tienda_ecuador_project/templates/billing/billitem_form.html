@@ -1,5 +1,6 @@
 {% extends 'billing/l2_bill_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
 {% block title %}Editar Item en Factura {{ bill }} - {{ block.super }}{% endblock %}
 {% block body %}
@@ -8,8 +9,10 @@
         {% csrf_token %}
         {% bootstrap_form form %}
         {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default'>Cancelar</a>
+            {% buttons_menu %}
+                {% save_button %}
+                {% dont_save_button 'bill_detail' bill.id %}
+            {% endbuttons_menu %}
         {% endbuttons %}
     </form>
 {% endblock %}

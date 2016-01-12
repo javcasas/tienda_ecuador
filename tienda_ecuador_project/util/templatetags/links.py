@@ -8,15 +8,16 @@ register = template.Library()
 
 
 class Button(object):
-    def __init__(self, name, view=None, view_args=None, btn_class='default', btn_extra_classes=None, btn_type='a', wrap_btn_group=False):
+    def __init__(self, name, view=None, view_args=None, url=None, btn_class='default', btn_extra_classes=None, btn_type='a', wrap_btn_group=False):
         self.name = name
-        self.view = view
         self.btn_class = btn_class
         self.btn_extra_classes = btn_extra_classes or []
         self.btn_type = btn_type
         self.wrap_btn_group = wrap_btn_group
-        self.view = view
-        self.view_args = view_args
+        if self.btn_type == 'a':
+            self.url = url or reverse(view, args=view_args)
+        else:
+            self.url = None
 
     def __html__(self):
         css_class = 'btn btn-{btn_class} separated-button'.format(btn_class=self.btn_class)
@@ -25,17 +26,15 @@ class Button(object):
 
         if self.btn_type == 'a':
             template = u"<a href='{url}' class='{css_class}'>{name}</a>"
-            url = reverse(self.view, args=self.view_args)
         elif self.btn_type == 'button':
             template = u"<button type='submit' class='{css_class}'>{name}</button>"
-            url = None
         else:
             raise Exception("Unknown button type: {}".format(self.btn_type))
 
         if self.wrap_btn_group:
             template = u"""<div class='btn-group'> {} </div>""".format(template)
 
-        res = template.format(url=url, css_class=css_class, name=self.name)
+        res = template.format(url=self.url, css_class=css_class, name=self.name)
         return mark_safe(res)
 
 
@@ -58,6 +57,12 @@ def details_button(view, *view_params):
 
 
 @register.simple_tag()
+def object_details_button(ob):
+    return Button('Detalle', url=ob.get_absolute_url(),
+                  btn_extra_classes=['btn-block'])
+
+
+@register.simple_tag()
 def fullwidth_primary_button(name, view, *view_params):
     return Button(name, view=view, view_args=view_params,
                   btn_class='primary',
@@ -71,7 +76,20 @@ def primary_button(name, view, *view_params):
 
 
 @register.simple_tag()
-def danger_button(text, view, *view_params):
+def fullwidth_warning_button(name, view, *view_params):
+    return Button(name, view=view, view_args=view_params,
+                  btn_extra_classes=['btn-block'],
+                  btn_class='warning')
+
+@register.simple_tag()
+def fullwidth_danger_button(name, view, *view_params):
+    return Button(name, view=view, view_args=view_params,
+                  btn_extra_classes=['btn-block'],
+                  btn_class='danger')
+
+
+@register.simple_tag()
+def danger_button(name, view, *view_params):
     return Button(name, view=view, view_args=view_params,
                   btn_class='danger')
 

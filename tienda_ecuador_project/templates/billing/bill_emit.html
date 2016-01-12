@@ -1,6 +1,7 @@
 {% extends 'billing/l2_bill_selected.html' %}
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Ver Factura {{ bill }} - {{ block.super }}{% endblock %}
 
@@ -86,8 +87,10 @@
         <form action='.' method='post' class='form spaced-bottom'>
             {% csrf_token %}
             {% buttons %}
-                <button type='submit' class='btn btn-primary col-xs-6'>Emitir Factura</button>
-                <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default col-xs-6'>Cancelar</a>
+                {% buttons_menu %}
+                    {% submit_button 'Emitir Factura' %}
+                    {% back_button 'bill_detail' bill.id %}
+                {% endbuttons_menu %}
             {% endbuttons %}
         </form>
     </div>

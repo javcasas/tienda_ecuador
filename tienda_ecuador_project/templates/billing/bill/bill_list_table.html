@@ -18,13 +18,13 @@
               <td>{% firstof bill.issued_to '<span class="text-danger">No hay cliente establecido</span>' %}</td>
               <td>{{ bill.total|price2d }}</td>
               <td>
-                <a href="{{ bill.get_absolute_url }}" class='btn btn-default form-control'>Detalle</a>
+                {% object_details_button bill %}
               </td>
               {% if bill.get_progress_url %}
                   <td>
                     <form action='{{ bill.get_progress_url }}' method='POST' class='form'>
                         {% csrf_token %}
-                        <button type='submit' class='btn btn-default form-control'>Procesar</a>
+                        {% submit_button 'Procesar' %}
                     </form>
                   </td>
               {% endif %}
@@ -33,8 +33,7 @@
           {% if show_all_items_button %}
               <tr>
                   <td colspan='10'>
-                      <a href='{% url "bill_company_index" company.id %}'
-                         class='btn btn-default form-control'>Ver todas las facturas</a>
+                      {% fullwidth_button 'Ver todas las facturas' "bill_company_index" company.id %}
                   </td>
               </tr>
           {% endif %}

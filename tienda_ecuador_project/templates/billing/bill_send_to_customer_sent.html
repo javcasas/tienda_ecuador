@@ -21,7 +21,11 @@
 
 <div class='col-xs-12'>
     <h1>Proforma enviada al Cliente</h1>
-    <a href='{% url 'bill_detail' bill.id %}' class='btn btn-primary btn-block'>Volver</a>
+    {% buttons %}
+        {% buttons_menu %}
+            {% back_button 'bill_detail' bill.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
 </div>
 
 {% endblock %}

@@ -1,3 +1,5 @@
+{% load links %}
+
 <h3 class='spaced-top'>Factura</h3>
 <table class='table table-bordered'>
     <tr>
@@ -30,8 +32,8 @@
     <tr>
         <th>Documentos Electrónicos</th>
         <td>
-            <a href='{% url "public-receipts:receipt_view_xml" bill.clave_acceso %}' class='btn btn-default'>Descargar XML</a>
-            <a href='{% url "public-receipts:receipt_view_ride" bill.clave_acceso %}' class='btn btn-default'>Descargar RIDE</a>
+            {% fullwidth_button 'Descargar XML' "public-receipts:receipt_view_xml" bill.clave_acceso %}
+            {% fullwidth_button 'Descargar RIDE' "public-receipts:receipt_view_ride" bill.clave_acceso %}
         </td>
     </tr>
     <tr>
