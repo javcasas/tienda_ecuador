@@ -9,6 +9,8 @@ urlpatterns = [
     url(r'^$', views.index, name='billing_index'),
     url(r'^(?P<company_id>[0-9]+)/$',
         views.CompanyIndex.as_view(), name='company_index'),
+    url(r'^(?P<company_id>[0-9]+)/$',
+        views.CompanyIndex.as_view(), name='billing_main_menu'),
 
     #######################
     # Item views
@@ -33,23 +35,28 @@ urlpatterns = [
     # Bill lists by status
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status__in': [SRIStatus.options.NotSent, SRIStatus.options.Rejected]}
+            queryset_filters={'status__in': [SRIStatus.options.NotSent, SRIStatus.options.Rejected]},
+            object_name='Pre Facturas',
         ), name='bill_company_index'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/ready_to_send/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': SRIStatus.options.ReadyToSend}
+            queryset_filters={'status': SRIStatus.options.ReadyToSend},
+            object_name='Facturas Listas para Enviar',
         ), name='bill_company_index.ready_to_send'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/sent/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': SRIStatus.options.Sent}
+            queryset_filters={'status': SRIStatus.options.Sent},
+            object_name='Facturas Enviadas',
         ), name='bill_company_index.sent'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/accepted/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': SRIStatus.options.Accepted}
+            queryset_filters={'status': SRIStatus.options.Accepted},
+            object_name='Facturas Aceptadas por el SRI',
         ), name='bill_company_index.accepted'),
     url(r'^bill/list/c/(?P<company_id>[0-9]+)/annulled/$',
         views.BillCompanyListView.as_view(
-            queryset_filters={'status': SRIStatus.options.Annulled}
+            queryset_filters={'status': SRIStatus.options.Annulled},
+            object_name='Facturas Anuladas',
         ), name='bill_company_index.annulled'),
 
     url(r'^bill/list/status/(?P<company_id>[0-9]+)/$',

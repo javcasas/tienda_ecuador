@@ -76,6 +76,11 @@ def primary_button(name, view, *view_params):
 
 
 @register.simple_tag()
+def warning_button(name, view, *view_params):
+    return Button(name, view=view, view_args=view_params,
+                  btn_class='warning')
+
+@register.simple_tag()
 def fullwidth_warning_button(name, view, *view_params):
     return Button(name, view=view, view_args=view_params,
                   btn_extra_classes=['btn-block'],

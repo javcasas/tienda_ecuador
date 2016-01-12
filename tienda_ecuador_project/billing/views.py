@@ -405,6 +405,11 @@ class BillCompanyListView(CompanySelected,
                           BillView,
                           ListView):
     context_object_name = "bill_list"
+    object_name = 'Facturas'
+    def get_context_data(self, *args, **kwargs):
+        res = super(BillCompanyListView, self).get_context_data(*args, **kwargs)
+        res['object_name'] = self.object_name
+        return res
 
 
 class BillEstablecimientoListView(EstablecimientoSelected,

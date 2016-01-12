@@ -162,35 +162,44 @@
     </div>
   </div>
 
+    {% if not company.can_sign %}
+        <div class="alert alert-warning" role="alert">
+            <p>No hay certificado de firma. No es posible emitir facturas hasta que no se suba un certificado de firma.</p>
+        </div>
+    {% elif not bill.issued_to %}
+        <div class="alert alert-warning" role="alert">
+            <p>No hay cliente seleccionado.</p>
+        </div>
+    {% elif not bill.payment %}
+        <div class="alert alert-warning" role="alert">
+            <p>No hay términos de pago.</p>
+        </div>
+    {% endif %}
 
-  <div class='panel panel-default'>
-    <div class='panel-heading'>
-        <h2 class='panel-title'>Acciones</h2>
-    </div>
-    <div class='panel-body'>
-      {% if not company.can_sign %}
-          <p>No hay certificado de firma. No es posible emitir facturas hasta que no se suba un certificado de firma</p>
-          {% fullwidth_warning_button 'Subir Certificado de Firma' "company_accounts:company_upload_cert" company.id %}      {% elif not bill.issued_to %}
-          <p>No hay cliente seleccionado.</p>
-          {% fullwidth_warning_button 'Seleccionar Cliente' "bill_update" bill.id %}
-      {% elif not bill.payment %}
-          <p>No hay términos de pago.</p>
-          {% fullwidth_warning_button 'Seleccionar Condiciones de Pago' "bill_payment_details" bill.id %}
-      {% elif not bill.items %}
-          <p>No hay artículos en la factura.</p>
-          <a href="#anchor-detalle"
-             class='btn btn-warning col-xs-12'>Añadir Artículos</a>
-      {% else %}
-          {% fullwidth_primary_button 'Emitir Factura' "bill_emit_accept" bill.id %}
-      {% endif %}
+    {% buttons %}
+        {% buttons_menu %}
+            {% if not company.can_sign %}
+                {% warning_button 'Subir Certificado de Firma' "company_accounts:company_upload_cert" company.id %}
+            {% elif not bill.issued_to %}
+                {% warning_button 'Seleccionar Cliente' "bill_update" bill.id %}
+            {% elif not bill.payment %}
+                {% warning_button 'Seleccionar Condiciones de Pago' "bill_payment_details" bill.id %}
+            {% else %}
+                {% primary_button 'Emitir Factura' "bill_emit_accept" bill.id %}
+            {% endif %}
 
-      {% if bill.issued_to and bill.issued_to.razon_social != "CONSUMIDOR FINAL" %}
-          {% fullwidth_button 'Enviar Proforma al Cliente' "bill_send_to_customer" bill.id %}
-      {% endif %}
-        
-      {% fullwidth_danger_button 'Eliminar Factura' "bill_delete" bill.id %}
-    </div>
-  </div>
+            {% if bill.issued_to and bill.issued_to.razon_social != "CONSUMIDOR FINAL" %}
+                {% button 'Enviar Proforma al Cliente' "bill_send_to_customer" bill.id %}
+            {% endif %}
+
+            {% danger_button 'Eliminar Factura' "bill_delete" bill.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
+    {% buttons %}
+        {% buttons_menu %}
+            {% back_button 'billing_main_menu' company.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
 </div>
 
 
