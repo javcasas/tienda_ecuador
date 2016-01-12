@@ -3,6 +3,7 @@
 {% load bootstrap3 %}
 {% load decimal_format %}
 {% load days_left %}
+{% load links %}
 
 {% block body %}
   {{ block.super }}
@@ -74,10 +75,15 @@
     {% else %}
       <p>No hay pagos asociados a esta cuenta por cobrar</p>
     {% endif %}
-    <a href='{% url 'receivable_update' receivable.id %}' class='btn btn-default col-xs-6'>Editar</a>
-    {% if not receivable.received %}
-        <a href='{% url 'receivable_claim' receivable.id %}' class='btn btn-primary col-xs-6'>Cobrar</a>
-    {% endif %}
+    {% buttons %}
+        {% buttons_menu %}
+            {% edit_button 'receivable_update' receivable.id %}
+            {% if not receivable.received %}
+                {% primary_button 'Cobrar' 'receivable_claim' receivable.id %}
+            {% endif %}
+            {% back_button 'accounts_receivable_index' company.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
   </div>
 
 {% endblock %}

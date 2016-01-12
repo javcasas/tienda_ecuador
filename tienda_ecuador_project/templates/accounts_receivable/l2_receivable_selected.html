@@ -4,11 +4,14 @@
 {% block home_url %}{% url 'company_accounts:company_select' %}{% endblock %}
 
 {% block left_nav_bar %}
-    {# TODO Llenar #}
+    {{ block.super }}
+    {% if not receivable.received %}
+        <li><a href='{% url 'receivable_claim' receivable.id %}'>Cobrar</a></li>
+    {% endif %}
 {% endblock %}
 
 {% block breadcrumbs %}
 {{ block.super }}
-<li><a href='{% url 'receivable_detail' receivable.id %}'>{{ receivable }}</a></li>
+    <li><a href='{% url 'receivable_detail' receivable.id %}'>{{ receivable }}</a></li>
 {% endblock %}
 

@@ -3,6 +3,7 @@ import datetime
 from django import forms
 from accounts_receivable import models
 import billing.models
+from util.forms import UpdatedDecimalField
 
 
 class ReceivableForm(forms.ModelForm):
@@ -26,7 +27,7 @@ class PaymentForm(forms.ModelForm):
     date = forms.DateField(
         initial=datetime.date.today,
         label='Fecha')
-    qty = forms.DecimalField(
+    qty = UpdatedDecimalField(
         label='Cantidad cobrada',
         decimal_places=2,
         min_value=0,
@@ -35,6 +36,7 @@ class PaymentForm(forms.ModelForm):
         label='Calculadora de Vueltos',
         decimal_places=2,
         min_value=0,
+        required=False,
         help_text="Teclee la cantidad que ha entregado el cliente.")
     method = forms.ModelChoiceField(
         label='Forma de pago',

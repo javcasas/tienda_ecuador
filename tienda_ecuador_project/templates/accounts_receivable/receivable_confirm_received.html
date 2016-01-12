@@ -1,6 +1,7 @@
 {% extends 'accounts_receivable/l1_company_selected.html' %}
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Confirmar cuenta cobrada {{ receivable }} - {{ block.super }}{% endblock %}
 {% block body %}
@@ -12,8 +13,10 @@
     <form method='post' action='.' class='form'>
         {% csrf_token %}
         {% buttons %}
-            <button type='submit' class='btn btn-primary col-xs-6'>Dar de Baja</button>
-            <a href='{% url 'receivable_detail' receivable.id %}' class='btn btn-default col-xs-6'>No dar de baja</a>
+            {% buttons_menu %}
+                {% submit_button 'Dar de Baja' %}
+                {% button 'No dar de baja' 'receivable_detail' receivable.id %}
+            {% endbuttons_menu %}
         {% endbuttons %}
     </form>
   </div>

@@ -1,5 +1,6 @@
 {% extends 'accounts_receivable/l2_receivable_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
 {% block title %}Editar Cuenta por Cobrar {{ receivable }} - {{ block.super }}{% endblock %}
 {% block body %}
@@ -9,8 +10,8 @@
         {% csrf_token %}
         {% bootstrap_form form %}
         {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'receivable_detail' receivable.id %}' class='btn btn-default'>Cancelar</a>
+            {% save_button %}
+            {% dont_save_button 'receivable_detail' receivable.id %}
         {% endbuttons %}
     </form>
   </div>

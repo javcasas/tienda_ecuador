@@ -1,6 +1,7 @@
 {% extends 'accounts_receivable/l2_receivable_selected.html' %}
 {% load bootstrap3 %}
 {% load decimal_format %}
+{% load links %}
 
 {% block title %}Cobrar cuenta {{ receivable }} - {{ block.super }}{% endblock %}
 {% block body %}
@@ -57,8 +58,10 @@ $('#id_customer_pays').keyup(calc_vueltos);
         </div>
         {% bootstrap_field form.comment %}
         {% buttons %}
-            <button type='submit' class='btn btn-primary'>Guardar</button>
-            <a href='{% url 'receivable_detail' receivable.id %}' class='btn btn-default'>Cancelar</a>
+            {% buttons_menu %}
+                {% save_button %}
+                {% dont_save_button 'receivable_detail' receivable.id %}
+            {% endbuttons_menu %}
         {% endbuttons %}
     </form>
   </div>
