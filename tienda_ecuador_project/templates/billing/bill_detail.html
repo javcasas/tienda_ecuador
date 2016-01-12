@@ -96,7 +96,7 @@
 
   <div class='panel panel-default'>
     <div class='panel-heading'>
-      <h2 class='panel-title'>Detalle</h2>
+      <h2 class='panel-title' id='anchor-detalle'>Detalle</h2>
     </div>
     <div class='panel-body'>
       <table class='table table-hover table-valign' id='detail_table'>
@@ -180,13 +180,19 @@
           <p>No hay términos de pago.</p>
           <a href="{% url "bill_payment_details" bill.id %}"
              class='btn btn-warning col-xs-12'>Seleccionar Condiciones de Pago</a>
+      {% elif not bill.items %}
+          <p>No hay artículos en la factura.</p>
+          <a href="#anchor-detalle"
+             class='btn btn-warning col-xs-12'>Añadir Artículos</a>
       {% else %}
           <a href="{% url "bill_emit_accept" bill.id %}"
              class='btn btn-primary col-xs-12'>Emitir Factura</a>
       {% endif %}
 
-      <a href="{% url "bill_send_to_customer" bill.id %}"
-         class='btn btn-default col-xs-12 spacer'>Enviar Proforma al Cliente</a>
+      {% if bill.issued_to and bill.issued_to.razon_social != "CONSUMIDOR FINAL" %}
+          <a href="{% url "bill_send_to_customer" bill.id %}"
+             class='btn btn-default col-xs-12 spacer'>Enviar Proforma al Cliente</a>
+      {% endif %}
         
       <a href="{% url "bill_delete" bill.id %}"
          class='btn btn-danger col-xs-12 spacer'>Eliminar Factura</a>
