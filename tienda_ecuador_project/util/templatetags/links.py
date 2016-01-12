@@ -19,7 +19,7 @@ class Button(object):
         self.view_args = view_args
 
     def __html__(self):
-        css_class = 'btn btn-{btn_class}'.format(btn_class=self.btn_class)
+        css_class = 'btn btn-{btn_class} separated-button'.format(btn_class=self.btn_class)
         for extra_class in self.btn_extra_classes:
             css_class += " " + extra_class
 
@@ -133,7 +133,7 @@ class ButtonMenuNode(template.Node):
     def render(self, context):
         output = self.nodelist.render(context)
         output = u"""
-<div class='btn-group-justified'>
+<div class='btn-group-justified separated-justified-buttons'>
 {}
 </div>
 """.format(output)

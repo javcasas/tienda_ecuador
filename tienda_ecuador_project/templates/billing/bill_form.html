@@ -1,5 +1,6 @@
 {% extends 'billing/l2_bill_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
 {% block title %}Editar Factura {{ bill.number }} - {{ block.super }}{% endblock %}
 {% block body %}
@@ -32,8 +33,10 @@
             <input type='hidden' name='cons_final' value='True' />
             {{ form.issued_to.as_hidden }}
             {% buttons %}
-                <button type='submit' class='btn btn-primary'>Guardar</button>
-                <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default'>Cancelar</a>
+                {% buttons_menu %}
+                    {% save_button %}
+                    {% dont_save_button 'bill_detail' bill.id %}
+                {% endbuttons_menu %}
             {% endbuttons %}
         </form>
       </div>
@@ -64,9 +67,11 @@
             <input type='hidden' name='cons_final' value='False' />
             {% bootstrap_form form %}
             {% buttons %}
-                <button type='submit' class='btn btn-primary'>Guardar</button>
-                <a href='{% url 'bill_new_customer' bill.id %}' class='btn btn-primary'>Introducir Datos</a>
-                <a href='{% url 'bill_detail' bill.id %}' class='btn btn-default'>Cancelar</a>
+                {% buttons_menu %}
+                    {% save_button %}
+                    {% primary_button 'Introducir Datos' 'bill_new_customer' bill.id %}
+                    {% dont_save_button 'bill_detail' bill.id %}
+                {% endbuttons_menu %}
             {% endbuttons %}
         </form>
       </div>
