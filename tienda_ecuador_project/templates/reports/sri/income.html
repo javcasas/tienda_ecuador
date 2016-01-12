@@ -1,6 +1,8 @@
 {% extends 'reports/l1_company_selected.html' %}
+{% load bootstrap3 %}
 {% load decimal_format %}
 {% load date_management %}
+{% load links %}
 
 {% block breadcrumbs %}
     {{ block.super }}
@@ -79,5 +81,10 @@
             <tr><th>Cantidad Cobrada</th><td>{{ total | money_2d }}</td></tr>
         </tbody>
     </table>
+    {% buttons %}
+        {% buttons_menu %}
+            {% back_button 'reports_index' company.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
 </div>
 {% endblock %}

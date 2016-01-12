@@ -1,6 +1,8 @@
 {% extends 'reports/l1_company_selected.html' %}
+{% load bootstrap3 %}
 {% load decimal_format %}
 {% load date_management %}
+{% load links %}
 
 {% block breadcrumbs %}
     {{ block.super }}
@@ -54,14 +56,16 @@
                 <th>Fecha</th>
                 <th>Factura</th>
                 <th>Total sin Impuestos</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
             {% for bill in bill_list %}
                 <tr>
                     <td>{{ bill.date }}</td>
-                    <td><a href='{{ bill.get_absolute_url }}'>{{ bill.number }}</a></td>
+                    <td>{{ bill.number }}</td>
                     <td>{{ bill.total_sin_iva | money_2d }}</td>
+                    <td>{% details_button 'bill_detail' bill.id %}</td>
                 </tr>
             {% empty %}
                 <tr>
@@ -77,5 +81,10 @@
             <tr><th>Total Facturado</th><td>{{ total | money_2d }}</td></tr>
         </tbody>
     </table>
+    {% buttons %}
+        {% buttons_menu %}
+            {% back_button 'reports_index' company.id %}
+        {% endbuttons_menu %}
+    {% endbuttons %}
 </div>
 {% endblock %}

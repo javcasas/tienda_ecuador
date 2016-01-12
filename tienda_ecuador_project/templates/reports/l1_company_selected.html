@@ -4,7 +4,10 @@
 {% block home_url %}{% url 'company_accounts:company_select' %}{% endblock %}
 
 {% block left_nav_bar %}
-    {# TODO Llenar #}
+    <li><a href='{% url 'reports_index' company.id %}'>Informes</a></li>
+    {% now 'm' as current_month %}
+        <li><a href='{% url 'report_monthly_income' company.id year current_month %}'>Ingresos Mensuales</a></li>
+        <li><a href='{% url 'report_monthly_bills' company.id year current_month %}'>Facturación Mensual</a></li>
 {% endblock %}
 
 {% block breadcrumbs %}
