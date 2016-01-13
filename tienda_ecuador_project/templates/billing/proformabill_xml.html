@@ -41,9 +41,9 @@
     <detalles>
         {% for item in proformabill.items %}
         <detalle>
-            {% if item.sku %}<codigoPrincipal>{{ item.sku }}</codigoPrincipal>{% endif %}
+            <codigoPrincipal>{{ item.code }}</codigoPrincipal>
             {% if item.codigo_auxiliar %}<codigoAuxiliar>{{ item.codigo_auxiliar }}</codigoAuxiliar>{% endif %}
-            <descripcion>{{ item.description }}</descripcion>
+            <descripcion>{{ item.name }}</descripcion>
             {% if item.unidad_medida %}<unidadMedida>{{ item.unidad_medida }}</unidadMedida>{% endif %}
             <cantidad>{{ item.qty|stringformat:'.6f' }}</cantidad>
             <precioUnitario>{{ item.unit_price|stringformat:'.6f' }}</precioUnitario>

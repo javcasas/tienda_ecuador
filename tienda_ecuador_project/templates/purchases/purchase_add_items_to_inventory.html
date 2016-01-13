@@ -105,15 +105,13 @@ prepare_search_box({
             </div>
             <div class='col-xs-12 spaced-bottom'></div>
         {% endfor %}
-        <button type='submit' class='btn btn-primary form-control'>Añadir artículos seleccionados al inventario</button>
     </form>
     {% buttons %}
         {% buttons_menu %}
-            {#% button "Hacer retención" "purchase_generate_retention" purchase.id %#}
             {% if not purchase.closed %}
-                {% button "Añadir artículos al Inventario" "purchase_add_items_to_inventory_xml" purchase.id %}
-                {% button "Cerrar compra" "purchase_finish" purchase.id %}
+                {% submit_button 'Añadir artículos seleccionados al inventario' %}
             {% endif %}
+            {% back_button 'purchase_detail' purchase.id %}
         {% endbuttons_menu %}
     {% endbuttons %}
 </div>

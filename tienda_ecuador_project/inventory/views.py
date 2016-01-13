@@ -19,7 +19,7 @@ from company_accounts.views import (CompanyView,
 import company_accounts.models
 from django.forms.models import model_to_dict
 
-import util.json
+import util.json_utils
 
 
 tz = pytz.timezone('America/Guayaquil')
@@ -274,7 +274,7 @@ class SKUEstablecimientoListView(EstablecimientoSelected, SKUView, ListView):
 
 class SKUEstablecimientoListJSONView(EstablecimientoSelected,
                                      SKUView,
-                                     util.json.ListJSONResponseMixin,
+                                     util.json_utils.ListJSONResponseMixin,
                                      ListView):
     """
     View that shows the items for the current company

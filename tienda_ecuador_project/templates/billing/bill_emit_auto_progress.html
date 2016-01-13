@@ -29,60 +29,64 @@ $(document).ready(function () {
         validate_url = '{% url "bill_emit_validate" bill.id %}',
         success_url = '{% url "emitted_bill_detail" bill.id %}',
         failure_url = '{% url "bill_detail" bill.id %}',
-        timeout_id;
-
-    timeout_id = window.setTimeout(accept_fn, 1000);
+        timeout_id = window.setTimeout(accept_fn, 1000),
+        retries = 0;
 
     function noop() {}
-    function accept_fn() {
-        $('#accept-td').append('<span class="glyphicon glyphicon-refresh spinning"></span>')
-        $.post(accept_url, get_base_dict_for_post(), noop, 'json')
+    function redirect_to_emitted_bill() {
+        document.location = success_url;
+    }
+    function post_to_server(ob) {
+        var selector = ob.status_selector,
+            url = ob.url,
+            next_fn = ob.next_fn,
+            self_fn = function () {post_to_server(ob);};
+        $(selector).append('<span class="glyphicon glyphicon-refresh spinning"></span>')
+        $.post(url, get_base_dict_for_post(), noop, 'json')
          .done(function (data) {
+            $(selector).text(data.msg);
             if(data.success == true) {
-                $('#accept-td').text(data.msg);
-                $('#accept-td').append(' <span class="glyphicon glyphicon-ok text-green"></span>');
-                timeout_id = window.setTimeout(send_to_sri_fn, 100);
+                $(selector).append(' <span class="glyphicon glyphicon-ok text-green"></span>');
+                timeout_id = window.setTimeout(next_fn, 100);
             } else {
-                $('#accept-td').text(data.msg);
-                $('#accept-td').append(' <span class="glyphicon glyphicon-delete text-red"></span>');
+                $(selector).append(' <span class="glyphicon glyphicon-delete text-red"></span>');
+                document.location = failure_url;
+            }
+         })
+         .fail(function (data) {
+            if(retries < 10) {
+                $(selector).text("Algo falló. Reintentando...");
+                timeout_id = window.setTimeout(self_fn, 1000);
+                retries += 1;
+            } else {
+                $(selector).text("Fallo.");
+                $(selector).append(' <span class="glyphicon glyphicon-delete text-red"></span>');
                 document.location = failure_url;
             }
          });
+    }
+
+    function accept_fn() {
+        post_to_server({
+            status_selector: '#accept-td',
+            url: accept_url,
+            next_fn: send_to_sri_fn});
     }
 
     function send_to_sri_fn() {
-        $('#send-td').append('<span class="glyphicon glyphicon-refresh spinning"></span>')
-        $.post(send_to_sri_url, get_base_dict_for_post(), noop, 'json')
-         .done(function (data) {
-            if(data.success == true) {
-                $('#send-td').text(data.msg);
-                $('#send-td').append(' <span class="glyphicon glyphicon-ok text-green"></span>');
-                timeout_id = window.setTimeout(validate_fn, 100);
-            } else {
-                $('#send-td').text(data.msg);
-                $('#send-td').append(' <span class="glyphicon glyphicon-remove text-red"></span>');
-                document.location = failure_url;
-            }
-         });
+        post_to_server({
+            status_selector: '#send-td',
+            url: send_to_sri_url,
+            next_fn: validate_fn});
     }
 
     function validate_fn() {
-        $('#validate-td').append('<span class="glyphicon glyphicon-refresh spinning"></span>')
-        $.post(validate_url, get_base_dict_for_post(), noop, 'json')
-         .done(function (data) {
-            if(data.success == true) {
-                $('#validate-td').text(data.msg);
-                $('#validate-td').append(' <span class="glyphicon glyphicon-ok text-green"></span>');
-                document.location = success_url;
-            } else {
-                $('#validate-td').text(data.msg);
-                $('#validate-td').append(' <span class="glyphicon glyphicon-remove text-red"></span>');
-                document.location = failure_url;
-            }
-         }).fail(function (data) {
-                timeout_id = window.setTimeout(validate_fn, 1000);
-         });
+        post_to_server({
+            status_selector: '#validate-td',
+            url: validate_url,
+            next_fn: redirect_to_emitted_bill});
     }
+
 
 });
 </script>

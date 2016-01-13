@@ -2,17 +2,17 @@
 from datetime import date, timedelta
 from decimal import Decimal
 import xml.etree.ElementTree as ET
+import pytz
 
-from django.db import models
+from django.db import models, transaction
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.shortcuts import render_to_response
 
 from util.property import Property, ConvertedProperty, ProtectedSetattr
-from util.validators import IsCedula, IsRuc
 from util import signature
 
-from company_accounts.models import Company, Establecimiento, PuntoEmision
+from company_accounts.models import Company, PuntoEmision
 from stakeholders.models import Customer
 from inventory.models import SKU
 from sri.models import ComprobanteSRIMixin, SRIStatus
@@ -154,7 +154,7 @@ class Bill(ComprobanteSRIMixin, models.Model):
             if decrease_inventory:
                 for item in self.items:
                     item.substract_from_inventory()
-                    
+        return res
 
     def validate_in_SRI(self):
         res = super(Bill, self).validate_in_SRI()
@@ -226,6 +226,7 @@ class Bill(ComprobanteSRIMixin, models.Model):
         assert self.ambiente_sri
         assert self.secuencial
         assert self.date
+        thedate = self.date.astimezone(pytz.timezone("America/Guayaquil"))
 
         company = self.punto_emision.establecimiento.company
 
@@ -252,9 +253,9 @@ class Bill(ComprobanteSRIMixin, models.Model):
                                             # 06: guia de remision
                                             # 07: comprobante de retencion
         c = ClaveAcceso()
-        c.fecha_emision = (self.date.year,
-                           self.date.month,
-                           self.date.day)
+        c.fecha_emision = (thedate.year,
+                           thedate.month,
+                           thedate.day)
         c.tipo_comprobante = "factura"
         c.ruc = str(company.ruc)
         c.ambiente = self.ambiente_sri
@@ -447,6 +448,10 @@ class BillItem(models.Model):
     @property
     def code(self):
         return self.sku.code
+
+    @property
+    def decimales_qty(self):
+        return self.sku.decimales_qty
 
     def substract_from_inventory(self):
         self.sku.substract(self.qty)

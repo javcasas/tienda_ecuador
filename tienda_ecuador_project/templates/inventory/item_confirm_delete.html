@@ -8,8 +8,10 @@
         {% csrf_token %}
         <p>¿Está seguro de querer eliminar "{{ item }}"?</p>
         {% buttons %}
-            <input type="submit" value="Eliminar" class='btn btn-danger' />
-            <a href='{% url 'item_detail' item.id %}' class='btn btn-default'>No Eliminar</a>
+            {% buttons_menu %}
+                {% delete_button %}
+                {% dont_delete_button 'item_detail' item.id %}
+            {% endbuttons_menu %}
         {% endbuttons %}
     </form>
 {% endblock %}

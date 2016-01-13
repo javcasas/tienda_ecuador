@@ -19,7 +19,7 @@
     <tr>
         <td class='visible-xs-block visible-sm-block item-qty-popup-edit'
             data-id='{{ item.id }}' data-step='{{ item.increment_qty }}'>
-            <span class='qty-value'>{{ item.qty|qty }}</span>
+            <span class='qty-value'>{{ item|qty }}</span>
             <span class='glyphicon glyphicon-pencil'></span>
         </td>
         <td>{{ item.code }}</td>
@@ -27,7 +27,7 @@
         <td class='visible-lg-block visible-xl-block item-inline-edit'
             data-id='{{ item.id }}' data-step='{{ item.increment_qty }}'
             data-field='qty'>
-            <span class='value'>{{ item.qty|qty }}</span>
+            <span class='value'>{{ item|qty }}</span>
             <span class='glyphicon glyphicon-pencil'></span>
         </td>
         <td>{{ item.unit_price|price4d }}</td>

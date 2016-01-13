@@ -40,7 +40,7 @@
         <strong>{{ error.tipo }}</strong>
         (#{{error.identificador}})
         {{ error.mensaje }}
-        {% if error.informacionAdicional %}{{ error.informacionAdicional }}{% endif %}
+        {% if error.informacionAdicional %}<br/>{{ error.informacionAdicional }}{% endif %}
         {% if error.url %}
             <a href='{{ error.url }}' class='btn btn-default'>{{ error.url_msg }}</a>
         {% endif %}

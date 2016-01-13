@@ -41,7 +41,7 @@
                     <tr>
                         <td>{{ date }}</td>
                         <td>{{ total | money_2d }}</td>
-                        <td>{% fullwidth_button 'Detalle' 'purchase_day_archive' company.id date.year date.month date.day %}</td>
+                        <td>{% details_button 'purchase_day_archive' company.id date.year date.month date.day %}</td>
                     </tr>
                 {% empty %}
                     <tr>

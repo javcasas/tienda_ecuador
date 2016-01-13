@@ -3,6 +3,7 @@
 
 {% block left_nav_bar %}
     <li><a href="{% url 'purchases_main_menu' company.id %}">Compras</a></li>
+    <li><a href="{% url 'purchase_create_from_xml' company.id %}">Nueva Compra desde XML</a></li>
     {% block left_menu %}
     {% endblock %}
 {% endblock %}

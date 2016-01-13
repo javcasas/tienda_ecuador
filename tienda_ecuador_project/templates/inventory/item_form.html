@@ -33,7 +33,7 @@
             {% csrf_token %}
             {% bootstrap_form form %}
             {% buttons %}
-                <button type='submit' class='btn btn-primary'>Guardar</button>
+                {% save_button %}
                 {% if item %}
                     {% dont_save_button 'item_detail' item.id %}
                 {% else %}

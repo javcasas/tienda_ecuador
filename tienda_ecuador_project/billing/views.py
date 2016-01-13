@@ -29,7 +29,7 @@ from util import signature
 from util import sri_sender
 from sri.models import SRIStatus
 from util import mail
-import util.json
+import util.json_utils
 import accounts_receivable.models
 
 tz = pytz.timezone('America/Guayaquil')
@@ -439,19 +439,10 @@ class BillDetailView(BillView,
     """
     def get_context_data(self, **kwargs):
         res = super(BillDetailView, self).get_context_data(**kwargs)
-        fix_urls = {'45': ("asdf", 'Eliminar secuencial actual')}  # FIXME
-        try:
-            sri_errors = json.loads(self.proforma.issues)
-        except:
-            sri_errors = None
+        bill = self.get_object()
+        if bill.issues:
+            res['sri_errors'] = json.loads(bill.issues)
 
-        if sri_errors:
-            res['sri_errors'] = sri_errors
-            for err in sri_errors:
-                url = fix_urls.get(err['identificador'])
-                if url:
-                    err['url'] = url[0]
-                    err['url_msg'] = url[1]
         return res
 
 
@@ -661,8 +652,8 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         bill = self.get_object()
         if bill.status in [SRIStatus.options.ReadyToSend, SRIStatus.options.Sent,
                            SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
-            return util.json.success('Ya Aceptado')
-        if bill.status != SRIStatus.options.NotSent:
+            return util.json_utils.success('Ya Aceptado')
+        if bill.status not in [SRIStatus.options.NotSent, SRIStatus.options.Rejected]:
             return HttpResponse("Bill status is not 'NotSent'",
                                 status=412, reason='Precondition Failed')
         if not bill.punto_emision:
@@ -671,7 +662,7 @@ class BillEmitAcceptView(BillView, PuntoEmisionSelected, DetailView):
         bill.date = datetime.now(tz=pytz.timezone('America/Guayaquil'))
         bill.save()
         bill.accept()
-        return util.json.success('Aceptado')
+        return util.json_utils.success('Aceptado')
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -686,16 +677,16 @@ class BillEmitSendToSRIView(BillView, PuntoEmisionSelected, DetailView):
         if bill.status in [SRIStatus.options.Sent,
                            SRIStatus.options.Accepted,
                            SRIStatus.options.Annulled]:
-            return util.json.success("Ya enviado")
+            return util.json_utils.success("Ya enviado")
         if bill.status != SRIStatus.options.ReadyToSend:
             return HttpResponse("Bill status is not 'a enviar'",
                                 status=412, reason='Precondition Failed')
 
         send_res = bill.send_to_SRI()
         if send_res:
-            return util.json.success("Enviado")
+            return util.json_utils.success("Enviado")
         else:
-            return util.json.failure("Factura rechazada")
+            return util.json_utils.failure("Factura rechazada")
 
 
 @licence_required('basic', 'professional', 'enterprise')
@@ -708,18 +699,18 @@ class BillEmitValidateView(BillView, PuntoEmisionSelected, DetailView):
     def post(self, request, pk):
         bill = self.get_object()
         if bill.status in [SRIStatus.options.Accepted, SRIStatus.options.Annulled]:
-            return util.json.success("Ya Validado")
+            return util.json_utils.success("Ya Validado")
         if bill.status in [SRIStatus.options.NotSent]:
-            return util.json.failure("Ya Rechazado")
+            return util.json_utils.failure("Ya Rechazado")
         if bill.status != SRIStatus.options.Sent:
             return HttpResponse("Bill status is not 'sent'",
                                 status=412, reason='Precondition Failed')
 
         res = bill.validate_in_SRI()
         if res:
-            return util.json.success("Aceptado")
+            return util.json_utils.success("Aceptado")
         elif bill.status == SRIStatus.options.NotSent:
-            return util.json.failure("Rechazado")
+            return util.json_utils.failure("Rechazado")
         elif bill.status == SRIStatus.options.Sent:
             return HttpResponse(u"Aún no procesada", status=412, reason='Precondition Failed')
 

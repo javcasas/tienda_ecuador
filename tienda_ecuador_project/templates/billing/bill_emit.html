@@ -49,7 +49,7 @@
             <tr>
                 <td>{{ item.code }}</td>
                 <td>{{ item.name }}</td>
-                <td>{{ item.qty|qty }}</td>
+                <td>{{ item|qty }}</td>
                 <td>{{ item.unit_price|floatformat:4 }}</td>
                 <td>{{ item.base_imponible_iva|floatformat:2 }}</td>
             <tr/>
@@ -84,7 +84,7 @@
             </tbody>
         </table>
 
-        <form action='.' method='post' class='form spaced-bottom'>
+        <form action='{% url 'bill_emit_auto_progress' bill.id %}' method='post' class='form spaced-bottom'>
             {% csrf_token %}
             {% buttons %}
                 {% buttons_menu %}

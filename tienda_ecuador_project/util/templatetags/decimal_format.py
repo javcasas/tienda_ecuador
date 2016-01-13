@@ -31,6 +31,21 @@ def decimals(value, arg):
 
 
 @register.filter
+def decimals2(value):
+    """
+    Formats with 2 decimal digits
+    """
+    return decimals(value, 2)
+
+@register.filter
+def decimals4(value):
+    """
+    Formats with 4 decimal digits
+    """
+    return decimals(value, 4)
+
+
+@register.filter
 def price2d(value):
     """
     Price with two decimals
@@ -63,13 +78,9 @@ def price4d(value):
 
 
 @register.filter
-def qty(value):
+def qty(ob):
     """
     Quantity with no digits (integer) or 4 digits (non-integer)
     """
-    if value.to_integral_value() == value:
-        # Is an integer
-        return decimals(value, 0)
-    else:
-        # Not an integer
-        return decimals(value, 4)
+    decimales = ob.decimales_qty
+    return decimals(ob.qty, decimales)

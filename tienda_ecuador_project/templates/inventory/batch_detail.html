@@ -54,7 +54,7 @@
             {% for sku in batch.skus %}
                 <tr>
                     <td> {{ sku.establecimiento }} </td>
-                    <td class='{{ sku.css_warnings.qty }}'> {{ sku.qty | decimals:item.decimales_qty }} </td>
+                    <td class='{{ sku.css_warnings.qty }}'> {{ sku | qty }} </td>
                     <td class='{{ sku.css_warnings.margin }}'> {{ sku.unit_price | money_2d }} (margen: {{ sku.margin_percent|decimals:0}}%) </td>
                     <td> {% fullwidth_button 'Detalle' 'sku_detail' sku.id %} </td>
                 </tr>

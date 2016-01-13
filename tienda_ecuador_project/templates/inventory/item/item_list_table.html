@@ -28,8 +28,7 @@
         {% if show_all_items_button %}
             <tr>
                 <td colspan='10'>
-                    <a href='{% url 'item_index' company.id %}'
-                       class='btn btn-default form-control'>Ver todos los Artículos</a>
+                    {% fullwidth_button 'Ver todos los Artículos' 'item_index' company.id %}
                 </td>
             </tr>
         {% endif %}

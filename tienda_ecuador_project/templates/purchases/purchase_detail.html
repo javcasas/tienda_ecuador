@@ -38,7 +38,7 @@
                         <td>{{ sku.code }}</td>
                         <td>{{ sku }}</td>
                         <td>{{ sku.establecimiento }}</td>
-                        <td>{% fullwidth_button 'Detalle' 'sku_detail' sku.id %}</td>
+                        <td>{% details_button 'sku_detail' sku.id %}</td>
                     </tr>
                 {% endfor %}
             {% endfor %}
@@ -48,8 +48,9 @@
         {% buttons_menu %}
             {#% button "Hacer retención" "purchase_generate_retention" purchase.id %#}
             {% if not purchase.closed %}
-                {% button "Añadir artículos al Inventario" "purchase_add_items_to_inventory_xml" purchase.id %}
-                {% button "Cerrar compra" "purchase_finish" purchase.id %}
+                {% primary_button "Añadir artículos al Inventario" "purchase_add_items_to_inventory_xml" purchase.id %}
+                {% warning_button "Cerrar compra" "purchase_finish" purchase.id %}
+                {% back_button "purchases_main_menu" company.id %}
             {% endif %}
         {% endbuttons_menu %}
     {% endbuttons %}

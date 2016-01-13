@@ -180,3 +180,7 @@ class SKU(models.Model):
     @property
     def css_warnings(self):
         return {key: 'bg-' + val for key, val in self.warnings.iteritems()}
+
+    @property
+    def decimales_qty(self):
+        return self.batch.item.decimales_qty

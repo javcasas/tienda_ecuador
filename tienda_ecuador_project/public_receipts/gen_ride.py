@@ -16,8 +16,8 @@ from reportlab.platypus import Paragraph, Frame, Table, Image  # , Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors, utils
 
-from util.sri_models import SRIStatus, AmbienteSRI
-from billing.templatetags.decimal_format import money_2d
+from sri.models import SRIStatus, AmbienteSRI
+from util.templatetags.decimal_format import money_2d, decimals
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -327,13 +327,13 @@ def gen_bill_ride_stuff(ob):
         data = [data]
         for item in ob.items:
             linea = [
-                item.sku,
+                item.code,
                 '',
-                str(item.qty),
+                str(decimals(item.qty, item.sku.batch.item.decimales_qty)),
                 item.name,
-                str(item.unit_price),
-                str(item.descuento),
-                str(item.total_sin_impuestos)
+                str(decimals(item.unit_price, 4)),
+                str(decimals(item.discount, 2)),
+                str(decimals(item.total_sin_impuestos, 2))
             ]
             data.append(linea)
         detail_table = Table(data,

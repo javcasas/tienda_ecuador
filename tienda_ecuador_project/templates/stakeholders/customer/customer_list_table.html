@@ -1,4 +1,5 @@
 {% load decimal_format %}
+{% load links %}
 
 {% if customer_list %}
 <table class='table table-hover'>
@@ -13,16 +14,14 @@
                 <td>({{customer.tipo_identificacion}}) {{ customer.identificacion }}</td>
                 <td>{{ customer.razon_social }}</td>
                 <td>
-                    <a href="{% url 'customer_detail' customer.id %}"
-                       class='btn btn-default form-control'>Detalle</a>
+                    {% details_button 'customer_detail' customer.id %}
                 </td>
             </tr>
         {% endfor %}
         {% if show_all_items_button %}
             <tr>
                 <td colspan='10'>
-                    <a href='{% url 'customer_index' company.id %}'
-                       class='btn btn-default form-control'>Ver todos los clientes</a>
+                    {% fullwidth_button 'Ver todos los clientes' 'customer_index' company.id %}
                 </td>
             </tr>
         {% endif %}
