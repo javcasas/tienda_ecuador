@@ -206,7 +206,22 @@ class Company(models.Model):
                               kwargs={'pk': self.id}),
                       u"Subir Certificado")
             )
+        for issue in CompanyIssue.objects.filter(company=self).exclude(fixed=True):
+            res.append(
+                Issue('danger',
+                      issue.issue,
+                      reverse('company_accounts:fix_issue',
+                              kwargs={'pk': issue.id}),
+                      u"Confirmar que ha sido arreglado")
+            )
+        
         return res
+
+    def add_db_issue(self, issue_text):
+        issue = CompanyIssue(
+            company=self,
+            issue=issue_text)
+        issue.save()
 
 
 class CompanyUser(models.Model):
@@ -219,6 +234,15 @@ class CompanyUser(models.Model):
 
     def __unicode__(self):
         return self.user.username
+
+
+class CompanyIssue(models.Model):
+    """
+    List of issues on a company
+    """
+    company = models.ForeignKey(Company)
+    issue = models.CharField(max_length=500)
+    fixed = models.BooleanField(default=False)
 
 
 class Establecimiento(models.Model):

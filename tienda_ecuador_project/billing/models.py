@@ -278,7 +278,7 @@ class Bill(ComprobanteSRIMixin, models.Model):
             'exterior': '08',
             'placa': '09',
         }[self.issued_to.tipo_identificacion]
-        info_factura['total_descuento'] = 0     # No hay descuentos
+        info_factura['total_descuento'] = sum([i.discount for i in self.items])
         info_factura['propina'] = 0             # No hay propinas
         info_factura['moneda'] = 'DOLAR'
         context['info_factura'] = info_factura

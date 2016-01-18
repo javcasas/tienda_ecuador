@@ -191,6 +191,20 @@ class ComprobanteSRIMixin(models.Model):
                 return converted
             return [convert_msg(msg) for msg in messages]
 
+        # Check it has not been sent and accepted
+        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
+            self.clave_acceso, entorno=self.ambiente_sri)
+        if int(autorizar_comprobante_result.numeroComprobantes) > 0:
+            for autorizacion in autorizar_comprobante_result.autorizaciones.autorizacion:
+                if autorizacion.estado == 'AUTORIZADO':
+                    self.status = SRIStatus.options.Sent
+                    self.secret_save()
+                    return True
+                elif autorizacion.estado == 'RECHAZADA':
+                    pass
+                else:  # Not processed yet
+                    return False
+
         with transaction.atomic():
             punto_emision = self.punto_emision
 
@@ -270,28 +284,40 @@ class ComprobanteSRIMixin(models.Model):
         autorizar_comprobante_result = sri_sender.autorizar_comprobante(
             self.clave_acceso, entorno=self.ambiente_sri)
 
-        if int(autorizar_comprobante_result.numeroComprobantes) == 1:
-            autorizacion = (autorizar_comprobante_result
-                            .autorizaciones.autorizacion[0])
-            if autorizacion.estado == 'AUTORIZADO':
-                self.fecha_autorizacion = autorizacion.fechaAutorizacion
-                self.numero_autorizacion = autorizacion.numeroAutorizacion
-                if autorizacion.mensajes:
+        if int(autorizar_comprobante_result.numeroComprobantes) > 0:
+            already_authorised = False
+            for autorizacion in autorizar_comprobante_result.autorizaciones.autorizacion:
+                # This should not happen, but it happened
+                # The same bill was submitted twice, with same everything but randoms from signature
+                # It was approved both times
+                if autorizacion.estado == 'AUTORIZADO':
+                    if already_authorised:
+                        self.company.add_db_issue("""
+El comprobante con clave de acceso {clave_acceso} ha sido enviado y aprobado dos veces, con 
+códigos de autorización {cod_1} y {cod_2}. Se recomienda anular el segundo."""
+                            .format(clave_acceso=autorizar_comprobante_result.claveAccesoConsultada,
+                                    cod_1=self.numero_autorizacion,
+                                    cod_2=autorizacion.numeroAutorizacion))
+                    else:
+                        self.fecha_autorizacion = autorizacion.fechaAutorizacion
+                        self.numero_autorizacion = autorizacion.numeroAutorizacion
+                        if autorizacion.mensajes:
+                            self.issues = json.dumps(
+                                convert_messages(autorizacion.mensajes.mensaje))
+                        self.status = SRIStatus.options.Accepted
+                        self.secret_save()
+                        res = True
+                        already_authorised = True
+                elif autorizacion.estado == 'RECHAZADA':
+                    self.fecha_autorizacion = autorizacion.fechaAutorizacion
                     self.issues = json.dumps(
                         convert_messages(autorizacion.mensajes.mensaje))
-                self.status = SRIStatus.options.Accepted
-                self.secret_save()
-                res = True
-            elif autorizacion.estado == 'RECHAZADA':
-                self.fecha_autorizacion = autorizacion.fechaAutorizacion
-                self.issues = json.dumps(
-                    convert_messages(autorizacion.mensajes.mensaje))
-                self.status = SRIStatus.options.Rejected
-                self.secret_save()
-                res = False
-            else:  # Aun no procesado??
-                # FIXME: log
-                res = False
+                    self.status = SRIStatus.options.Rejected
+                    self.secret_save()
+                    res = False
+                else:  # Aun no procesado??
+                    # FIXME: log
+                    res = False
         else:
             res = False
 

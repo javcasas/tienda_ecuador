@@ -4,6 +4,11 @@ from subprocess import Popen, PIPE
 
 from django.shortcuts import render, redirect
 from django.views.generic import View
+from django.views.generic.edit import FormView
+from django.core.urlresolvers import reverse
+
+from company_accounts.views import CompanySelected
+import forms
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -56,3 +61,25 @@ Email: {email}
         p = Popen(["/usr/bin/sendmail", "-t", "-oi"], stdin=PIPE)
         p.communicate(msg.as_string())
         return render(request, 'support_submitted.html', {})
+
+
+class AppSupportView(CompanySelected, FormView):
+    form_class = forms.SupportContactForm
+
+    def get_success_url(self):
+        return reverse("support_request_completed")
+
+    def form_valid(self, form):
+        form.send_email(company=self.company, user=self.request.user)
+        return super(SalesSupportView, self).form_valid(form)
+
+
+class SalesSupportView(FormView):
+    form_class = forms.SalesContactForm
+
+    def get_success_url(self):
+        return reverse("sales_request_completed")
+
+    def form_valid(self, form):
+        form.send_email()
+        return super(SalesSupportView, self).form_valid(form)

@@ -16,6 +16,8 @@ from licence_helpers import LicenceControlMixin
 from util import signature
 from sri.models import AmbienteSRI
 
+import tienda_ecuador_project.forms
+
 
 tz = pytz.timezone('America/Guayaquil')
 
@@ -119,6 +121,9 @@ class CompanySelected(object):
         context = super(CompanySelected, self).get_context_data(**kwargs)
         context['company'] = self.company
         context['single_punto_emision'] = self.single_punto_emision
+        support_contact_form = tienda_ecuador_project.forms.SupportContactForm()
+        support_contact_form.fields['url'].initial = self.request.get_full_path()
+        context['support_form'] = support_contact_form
         return context
 
     @property
@@ -222,6 +227,7 @@ class CompanyProfileSelectPlanView(CompanyView, CompanySelected, View):
     def get(self, request, pk):
         context = {
             'company': self.company,
+            'select_buttons': True,
             'select_urls': [
                 {'name': 'basic'},
                 {'name': 'professional'},
@@ -350,3 +356,32 @@ class PuntoEmisionUpdateView(PuntoEmisionView, PuntoEmisionSelected, UpdateView)
     View that shows a general index for a given punto_emision
     """
     form_class = forms.PuntoEmisionForm
+
+
+class CompanyIssueFixView(CompanySelected, DetailView):
+    """
+    View that shows a general index for a given punto_emision
+    """
+    model = models.CompanyIssue
+
+    def get_queryset(self):
+        return models.CompanyIssue.objects.filter(company=self.company)
+
+    @property
+    def company_id(self):
+        return self.issue.company.id
+
+    @property
+    def issue(self):
+        return get_object_or_404(models.CompanyIssue, id=self.kwargs['pk'])
+
+    def get_context_data(self, **kwargs):
+        context = super(CompanyIssueFixView, self).get_context_data(**kwargs)
+        context['issue'] = self.issue
+        return context
+
+    def post(self, request, pk):
+        issue = self.get_queryset().get(id=pk)
+        issue.fixed = True
+        issue.save()
+        return redirect("company_accounts:company_main_menu", self.company.id)

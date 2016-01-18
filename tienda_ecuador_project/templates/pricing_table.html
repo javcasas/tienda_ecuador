@@ -15,19 +15,33 @@
                 <td>Para Ingenieros, Licenciados, Grandes Profesionales y Negocios Serios</td>
                 <td>Para Grandes Empresas</td>
             </tr>
-            {% if select_urls %}
+            {% if select_buttons %}
                 <tr>
                     <td></td>
-                    {% for select_url in select_urls %}
-                        <td>
-                            <form class='form' action='.' method='post'>
-                                {% csrf_token %}
-                                <button type='submit' name='selected_plan'
-                                        value='{{select_url.name}}' class='btn btn-primary form-control'>
-                                        Elegir plan {{select_url.name|capfirst}}</button>
-                            </form>
-                        </td>
-                    {% endfor %}
+                    <td>
+                        <form class='form' action='.' method='post'>
+                            {% csrf_token %}
+                            <button type='submit' name='selected_plan'
+                                    value='basic' class='btn btn-primary form-control'>
+                                    Elegir plan Basic</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form class='form' action='.' method='post'>
+                            {% csrf_token %}
+                            <button type='submit' name='selected_plan'
+                                    value='professional' class='btn btn-primary form-control'>
+                                    Elegir plan Professional</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form class='form' action='.' method='post'>
+                            {% csrf_token %}
+                            <button type='submit' name='selected_plan'
+                                    value='enterprise' class='btn btn-primary form-control'>
+                                    Elegir plan Enterprise</button>
+                        </form>
+                    </td>
                 </tr>
             {% endif %}
             <tr>
@@ -94,7 +108,7 @@
                 <td></td>
                 <td>&dollar;29 / mes</td>
                 <td>&dollar;69 / mes</td>
-                <td>&dollar;295 / mes</td>
+                <td>Llámenos</td>
             </tr>
             {% if select_urls %}
                 <tr>

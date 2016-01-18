@@ -1,15 +1,74 @@
 {% extends 'base.html' %}
+{% load bootstrap3 %}
+{% load links %}
+
 {% block title %}{{ company.nombre_comercial }} - {{ block.super }}{% endblock %}
 
 {% block home_url %}{% url 'company_accounts:company_select' %}{% endblock %}
 
 {% block body_block %}
     <div class='row even-section'>
+
+<!-- Support Modal Form -->
+<div class="modal fade" id="support-form" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Soporte Técnico</h4>
+      </div>
+      <div class="modal-body">
+        <p>
+            Describa su problema, y nos pondremos en contacto con usted para solucionarlo tan pronto nos sea posible.
+        </p>
+        <form class='form' id='support-form-form'>
+            {% bootstrap_form support_form %}
+              <div class="modal-footer">
+                <button type='submit' class='btn btn-primary' id='support-submit'>Enviar Mensaje</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+              </div>
+        </form>
+        <script>
+$('#support-form-form').submit(function(event) {
+    event.preventDefault();
+    var token_data = $("{% csrf_token %}");
+    var data_to_post = {};
+    data_to_post[token_data.attr("name")] = token_data.attr('value');
+    data_to_post[$('#id_url').attr('name')] = $('#id_url').val();
+    data_to_post[$('#id_mensaje').attr('name')] = $('#id_mensaje').val();
+
+    $("#support-submit").append('<span class="glyphicon glyphicon-refresh spinning"></span>');
+    $.post('{% url "support_request_submit" company.id %}', data_to_post)
+        .done(function () {
+            $('#support-submit').text("Mensaje enviado");
+            setTimeout(function () {
+                $('#id_mensaje').val('');
+                $('#support-form').modal('hide');
+            }, 1500);
+        }).fail(function () {
+            $('#support-submit').text("Error enviando mensaje");
+            setTimeout(function () {
+                $('#support-submit').text("Enviar Mensaje");
+            }, 1500);
+        });
+});
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+
+
         <div class='col-xs-12 company-bar'>
             <h1>{{ company.nombre_comercial }}</h1>
             <h3>{{ company.razon_social }} - {{ company.ruc }}</h3>
         </div>
         <div class='col-xs-12'>
+            <div class='pull-right'>
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#support-form">
+                  Soporte Técnico <span class='glyphicon glyphicon-question-sign'></span>
+                </button>
+            </div>
             <ol class='breadcrumb'>
                 {% block breadcrumbs %}
                     <li><a href='{% url 'company_accounts:company_main_menu' company.id %}'>{{ company.nombre_comercial }}</a></li>

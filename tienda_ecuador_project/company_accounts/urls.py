@@ -30,6 +30,9 @@ urlpatterns = [
     url(r'^(?P<pk>[0-9]+)/pay_licence/$',
         views.CompanyPayLicenceView.as_view(), name='pay_licence'),
 
+    url(r'^(?P<pk>[0-9]+)/fix_issue/$',
+        views.CompanyIssueFixView.as_view(), name='fix_issue'),
+
     # Company Structure view
     url(r'^(?P<pk>[0-9]+)/structure/$',
         views.CompanyProfileView.as_view(

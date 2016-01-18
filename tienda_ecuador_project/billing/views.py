@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.views.generic import View
+from django.views.generic import View, TemplateView
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -23,6 +23,7 @@ from company_accounts.models import (CompanyUser,
                                      Establecimiento,
                                      PuntoEmision)
 from company_accounts.licence_helpers import licence_required
+from company_accounts.views import CompanySelected
 import inventory.models
 
 from util import signature
@@ -51,51 +52,6 @@ def index(request):
         'user': request.user,
     }
     return render(request, "billing/index.html", param_dict)
-
-
-class CompanySelected(object):
-    """
-    Class that offers the self.company attribute.
-    The attribute checks that the company exists, or 404
-    """
-    @classmethod
-    def as_view(cls, **initkwargs):
-        view = super(CompanySelected, cls).as_view(**initkwargs)
-        return login_required(view)
-
-    @property
-    def company(self):
-        # Ensure there is a corresponding CompanyUser, or 404
-        get_object_or_404(
-            CompanyUser,
-            user_id=self.request.user.id, company_id=self.company_id)
-        return get_object_or_404(Company, id=self.company_id)
-
-    @property
-    def company_id(self):
-        """
-        Overridable property to get the current company id
-        """
-        return self.kwargs['company_id']
-
-    def get_context_data(self, **kwargs):
-        context = super(CompanySelected, self).get_context_data(**kwargs)
-        context['company'] = self.company
-        context['single_punto_emision'] = self.single_punto_emision
-        return context
-
-    @property
-    def single_punto_emision(self):
-        """
-        Returns a PuntoEmision object if it's the only one
-        for the current company
-        """
-        single_punto_emision = PuntoEmision.objects.filter(
-            establecimiento__company=self.company)
-        if len(single_punto_emision) == 1:
-            return single_punto_emision[0]
-        else:
-            return None
 
 
 class EstablecimientoSelected(CompanySelected):
@@ -166,40 +122,11 @@ class JSONResponseMixin(object):
                    list(self.model.objects.filter(company=self.company)))
 
 
-class CompanyIndex(CompanySelected, View):
+class CompanyIndex(CompanySelected, TemplateView):
     """
     View that shows a general index for a given company
     """
-    def get(self, request, company_id):
-        """
-        Shows an index for a company
-        """
-        company = self.company
-        context = {}
-        context.update({
-            'item_list': [],
-            #    models.Item.objects
-            #               .filter(company=company)
-            #               .order_by('sku')[:5],
-            'bill_list':
-                (models.Bill.objects
-                            .filter(company=company)
-                            .filter(status=SRIStatus.options.Accepted)[:5]),
-            'prebill_list':
-                (models.Bill.objects
-                            .filter(punto_emision__establecimiento__company=company)
-                            .filter(status=SRIStatus.options.NotSent)
-                            .order_by("number")[:5]),
-            'customer_list':
-                (models.Customer.objects
-                                .filter(company=company)
-                                .exclude(identificacion='9999999999999')
-                                .order_by('identificacion')[:5]),
-            'company': company,
-            'single_punto_emision': self.single_punto_emision,
-            'user': self.request.user,
-        })
-        return render(request, "billing/company_index.html", context)
+    template_name = "billing/company_index.html"
 
 
 ####################################################################
@@ -778,248 +705,13 @@ class BillEmitGeneralProgressView(View):
 
 
 @licence_required('basic', 'professional', 'enterprise')
-class BillEmitView(BillView, PuntoEmisionSelected, DetailView):
-    template_name_suffix = '_emit'
-
-    def get_context_data(self, **kwargs):
-        res = super(BillEmitView, self).get_context_data(**kwargs)
-        try:
-            res['msgs'] = self.error_messages
-        except:
-            pass
-        return res
-
-    def post(self, request, pk):
-        # Local vars
-        bill = self.get_object()
-        punto_emision = bill.punto_emision
-        establecimiento = punto_emision.establecimiento
-
-        ambiente = punto_emision.ambiente_sri
-        secuencial = {
-            'pruebas': punto_emision.siguiente_secuencial_pruebas,
-            'produccion': punto_emision.siguiente_secuencial_produccion,
-        }[ambiente]
-
-        numero_comprobante = "{}-{}-{:09d}".format(establecimiento.codigo,
-                                                   punto_emision.codigo,
-                                                   secuencial)
-
-        # Generate and sign XML
-        xml_data, clave_acceso = gen_bill_xml(request, bill)
-        # assert(clave_acceso == proforma.clave_acceso) FIXME: Is this needed?
-        # print "Claves de acceso coinciden"
-
-        bill.xml_content = xml_data
-        bill.clave_acceso = clave_acceso
-        bill.save()
-
-        # Send XML to SRI
-        enviar_comprobante_result = sri_sender.enviar_comprobante(xml_data)
-        enviar_msgs = (enviar_comprobante_result.comprobantes.comprobante[0]
-                                                .mensajes.mensaje)
-
-        def convert_messages(messages):
-            def convert_msg(msg):
-                converted = {}
-                for key in ['tipo', 'identificador',
-                            'mensaje', 'informacionAdicional']:
-                    converted[key] = getattr(msg, key, None)
-            return map(convert_msg, messages)
-
-        # True if any of the error messages is 43: repeated access key
-        used_access_key_error = any(
-            map(lambda x: x.identificador == '43', enviar_msgs))
-
-        if (enviar_comprobante_result.estado == 'DEVUELTA'
-                and not used_access_key_error):
-            bill.issues = json.dumps(convert_messages(enviar_msgs))
-            bill.save()
-            return redirect("bill_detail", bill.id)
-
-        # Check result
-        def validar_comprobante(clave):
-            for i in range(10):
-                print "Validando", i
-                validar_result = sri_sender.validar_comprobante(clave)
-                try:
-                    if (validar_result.autorizaciones[0][0].estado
-                            in ['AUTORIZADO', 'NO AUTORIZADO']):
-                        return validar_result.autorizaciones[0][0]
-                except Exception, e:
-                    print e
-                    pass
-                time.sleep(1)
-            return None
-        autorizacion = validar_comprobante(clave_acceso)
-
-        if not autorizacion:
-            bill.issues = json.dumps([{'tipo': 'ERROR',
-                                       'identificador': '',
-                                       'mensaje': 'Tiempo de espera agotado'}])
-            bill.save()
-            return redirect("bill_detail", bill.id)
-
-        if autorizacion.estado != 'AUTORIZADO':
-            bill.issues = json.dumps(convert_messages(autorizacion.mensajes))
-            bill.save()
-            return redirect("bill_detail", bill.id)
-
-        # Accepted
-        # convert to bill
-        new = models.Bill.fromProformaBill(bill)
-        new.numero_autorizacion = autorizacion.numeroAutorizacion
-        new.fecha_autorizacion = autorizacion.fechaAutorizacion
-        new.xml_content = autorizacion.comprobante
-        new.clave_acceso = clave_acceso
-        new.iva = sum(bill.iva.values())
-        new.iva_retenido = 0
-        new.total_sin_iva = sum(bill.subtotal.values())
-        new.ambiente_sri = autorizacion.ambiente.lower()
-        new.number = numero_comprobante
-        new.issues = json.dumps(convert_messages(autorizacion.mensajes))
-        new.save()
-
-        # Generate Receivables
-        for payment in bill.payment:
-            if payment.plazo_pago.unidad_tiempo == 'dias':
-                payment_date = (date.today()
-                                + timedelta(days=payment.plazo_pago.tiempo))
-            r = accounts_receivable.models.Receivable(
-                bill=new,
-                qty=payment.cantidad,
-                date=payment_date,
-                method=payment.forma_pago)
-            r.save()
-
-        # update sequence numbers
-        if ambiente == 'pruebas':
-            punto_emision.siguiente_secuencial_pruebas = secuencial + 1
-        else:
-            punto_emision.siguiente_secuencial_produccion = secuencial + 1
-        punto_emision.save()
-
-        # generate RIDE
-        # FIXME
-
-        # Remove proforma
-        for item in bill.items:
-            item.delete()
-        bill.delete()
-        # redirect to bill
-        return redirect("bill_detail", new.id)
-
-
-def gen_bill_xml(request, bill, codigo=None):
-    """
-    Generates XML content and clave de acceso
-    Requires bill with:
-        punto_emision
-        ambiente_sri
-        secuencial
-        date
-    @returns: signed_xml_content, clave_acceso
-    """
-    def get_code_from_proforma_number(number):
-        for i in range(len(number)):
-            try:
-                assert(int(number[i:]) >= 0)
-                assert(int(number[i:]) < 10 ** 8)
-                return int(number[i:])
-            except (ValueError, AssertionError):
-                pass
-        else:
-            return 0
-
-    assert bill.punto_emision
-    assert bill.ambiente_sri
-    assert bill.secuencial
-    assert bill.date
-
-    company = bill.punto_emision.establecimiento.company
-
-    context = {
-        'proformabill': bill,
-        'punto_emision': bill.punto_emision,
-        'establecimiento': bill.punto_emision.establecimiento,
-        'company': company,
-    }
-
-    context['secuencial'] = bill.secuencial
-
-    info_tributaria = {}
-    info_tributaria['ambiente'] = {
-        'pruebas': '1',
-        'produccion': '2'
-    }[bill.ambiente_sri]
-
-    info_tributaria['tipo_emision'] = {
-        'normal': '1',
-        'indisponibilidad_sistema': '2'
-    }['normal']
-
-    info_tributaria['cod_doc'] = {
-        'factura': '01',
-        'nota_de_credito': '04',
-        'nota_de_debito': '05',
-        'guia_de_remision': '06',
-        'comprobante_de_retencion': '07',
-    }['factura']
-
-    c = models.ClaveAcceso()
-    # proformabill.date = proformabill.date.astimezone(
-    #     pytz.timezone('America/Guayaquil'))  # FIXME
-    c.fecha_emision = (bill.date.year,
-                       bill.date.month,
-                       bill.date.day)
-    c.tipo_comprobante = "factura"
-    c.ruc = str(company.ruc)
-    c.ambiente = bill.ambiente_sri
-    c.establecimiento = int(bill.punto_emision.establecimiento.codigo)
-    c.punto_emision = int(bill.punto_emision.codigo)
-    c.numero = bill.secuencial
-    c.codigo = codigo or get_code_from_proforma_number(bill.number)
-    c.tipo_emision = "normal"
-    clave_acceso = unicode(c)
-    info_tributaria['clave_acceso'] = clave_acceso
-
-    context['info_tributaria'] = info_tributaria
-
-    info_factura = {}
-    info_factura['tipo_identificacion_comprador'] = {    # tabla 7
-        'ruc': '04',
-        'cedula': '05',
-        'pasaporte': '06',
-        'consumidor_final': '07',
-        'exterior': '08',
-        'placa': '09',
-    }[bill.issued_to.tipo_identificacion]
-    info_factura['total_descuento'] = 0     # No hay descuentos
-    info_factura['propina'] = 0             # No hay propinas
-    info_factura['moneda'] = 'DOLAR'
-    context['info_factura'] = info_factura
-
-    context['info_adicional'] = {
-        'Generado Con': 'DSSTI Facturas',
-        'Web': 'http://facturas.dssti.com',
-    }
-
-    response = render(request, "billing/proformabill_xml.html", context)
-
-    xml_content = response.content
-    # sign xml_content
-    signed_xml_content = signature.sign(company.ruc, company.id, xml_content)
-    return signed_xml_content, clave_acceso
-
-
-@licence_required('basic', 'professional', 'enterprise')
 class BillEmitGenXMLView(BillView,
                          PuntoEmisionSelected,
                          View):
 
     def get(self, request, pk):
-        proformabill = self.get_queryset().get(id=pk)
-        xml = gen_bill_xml(request, proformabill)
+        bill = self.get_queryset().get(id=pk)
+        xml, clave_acceso = bill.gen_xml()
         return HttpResponse(xml)
 
 

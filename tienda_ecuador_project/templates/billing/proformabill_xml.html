@@ -47,7 +47,7 @@
             {% if item.unidad_medida %}<unidadMedida>{{ item.unidad_medida }}</unidadMedida>{% endif %}
             <cantidad>{{ item.qty|stringformat:'.6f' }}</cantidad>
             <precioUnitario>{{ item.unit_price|stringformat:'.6f' }}</precioUnitario>
-            <descuento>{{ 0|stringformat:'.2f' }}</descuento>
+            <descuento>{{ item.discount|stringformat:'.2f' }}</descuento>
             <precioTotalSinImpuesto>{{ item.total_sin_impuestos|stringformat:'.2f' }}</precioTotalSinImpuesto>
             <impuestos>
                 <impuesto>

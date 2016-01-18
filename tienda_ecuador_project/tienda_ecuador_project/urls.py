@@ -17,6 +17,20 @@ urlpatterns = [
     url(r'^benefits/$', TemplateView.as_view(template_name='benefits.html'), name='benefits'),
     url(r'^pricing/$', TemplateView.as_view(template_name='pricing.html'), name='pricing'),
     url(r'^support/$', views.SupportView.as_view(), name='support'),
+
+    # Support forms
+    url(r'^app_support/(?P<company_id>[0-9]+)/$', views.AppSupportView.as_view(), name='support_request_submit'),
+    url(r'^app_support/success/$', TemplateView.as_view(
+        template_name='support_request_completed.html'
+    ), name='support_request_completed'),
+
+    # Sales forms
+    url(r'^sales_support/$', views.SalesSupportView.as_view(), name='sales_support'),
+    url(r'^sales_support/success/$', TemplateView.as_view(
+        template_name='sales_request_completed.html'
+    ), name='sales_request_completed'),
+
+    # General info pages
     url(r'^info/cert/$', TemplateView.as_view(
         template_name='info/certificate.html',
     ), name='info_cert'),

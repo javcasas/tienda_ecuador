@@ -1,0 +1,32 @@
+{% extends 'company_accounts/l1_company_selected.html' %}
+
+{% load bootstrap3 %}
+{% load decimal_format %}
+{% load links %}
+
+{% block title %}Problema - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href='{% url 'company_accounts:company_profile' company.id %}'>Perfil</a></li>
+    <li><a href='{% url 'company_accounts:fix_issue' issue.id %}'>Problema</a></li>
+{% endblock %}
+
+{% block body %}
+    {{ block.super }}
+
+    <div class='col-xs-12 even-section'>
+        <h1>Problema encontrado</h1>
+        <p class='lead col-lg-10 col-lg-offset-1'>{{ issue.issue }}</p>
+        <form action='.' method='post' class='form'>
+            {% csrf_token %}
+            {% buttons %}
+                {% buttons_menu %}
+                    {% submit_button 'Ya he resuelto el problema' %}
+                    {% back_button 'company_accounts:company_profile' company.id %}
+                {% endbuttons_menu %}
+            {% endbuttons %}
+        </form>
+    </div>
+
+{% endblock %}
