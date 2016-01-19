@@ -64,6 +64,7 @@ class ReceiptViewTests(TestCase, TestHelpersMixin):
             reverse('public-receipts:index'),
             {'clave': clave_acceso},
             Client(),
+            form_offset=0,
             follow=True)
         self.assertContains(r, "No encontrado")
         self.assertContains(r, "No se encontró ningún comprobante con la clave " + clave_acceso)
@@ -74,6 +75,7 @@ class ReceiptViewTests(TestCase, TestHelpersMixin):
             reverse('public-receipts:index'),
             {'clave': clave_acceso},
             Client(),
+            form_offset=0,
             follow=True)
         for key, val in self.bill_data.iteritems():
             self.assertContains(r, val, msg_prefix="Data '{}': '{}' not found on response".format(key, val))

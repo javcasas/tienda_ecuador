@@ -82,7 +82,7 @@ class TestHelpersMixin(object):
             self.fail("New item of type {} was not created".format(kind))
         res.ob = new_items.pop()
 
-    def simulate_post(self, url, data_to_post, client=None, form_index=0, **kwargs):
+    def simulate_post(self, url, data_to_post, client=None, form_index=0, form_offset=1, **kwargs):
         """
         Simulates a post
             Only commits data that is not in hidden fields
@@ -97,7 +97,7 @@ class TestHelpersMixin(object):
         data_to_post = make_post(data_to_post)
         data_to_use = {}
 
-        current_form = root.findall(".//form")[form_index]
+        current_form = root.findall(".//form")[form_index + form_offset]
         # input fields, including hidden inputs
         for i in current_form.findall(".//input"):
             key = i.get('name')

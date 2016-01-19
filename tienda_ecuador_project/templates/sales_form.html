@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% load links %}
+
+{% block title %}Editar Item en Factura {{ bill }} - {{ block.super }}{% endblock %}
+{% block body_block %}
+    {{ block.super }}
+    <div class='col-xs-12 even-section'>
+        <h1>Contactar con DSSTI</h1>
+        <form method='post' action='.' class='form'>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                {% buttons_menu %}
+                    {% submit_button 'Contactar' %}
+                {% endbuttons_menu %}
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock %}

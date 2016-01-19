@@ -25,7 +25,9 @@ urlpatterns = [
     ), name='support_request_completed'),
 
     # Sales forms
-    url(r'^sales_support/$', views.SalesSupportView.as_view(), name='sales_support'),
+    url(r'^sales_support/$', views.SalesSupportView.as_view(
+        template_name='sales_form.html'
+    ), name='sales_support'),
     url(r'^sales_support/success/$', TemplateView.as_view(
         template_name='sales_request_completed.html'
     ), name='sales_request_completed'),

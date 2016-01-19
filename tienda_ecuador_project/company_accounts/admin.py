@@ -38,3 +38,4 @@ class LicenceUpdateRequestAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
 
 admin.site.register(models.LicenceUpdateRequest, LicenceUpdateRequestAdmin)
+admin.site.register(models.CompanyIssue)

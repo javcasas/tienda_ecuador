@@ -219,13 +219,15 @@ class CompanyProfileUpdateView(CompanyView, CompanySelected, UpdateView):
         return res
 
 
-class CompanyProfileSelectPlanView(CompanyView, CompanySelected, View):
+class CompanyProfileSelectPlanView(CompanyView, CompanySelected, DetailView):
     """
     View that shows a general index for a given company
     """
+    template_name_suffix = '_profile_select_plan'
 
-    def get(self, request, pk):
-        context = {
+    def get_context_data(self, **kwargs):
+        context = super(CompanyProfileSelectPlanView, self).get_context_data(**kwargs)
+        context.update({
             'company': self.company,
             'select_buttons': True,
             'select_urls': [
@@ -233,8 +235,8 @@ class CompanyProfileSelectPlanView(CompanyView, CompanySelected, View):
                 {'name': 'professional'},
                 {'name': 'enterprise'},
             ],
-        }
-        return render(request, "company_accounts/company_profile_select_plan.html", context)
+        })
+        return context
 
     def post(self, request, pk):
         try:

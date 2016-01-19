@@ -35,11 +35,11 @@
                         </form>
                     </td>
                     <td>
-                        <form class='form' action='.' method='post'>
+                        <form class='form' action='{% url 'sales_support %}' method='get'>
                             {% csrf_token %}
                             <button type='submit' name='selected_plan'
                                     value='enterprise' class='btn btn-primary form-control'>
-                                    Elegir plan Enterprise</button>
+                                    Contactar con DSSTI</button>
                         </form>
                     </td>
                 </tr>

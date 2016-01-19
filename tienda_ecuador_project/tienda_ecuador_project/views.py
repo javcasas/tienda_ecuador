@@ -71,7 +71,7 @@ class AppSupportView(CompanySelected, FormView):
 
     def form_valid(self, form):
         form.send_email(company=self.company, user=self.request.user)
-        return super(SalesSupportView, self).form_valid(form)
+        return super(AppSupportView, self).form_valid(form)
 
 
 class SalesSupportView(FormView):

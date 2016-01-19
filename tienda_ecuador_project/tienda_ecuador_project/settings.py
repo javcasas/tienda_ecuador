@@ -176,6 +176,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'email': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': True,
+        },
     },
 }
 

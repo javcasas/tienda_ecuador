@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from email.mime.text import MIMEText
-from subprocess import Popen, PIPE
-
 from django import forms
+import util.mail
 
 
 class SalesContactForm(forms.Form):
@@ -15,7 +13,9 @@ class SalesContactForm(forms.Form):
         label="Teléfono de contacto")
     mensaje = forms.CharField(
         label=u"Mensaje",
-        max_length=5000)
+        max_length=5000,
+        widget=forms.Textarea,
+        )
 
     def send_email(self):
         msg_text = u'''
@@ -25,13 +25,12 @@ Email: {email}
 Telefono: {telefono}
 
 {mensaje}
-'''
-        msg = MIMEText(msg_text.format(**self.cleaned_data))
-        msg["From"] = "ventas@dssti.com"
-        msg["To"] = "ventas@dssti.com"
-        msg["Subject"] = "Peticion de Ventas - {}".format(self.cleaned_data['nombre_comercial'])
-        p = Popen(["/usr/bin/sendmail", "-t", "-oi"], stdin=PIPE)
-        p.communicate(msg.as_string())
+'''.format(**self.cleaned_data)
+        util.mail.send_mail(
+            from_="ventas@dssti.com",
+            to="ventas@dssti.com",
+            subject="Peticion de Ventas - {}".format(self.cleaned_data['nombre_comercial']),
+            content=msg_text)
 
 
 class SupportContactForm(forms.Form):
@@ -52,10 +51,9 @@ Email: {user.email}
 Url: {url}
 
 {mensaje}
-'''
-        msg = MIMEText(msg_text.format(company=company, user=user, **self.cleaned_data))
-        msg["From"] = "soporte@dssti.com"
-        msg["To"] = "soporte@dssti.com"
-        msg["Subject"] = "Peticion de Soporte - {}".format(company.nombre_comercial)
-        p = Popen(["/usr/bin/sendmail", "-t", "-oi"], stdin=PIPE)
-        p.communicate(msg.as_string())
+'''.format(company=company, user=user, **self.cleaned_data)
+        util.mail.send_mail(
+            from_="soporte@dssti.com",
+            to="soporte@dssti.com",
+            subject="Peticion de Soporte - {}".format(company.nombre_comercial),
+            content=msg_text)

@@ -293,7 +293,7 @@ class ComprobanteSRIMixin(models.Model):
                 if autorizacion.estado == 'AUTORIZADO':
                     if already_authorised:
                         self.company.add_db_issue("""
-El comprobante con clave de acceso {clave_acceso} ha sido enviado y aprobado dos veces, con 
+El comprobante con clave de acceso {clave_acceso} ha sido enviado y aprobado dos veces, con
 códigos de autorización {cod_1} y {cod_2}. Se recomienda anular el segundo."""
                             .format(clave_acceso=autorizar_comprobante_result.claveAccesoConsultada,
                                     cod_1=self.numero_autorizacion,
