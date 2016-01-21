@@ -193,3 +193,13 @@ if "javier" not in hostname:
     DEBUG = False
     TEMPLATES[0]['OPTIONS']['debug'] = False
     TEMPLATES[0]['OPTIONS']['string_if_invalid'] = ''
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'facturas',
+            'USER': '',
+            'PASSWORD': '',
+            'HOST': 'dssti.db',
+            'PORT': '',
+        }
+    }
