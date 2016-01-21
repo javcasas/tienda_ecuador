@@ -192,18 +192,19 @@ class ComprobanteSRIMixin(models.Model):
             return [convert_msg(msg) for msg in messages]
 
         # Check it has not been sent and accepted
-        autorizar_comprobante_result = sri_sender.autorizar_comprobante(
-            self.clave_acceso, entorno=self.ambiente_sri)
-        if int(autorizar_comprobante_result.numeroComprobantes) > 0:
-            for autorizacion in autorizar_comprobante_result.autorizaciones.autorizacion:
-                if autorizacion.estado == 'AUTORIZADO':
-                    self.status = SRIStatus.options.Sent
-                    self.secret_save()
-                    return True
-                elif autorizacion.estado == 'RECHAZADA':
-                    pass
-                else:  # Not processed yet
-                    return False
+        if self.clave_acceso:
+            autorizar_comprobante_result = sri_sender.autorizar_comprobante(
+                self.clave_acceso, entorno=self.ambiente_sri)
+            if int(autorizar_comprobante_result.numeroComprobantes) > 0:
+                for autorizacion in autorizar_comprobante_result.autorizaciones.autorizacion:
+                    if autorizacion.estado == 'AUTORIZADO':
+                        self.status = SRIStatus.options.Sent
+                        self.secret_save()
+                        return True
+                    elif autorizacion.estado == 'RECHAZADA':
+                        pass
+                    else:  # Not processed yet
+                        return False
 
         with transaction.atomic():
             punto_emision = self.punto_emision

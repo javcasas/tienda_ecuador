@@ -1,5 +1,5 @@
 {% load bootstrap3 %}
-    <table class='table table-hover table-pricing'>
+    <table class='table table-hover table-pricing even-section'>
         <thead>
             <tr>
                 <th class='col-xs-3'></th>
@@ -35,7 +35,7 @@
                         </form>
                     </td>
                     <td>
-                        <form class='form' action='{% url 'sales_support %}' method='get'>
+                        <form class='form' action='{% url 'sales_support' %}' method='get'>
                             {% csrf_token %}
                             <button type='submit' name='selected_plan'
                                     value='enterprise' class='btn btn-primary form-control'>
@@ -108,21 +108,42 @@
                 <td></td>
                 <td>&dollar;29 / mes</td>
                 <td>&dollar;69 / mes</td>
-                <td>Llámenos</td>
+                <td>
+                    <form class='form' action='{% url 'sales_support' %}' method='get'>
+                        {% csrf_token %}
+                        <button type='submit' name='selected_plan'
+                                value='enterprise' class='btn btn-primary form-control'>
+                                Contactar con DSSTI</button>
+                    </form>
+                </td>
             </tr>
             {% if select_urls %}
                 <tr>
                     <td></td>
-                    {% for select_url in select_urls %}
-                        <td>
-                            <form class='form' action='.' method='post'>
-                                {% csrf_token %}
-                                <button type='submit' name='selected_plan'
-                                        value='{{select_url.name}}' class='btn btn-primary form-control'>
-                                        Elegir plan {{select_url.name|capfirst}}</button>
-                            </form>
-                        </td>
-                    {% endfor %}
+                    <td>
+                        <form class='form' action='.' method='post'>
+                            {% csrf_token %}
+                            <button type='submit' name='selected_plan'
+                                    value='basic' class='btn btn-primary form-control'>
+                                    Elegir plan Basic</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form class='form' action='.' method='post'>
+                            {% csrf_token %}
+                            <button type='submit' name='selected_plan'
+                                    value='professional' class='btn btn-primary form-control'>
+                                    Elegir plan Professional</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form class='form' action='{% url 'sales_support' %}' method='get'>
+                            {% csrf_token %}
+                            <button type='submit' name='selected_plan'
+                                    value='enterprise' class='btn btn-primary form-control'>
+                                    Contactar con DSSTI</button>
+                        </form>
+                    </td>
                 </tr>
             {% endif %}
         </tbody>

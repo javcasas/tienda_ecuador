@@ -46,6 +46,11 @@ class Bill(ComprobanteSRIMixin, models.Model):
         return BillItem.objects.filter(bill=self)
 
     @property
+    def receivables(self):
+        import accounts_receivable.models
+        return accounts_receivable.models.Receivable.objects.filter(bill=self)
+
+    @property
     def subtotal(self):
         res = {0: Decimal(0),
                12: Decimal(0)}
@@ -361,7 +366,7 @@ class BillItem(models.Model):
     """
     qty = models.DecimalField(max_digits=10, decimal_places=4)
     sku = models.ForeignKey(SKU)
-    discount = models.DecimalField(max_digits=15, decimal_places=4, default=0)
+    discount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     bill = models.ForeignKey(Bill)
 
     def save(self, **kwargs):
@@ -489,7 +494,7 @@ class Pago(models.Model):
     """
     Pagos en una factura
     """
-    porcentaje = models.DecimalField(max_digits=20, decimal_places=8)
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
     forma_pago = models.ForeignKey(FormaPago)
     plazo_pago = models.ForeignKey(PlazoPago)
     bill = models.ForeignKey(Bill)

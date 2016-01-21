@@ -1,5 +1,6 @@
 {% load decimal_format %}
 {% load links %}
+{% load enums %}
 
 <h3 class='spaced-top'>Factura</h3>
 <table class='table table-bordered'>
@@ -13,10 +14,10 @@
         <th>Numero</th><td>{{ bill.get_bill_number }}</td>
     </tr>
     <tr>
-        <th>Estado</th><td>{{ bill.status }} {# FIXME estado #}</td>
+        <th>Estado</th><td>{{ bill.status | sri_status }}</td>
     </tr>
     <tr>
-        <th>Ambiente</th><td> {{ bill.ambiente_sri }} </td>
+        <th>Ambiente</th><td> {{ bill.ambiente_sri | ambiente_sri }} </td>
     </tr>
     <tr>
         <th>Fecha</th><td>{{ bill.date }}</td>
@@ -48,7 +49,7 @@
 <h3 class='spaced-top'>Cliente</h3>
 <table class='table table-bordered'>
     <tr>
-        <th>Identificación</th><td>({{ bill.issued_to.tipo_identificacion }}) {{ bill.issued_to.identificacion }} </td>
+        <th>Identificación</th><td>({{ bill.issued_to.tipo_identificacion | tipo_identificacion }}) {{ bill.issued_to.identificacion }} </td>
     </tr>
     <tr>
          <th>Razón Social</th><td>{{ bill.issued_to.razon_social }}</td>
@@ -67,7 +68,7 @@
     </tr>
 {% for item in bill.items %}
     <tr>
-        <td>{{ item.sku }}</td>
+        <td>{{ item.sku.code }}</td>
         <td>{{ item.name }}</td>
         <td>{{ item | qty }}</td>
         <td>{{ item.unit_price | decimals4 }}</td>

@@ -1,5 +1,6 @@
 {% extends 'billing/l2_bill_selected.html' %}
 {% load bootstrap3 %}
+{% load links %}
 
 {% block title %}Ver Factura {{ bill }} - {{ block.super }}{% endblock %}
 
@@ -8,7 +9,14 @@
 {% block body %}
     {{ block.super }}
     <div class='col-xs-12'>
-        <h2>Factura emitida</h2>
+        <h1>Factura emitida</h1>
+        {% buttons %}
+            {% buttons_menu %}
+                {% primary_button 'Cobrar factura' 'receivable_detail' bill.receivables.0.id %}
+                {% back_button 'billing_main_menu' company.id %}
+            {% endbuttons_menu %}
+        {% endbuttons %}
+       
         {% include 'billing/bill_emitted_detail.html' %}
 
     </div>

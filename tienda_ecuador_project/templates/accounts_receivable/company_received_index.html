@@ -31,7 +31,7 @@
           {% for item in receivable_list %}
             <tr>
               <td>{{ item.date.isoformat }}</td>
-              <td>{{ item.bill.number }}</td>
+              <td>{{ item.bill.get_bill_number }}</td>
               <td>{{ item.qty|price2d }}</td>
               <td>{{ item.total_paid|price2d }}</td>
               <td>{% details_button 'receivable_detail' item.id %}</td>

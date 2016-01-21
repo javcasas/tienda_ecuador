@@ -98,7 +98,7 @@ class Batch(models.Model):
     Represents a bunch of items that were bought some date
     """
     item = models.ForeignKey(Item)
-    unit_cost = models.DecimalField(max_digits=20, decimal_places=8)
+    unit_cost = models.DecimalField(max_digits=20, decimal_places=4)
     code = models.IntegerField()
     acquisition_date = models.DateField()
     purchase = models.ForeignKey(purchases.models.Purchase, blank=True, null=True)
@@ -123,8 +123,8 @@ class SKU(models.Model):
     that are stored on an Establecimiento
     """
     batch = models.ForeignKey(Batch)
-    qty = models.DecimalField(max_digits=20, decimal_places=8)
-    unit_price = models.DecimalField(max_digits=20, decimal_places=8)
+    qty = models.DecimalField(max_digits=20, decimal_places=4)
+    unit_price = models.DecimalField(max_digits=20, decimal_places=4)
     establecimiento = models.ForeignKey(
         company_accounts.models.Establecimiento)
     # Where on the store it is located

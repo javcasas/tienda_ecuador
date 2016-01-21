@@ -2,6 +2,7 @@
 {% load bootstrap3 %}
 {% load decimal_format %}
 {% load links %}
+{% load enums %}
 
 {% block title %}Ver Factura {{ bill }} - {{ block.super }}{% endblock %}
 
@@ -26,7 +27,7 @@
                 <th>Numero</th><td>{{ bill.number }}</td>
             </tr>
             <tr>
-                <th>Cliente</th><td>({{ bill.issued_to.tipo_identificacion }}) {{ bill.issued_to.identificacion }} </td>
+                <th>Cliente</th><td>({{ bill.issued_to.tipo_identificacion | tipo_identificacion }}) {{ bill.issued_to.identificacion }} </td>
             </tr>
             <tr>
                  <th></th><td>{{ bill.issued_to.razon_social }}</td>

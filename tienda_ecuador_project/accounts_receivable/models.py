@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 
 import billing.models
 
-from utils import Property, ConvertedProperty
+from util.templatetags import decimal_format
 
 
 class Receivable(models.Model):
@@ -17,7 +17,7 @@ class Receivable(models.Model):
     Amount of money to receive from a payer
     """
     bill = models.ForeignKey(billing.models.Bill)
-    qty = models.DecimalField(max_digits=20, decimal_places=8)
+    qty = models.DecimalField(max_digits=20, decimal_places=2)
     date = models.DateField()
     method = models.ForeignKey(billing.models.FormaPago)
     received = models.BooleanField(default=False)
@@ -49,7 +49,8 @@ class Receivable(models.Model):
         return Payment.objects.filter(receivable=self)
 
     def __unicode__(self):
-        return u"{}/{} - ${}".format(self.bill.number, self.date, self.amount_left)
+        return u"{}/{} - {}".format(self.bill.number, self.date,
+                                    decimal_format.money_2d(self.amount_left))
 
     def get_absolute_url(self):
         return reverse("receivable_detail", args=(self.id,))
@@ -61,6 +62,6 @@ class Payment(models.Model):
     """
     receivable = models.ForeignKey(Receivable)
     date = models.DateField()
-    qty = models.DecimalField(max_digits=20, decimal_places=8)
+    qty = models.DecimalField(max_digits=20, decimal_places=2)
     method = models.ForeignKey(billing.models.FormaPago)
     comment = models.TextField(blank=True)

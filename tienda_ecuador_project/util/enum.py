@@ -1,11 +1,11 @@
 # * encoding: utf-8 *
 def Enum(name, option_pairs):
     code = """
-class {}(object):
+class {clsname}(object):
     @classmethod
     def pretty_print(cls, ob):
-        return dict(SRIStatus.__OPTIONS__)[ob]
-""".format(name)
+        return dict(cls.__OPTIONS__)[ob]
+""".format(clsname=name)
     exec(code)
     cls = locals()[name]
 
