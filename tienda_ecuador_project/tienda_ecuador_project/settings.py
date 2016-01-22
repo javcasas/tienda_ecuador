@@ -196,10 +196,8 @@ if "javier" not in hostname:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'facturas',
-            'USER': '',
-            'PASSWORD': '',
-            'HOST': 'dssti.db',
-            'PORT': '',
+            'OPTIONS': {
+                'read_default_file': '/home/protected/my.cnf',
+            },
         }
     }
