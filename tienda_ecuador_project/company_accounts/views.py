@@ -71,7 +71,7 @@ class CompanyCreateView(CreateView):
         pe.save()
         return res
 
-   def get_success_url(self):
+    def get_success_url(self):
         return reverse("company_accounts:company_main_menu", args=(self.form.instance.id)) 
 
 
