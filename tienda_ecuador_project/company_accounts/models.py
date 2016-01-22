@@ -179,7 +179,7 @@ class Company(models.Model):
         Makes a list of issues in a given company to be shown
         """
         res = []
-        if self.licence.licence == 'demo':
+        if self.licence.licence == 'demo' and self.licence.next_licence == 'demo':
             res.append(
                 Issue('warning',
                       u'DSSTI Facturas está en modo Demo',
