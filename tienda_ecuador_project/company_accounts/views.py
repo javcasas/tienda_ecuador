@@ -50,7 +50,7 @@ class CompanyCreateView(CreateView):
         # Delete orphaned CompanyUsers
         (models.Company.objects.annotate(number_of_companies=Count("companyuser"))
                                .filter(number_of_companies=0).delete())
-        res = super(self.__class__, self).form_valid(form)
+        res = super(CompanyCreateView, self).form_valid(form)
         new_company = form.instance
         # Create CompanyUser
         c_u = models.CompanyUser(user=self.request.user, company=new_company)
@@ -70,6 +70,9 @@ class CompanyCreateView(CreateView):
             ambiente_sri=AmbienteSRI.options.produccion)
         pe.save()
         return res
+
+   def get_success_url(self):
+        return reverse("company_accounts:company_main_menu", args=(self.form.instance.id)) 
 
 
 def company_create(request):
