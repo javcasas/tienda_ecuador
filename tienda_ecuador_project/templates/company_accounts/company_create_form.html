@@ -7,6 +7,7 @@
     {{ block.super }}
     <div class='col-xs-12 even-section'>
         <h1>Datos de la Empresa</h1>
+        <p>Usted no tiene ninguna empresa registrada. Por favor, describa su empresa:</p>
         <form method='post' action='.' class='form'>
             {% csrf_token %}
             {% bootstrap_form form %}
