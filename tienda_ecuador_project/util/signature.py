@@ -10,7 +10,7 @@ class Timeout(Exception):
 context = zmq.Context()
 
 
-def request(cmd, server="tcp://localhost:5555", timeout=2000):
+def request(cmd, server="tcp://127.0.0.1:5555", timeout=3000):
     try:
         socket = context.socket(zmq.REQ)
         socket.setsockopt(zmq.RCVTIMEO, timeout)

@@ -111,7 +111,7 @@ function prepare_search_box(ob)
             // Search all the fields
             $.each(fields_to_search, function (i, field) {
                 $.each(data, function (i, item) {
-                    if(item[field].toLowerCase().contains(current_text)) {
+                    if(item[field].toLowerCase().indexOf(current_text) != -1) {
                         select_item(item);
                     }
                 });

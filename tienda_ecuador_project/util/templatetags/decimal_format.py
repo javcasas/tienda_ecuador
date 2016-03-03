@@ -22,9 +22,9 @@ def decimals(value, arg):
         return ("The type of '{}' is {}, not {}".format(
                 value, type(value), Decimal))
 
-    if type(arg) is not int:
-        raise Exception("The type of '{}' is {}, not {}".format(
-                        arg, type(arg), int))
+    if type(arg) not in [int, long]:
+        raise Exception("The type of '{}' is {}".format(
+                        arg, type(arg)))
 
     format_string = "{{:.{}f}}".format(arg)
     return format_string.format(value)
