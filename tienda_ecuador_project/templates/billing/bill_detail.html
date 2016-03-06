@@ -310,6 +310,9 @@ function get_base_dict_for_post() {
 prepare_search_box({
     selector: '#search_item',
     gen_name_fn: function (sku) {
+                    if(sku.qty_unlimited) {
+                        return sku.code + " - " + sku.name;
+                    }
                     if(sku.qty > 0) {
                         return sku.code + " - " + sku.name + " - (" + sku.qty + " disponibles)";
                     } else {
@@ -317,7 +320,7 @@ prepare_search_box({
                     }
                  },
     gen_name_post_process_fn: function (sku, text) {
-                                    if (sku.qty > 0) {
+                                    if((sku.qty > 0) || sku.qty_unlimited) {
                                         return text;
                                     } else {
                                         return "<span class='text-danger'>" + text + "</span>";

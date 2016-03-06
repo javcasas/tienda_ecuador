@@ -11,6 +11,7 @@
         <h1>Editar Inventario {{ sku }}</h1>
         <form method='post' action='.' class='form'>
             {% csrf_token %}
+            {% bootstrap_field form.qty_unlimited %}
             {% bootstrap_field form.qty %}
             {% captureas after %} Coste: {{ batch.unit_cost | money_4d }}{% endcaptureas %}
             {% bootstrap_field form.unit_price addon_before='$' addon_after=after %}

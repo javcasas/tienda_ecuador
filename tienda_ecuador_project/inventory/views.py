@@ -281,7 +281,7 @@ class SKUEstablecimientoListJSONView(EstablecimientoSelected,
     """
     context_object_name = "sku_list"
     template_name_suffix = '_establecimiento_list'
-    fields_to_return = ['code', 'name', 'id', 'qty', 'unit_price', 'location']
+    fields_to_return = ['code', 'name', 'id', 'qty', 'unit_price', 'location', 'qty_unlimited']
 
     def get_queryset(self):
         return self.model.objects.filter(establecimiento=self.establecimiento)
@@ -389,3 +389,8 @@ class ServiceBatchSKUCreateView(ItemBatchSKUCreateView):
         context = super(ServiceBatchSKUCreateView, self).get_context_data(**kwargs)
         context['tipo'] = u'Servicio'
         return context
+
+    def form_valid(self, form):
+        form.instance.qty_unlimited = True
+        res = super(ServiceBatchSKUCreateView, self).form_valid(form)
+        return res

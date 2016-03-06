@@ -35,7 +35,7 @@ class Item(models.Model):
     """
     Represents an item that can be sold or bought
     """
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     code = models.CharField(max_length=50)
     distributor_code = models.CharField(max_length=50, blank=True)
     description = models.CharField(max_length=500, blank=True)
@@ -124,6 +124,7 @@ class SKU(models.Model):
     """
     batch = models.ForeignKey(Batch)
     qty = models.DecimalField(max_digits=20, decimal_places=4)
+    qty_unlimited = models.BooleanField(default=False)
     unit_price = models.DecimalField(max_digits=20, decimal_places=4)
     establecimiento = models.ForeignKey(
         company_accounts.models.Establecimiento)
@@ -143,15 +144,19 @@ class SKU(models.Model):
         return self.batch.item.name
 
     def substract(self, qty):
-        self.qty -= qty
-        self.save()
+        if not self.qty_unlimited:
+            self.qty -= qty
+            self.save()
 
     def get_absolute_url(self):
         return reverse("sku_detail", args=(self.id,))
 
     def __unicode__(self):
-        fmt_string = u"{:." + unicode(self.batch.item.decimales_qty) + u"f} x {}"
-        return fmt_string.format(self.qty, self.batch.item.name)
+        if self.qty_unlimited:
+            return self.batch.item.name
+        else:
+            fmt_string = u"{:." + unicode(self.batch.item.decimales_qty) + u"f} x {}"
+            return fmt_string.format(self.qty, self.batch.item.name)
 
     @property
     def margin(self):
@@ -160,6 +165,8 @@ class SKU(models.Model):
     @property
     def margin_percent(self):
         cost = self.batch.unit_cost
+        if cost == 0:
+            return Decimal(100)
         price = self.unit_price
         return ((price/cost) - 1) * 100
 
@@ -184,3 +191,6 @@ class SKU(models.Model):
     @property
     def decimales_qty(self):
         return self.batch.item.decimales_qty
+
+    def can_be_sold(self, ammount=1):
+        return self.unlimited_qty or self.qty >= ammount

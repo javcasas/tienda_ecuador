@@ -105,6 +105,10 @@ class SKUForm(forms.ModelForm):
         label='Cantidad',
         help_text=u'La cantidad que hay almacenada en el establecimiento',
         decimal_places=4)
+    qty_unlimited = forms.BooleanField(
+        label='Inventario ilimitado',
+        required=False,
+        help_text=u'El artículo es un servicio y no hay límite en la cantidad que se puede vender')
     establecimiento = forms.ModelChoiceField(
         label='Establecimiento',
         queryset=None,
@@ -114,7 +118,7 @@ class SKUForm(forms.ModelForm):
     class Meta:
         # Provide an association between the ModelForm and a model
         model = models.SKU
-        fields = ('unit_price', 'qty', 'establecimiento',)
+        fields = ('unit_price', 'qty_unlimited', 'qty', 'establecimiento',)
 
     def clean(self):
         cleaned_data = super(SKUForm, self).clean()
@@ -198,6 +202,10 @@ class ItemBatchSKUForm(forms.ModelForm):
         label='Precio de venta',
         help_text=u'El precio de referencia al que se venderá en el establecimiento',
         decimal_places=4)
+    qty_unlimited = forms.BooleanField(
+        widget=forms.HiddenInput(),
+        required=False,
+        initial=False)
     qty = UpdatedDecimalField(
         label='Cantidad',
         help_text=u'La cantidad que hay almacenada en el establecimiento',
@@ -227,6 +235,10 @@ class ServiceBatchSKUForm(ItemBatchSKUForm):
         widget=forms.HiddenInput(),
         initial=10000000,
         decimal_places=4)
+    qty_unlimited = forms.BooleanField(
+        widget=forms.HiddenInput(),
+        required=False,
+        initial=True)
     unit_cost = UpdatedDecimalField(
         widget=forms.HiddenInput(),
         initial=Decimal(0),
