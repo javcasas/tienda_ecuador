@@ -17,45 +17,108 @@ class OneOf(object):
                 val, self.values))
 
 
+def verifier_number(c, coefficients, mul_op, modulus):
+    pairs = zip(c, coefficients)
+    muls = map(mul_op, pairs)
+    sums = sum(muls)
+    verif = sums % modulus
+    if verif != 0:
+        verif = modulus - verif
+    return verif
+
+
+def check_verifier_number(c, coefficients, mul_op, modulus, verifier_position):
+    verif = verifier_number(c,
+                            coefficients=coefficients,
+                            mul_op=mul_op,
+                            modulus=modulus)
+    return verif == c[verifier_position]
+
+
+def mul((x, y)):
+    return x * y
+
+
+def mul_merge((x, y)):
+    r = x * y
+    d, m = divmod(r, 10)
+    return d + m
+
+
+def valid_province_code(c):
+    provincia = int(c[0:2])
+    if provincia < 1 or provincia > 22:
+        return False
+    else:
+        return True
+
+
 def IsCedula(val):
     """
     Ensures the value is a valid cedula
     """
-    codigo_provincia = int(val[0:2])
-    if codigo_provincia < 1 or codigo_provincia > 24:
-        raise ValidationError("Codigo de provincia invalido")
-    tipo_cedula = int(val[2])
-    if tipo_cedula < 1 or tipo_cedula > 6:
-        raise ValidationError("Tercer digito invalido")
-    if len(val) != 10:
+    num = map(int, val)
+
+    if len(num) != 10:
         raise ValidationError("Invalid value length")
-    verificador = int(val[-1])
-    checksum_multiplier = "21212121212"
 
-    def digit_sum(digit, multiplier):
-        digit = int(digit)
-        multiplier = int(multiplier)
-        res = digit * multiplier
-        div, mod = divmod(res, 10)
-        return div + mod
+    if not valid_province_code(val):
+        raise ValidationError("Codigo de provincia invalido")
 
-    checksum = sum([digit_sum(*params) for params
-                    in zip(val[0:9], checksum_multiplier[0:9])])
-    _, checksum = divmod(checksum, 10)
-    checksum = 10 - checksum
-    _, checksum = divmod(checksum, 10)
-    if checksum != verificador:
-        raise ValidationError("Invalid RUC invalid checksum")
+    tipo = num[2]
+
+    if tipo in [0, 1, 2, 3, 4, 5]:
+        # Cedula
+        if not check_verifier_number(
+                num,
+                coefficients=[2, 1, 2, 1, 2, 1, 2, 1, 2],
+                mul_op=mul_merge,
+                modulus=10,
+                verifier_position=9):
+            raise ValidationError("Invalid RUC invalid checksum")
+    else:
+        raise ValidationError("Tercer digito invalido")
 
 
 def IsRuc(val):
     """
     Ensures the value is a valid RUC
     """
-    if not len(val) == 13:
-        raise ValidationError("RUC no tiene 13 digitos")
-    if val == '9999999999999':  # consumidor final
-        return
     if not val.endswith("001"):
         raise ValidationError("RUC no termina en 001")
-    IsCedula(val[0:10])
+
+    num = map(int, val)
+    if len(num) != 13:
+        raise ValidationError("Invalid value length")
+
+    if val in ['9999999999999', '9999999999001']:
+        return
+
+    if not valid_province_code(val):
+        raise ValidationError("Codigo de provincia invalido")
+
+    tipo = num[2]
+
+    if tipo in [0, 1, 2, 3, 4, 5]:
+        # Cedula
+        return IsCedula(val[0:10])
+    elif tipo == 9:
+        # Sociedad o extranjero no residente
+        if not check_verifier_number(
+                num,
+                coefficients=[4, 3, 2, 7, 6, 5, 4, 3, 2],
+                mul_op=mul,
+                modulus=11,
+                verifier_position=9):
+            raise ValidationError("Invalid RUC invalid checksum")
+    elif tipo == 6:
+        # Empresa del estado
+        if not check_verifier_number(
+                num,
+                coefficients=[3, 2, 7, 6, 5, 4, 3, 2],
+                mul_op=mul,
+                modulus=11,
+                verifier_position=8):
+            raise ValidationError("Invalid RUC invalid checksum")
+    else:
+        raise ValidationError("Tercer digito invalido")

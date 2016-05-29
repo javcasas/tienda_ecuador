@@ -1,7 +1,6 @@
 def verifier_number(c, coefficients, mul_op, modulus):
-    coefs = [2, 1, 2, 1, 2, 1, 2, 1, 2]
     pairs = zip(c, coefficients)
-    muls = map(mul_op, pairs) 
+    muls = map(mul_op, pairs)
     sums = sum(muls)
     verif = sums % modulus
     if verif != 0:
@@ -10,25 +9,36 @@ def verifier_number(c, coefficients, mul_op, modulus):
 
 
 def check_verifier_number(c, coefficients, mul_op, modulus, verifier_position):
-    verif = verifier_number(c, 
+    verif = verifier_number(c,
                             coefficients=coefficients,
                             mul_op=mul_op,
                             modulus=modulus)
     return verif == c[verifier_position]
 
+
 def mul((x, y)):
     return x * y
+
 
 def mul_merge((x, y)):
     r = x * y
     d, m = divmod(r, 10)
     return d + m
 
-def is_valid_cedula(c):
-    num = map(int, str(c))
-
+def valid_province_code(c):
     provincia = int(c[0:2])
     if provincia < 1 or provincia > 22:
+        return False
+    else:
+        return True
+
+def is_valid_cedula(c):
+    num = map(int, c)
+
+    if len(num) != 10:
+        return False
+
+    if not valid_province_code(c):
         return False
 
     tipo = num[2]
@@ -36,7 +46,7 @@ def is_valid_cedula(c):
     if tipo in [0, 1, 2, 3, 4, 5]:
         # Cedula
         return check_verifier_number(
-            num, 
+            num,
             coefficients=[2, 1, 2, 1, 2, 1, 2, 1, 2],
             mul_op=mul_merge,
             modulus=10,
@@ -44,30 +54,27 @@ def is_valid_cedula(c):
     else:
         return False
 
+
 def is_valid_ruc(c):
-    num = map(int, str(c))
+    num = map(int, c)
+    if len(num) != 13:
+        return False
 
     if c in ['9999999999999', '9999999999001']:
         return True
 
-    provincia = int(c[0:2])
-    if provincia < 1 or provincia > 22:
+    if not valid_province_code(c):
         return False
 
     tipo = num[2]
 
     if tipo in [0, 1, 2, 3, 4, 5]:
         # Cedula
-        return check_verifier_number(
-            num, 
-            coefficients=[2, 1, 2, 1, 2, 1, 2, 1, 2],
-            mul_op=mul_merge,
-            modulus=10,
-            verifier_position=9)
+        return is_valid_cedula(c[0:10])
     elif tipo == 9:
         # Sociedad o extranjero no residente
         return check_verifier_number(
-            num, 
+            num,
             coefficients=[4, 3, 2, 7, 6, 5, 4, 3, 2],
             mul_op=mul,
             modulus=11,
@@ -75,7 +82,7 @@ def is_valid_ruc(c):
     elif tipo == 6:
         # Empresa del estado
         return check_verifier_number(
-            num, 
+            num,
             coefficients=[3, 2, 7, 6, 5, 4, 3, 2],
             mul_op=mul,
             modulus=11,
@@ -88,6 +95,7 @@ def test():
     assert is_valid_ruc("1710034065001")
     assert is_valid_ruc("1756760292001")
     assert is_valid_ruc("1791321634001")
+
     assert is_valid_cedula("1710034065")
     assert is_valid_cedula("1756760292")
     assert not is_valid_cedula("1791321634")
