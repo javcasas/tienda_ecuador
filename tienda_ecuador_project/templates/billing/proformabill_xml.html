@@ -84,7 +84,7 @@
     {% endif %}
     {% if info_adicional %}
     <infoAdicional>
-        {% for k,v in info_adicional %}
+        {% for k,v in info_adicional.iteritems %}
         <campoAdicional nombre="{{ k }}">{{ v }}</campoAdicional>
         {% endfor %}
     </infoAdicional>
